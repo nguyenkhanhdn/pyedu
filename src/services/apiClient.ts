@@ -1,0 +1,556 @@
+import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage } from "../types";
+import { INITIAL_STUDY_GROUPS } from "../data/curriculum";
+
+// Initial seed users for offline / static fallback
+const INITIAL_FALLBACK_USERS: User[] = [
+  {
+    id: "usr-demo-1",
+    username: "khanh_tin10",
+    email: "khanh.le@thpt-chuyentin.edu.vn",
+    fullName: "Lê Minh Khánh",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=KhanhMinh",
+    grade: "Lớp 10 Tin",
+    school: "THPT Chuyên Tin Học",
+    role: "student",
+    totalXp: 1450,
+    weeklyXp: 420,
+    streakDays: 5,
+    lastActiveDate: new Date().toISOString().split("T")[0],
+    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1"],
+    badges: ["first_step", "streak_3", "perfect_score"],
+    dailyGoal: 25,
+    reminderTime: "19:30",
+    reminderEnabled: true
+  },
+  {
+    id: "usr-teacher-1",
+    username: "thaynam_gv",
+    email: "nam.nguyen@thpt-chuyentin.edu.vn",
+    fullName: "Thầy Nguyễn Hoàng Nam",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TeacherNam",
+    grade: "Tổ trưởng Bộ môn Tin",
+    school: "THPT Chuyên Tin Học",
+    role: "teacher",
+    totalXp: 3500,
+    weeklyXp: 850,
+    streakDays: 30,
+    lastActiveDate: new Date().toISOString().split("T")[0],
+    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1", "lesson-3-2", "lesson-4-1", "lesson-5-1", "lesson-6-1"],
+    badges: ["first_step", "streak_3", "streak_7", "perfect_score", "loop_master", "algo_wizard"],
+    dailyGoal: 30,
+    reminderTime: "20:00",
+    reminderEnabled: true
+  },
+  {
+    id: "usr-demo-2",
+    username: "lananh_python",
+    email: "lananh@thpt-chuyentin.edu.vn",
+    fullName: "Trần Lan Anh",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=LanAnh",
+    grade: "Lớp 10 Tin",
+    school: "THPT Chuyên Tin Học",
+    role: "student",
+    totalXp: 1280,
+    weeklyXp: 390,
+    streakDays: 4,
+    lastActiveDate: new Date().toISOString().split("T")[0],
+    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3"],
+    badges: ["first_step", "streak_3"],
+    dailyGoal: 20,
+    reminderTime: "19:00",
+    reminderEnabled: true
+  },
+  {
+    id: "usr-demo-3",
+    username: "hoang_coder",
+    email: "hoang@thpt-chuyentin.edu.vn",
+    fullName: "Vũ Huy Hoàng",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=HuyHoang",
+    grade: "Lớp 11 Tin",
+    school: "THPT Chuyên Tin Học",
+    role: "student",
+    totalXp: 2150,
+    weeklyXp: 610,
+    streakDays: 9,
+    lastActiveDate: new Date().toISOString().split("T")[0],
+    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1"],
+    badges: ["first_step", "streak_3", "streak_7", "loop_master"],
+    dailyGoal: 30,
+    reminderTime: "21:00",
+    reminderEnabled: true
+  }
+];
+
+// Helper to safely parse JSON or return null
+async function safeFetchJson<T>(url: string, options?: RequestInit): Promise<T | null> {
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// Local persistent storage manager
+class LocalDataManager {
+  private static STORAGE_KEY_USERS = "pyedu_offline_users";
+  private static STORAGE_KEY_CODES = "pyedu_offline_codes";
+  private static STORAGE_KEY_SUBS = "pyedu_offline_subs";
+  private static STORAGE_KEY_NOTES = "pyedu_offline_notes";
+  private static STORAGE_KEY_GROUPS = "pyedu_offline_groups";
+  private static STORAGE_KEY_NOTIFS = "pyedu_offline_notifs";
+
+  public static getUsers(): User[] {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY_USERS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    this.saveUsers(INITIAL_FALLBACK_USERS);
+    return INITIAL_FALLBACK_USERS;
+  }
+
+  public static saveUsers(users: User[]) {
+    try {
+      localStorage.setItem(this.STORAGE_KEY_USERS, JSON.stringify(users));
+    } catch {}
+  }
+
+  public static getUserById(id: string): User | null {
+    const users = this.getUsers();
+    return users.find(u => u.id === id) || null;
+  }
+
+  public static updateUser(id: string, updates: Partial<User>): User | null {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === id);
+    if (idx === -1) return null;
+    users[idx] = { ...users[idx], ...updates };
+    this.saveUsers(users);
+    return users[idx];
+  }
+
+  public static getCodes(userId: string): Record<string, string> {
+    try {
+      const raw = localStorage.getItem(`${this.STORAGE_KEY_CODES}_${userId}`);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  public static saveCode(userId: string, lessonId: string, code: string) {
+    try {
+      const codes = this.getCodes(userId);
+      codes[lessonId] = code;
+      localStorage.setItem(`${this.STORAGE_KEY_CODES}_${userId}`, JSON.stringify(codes));
+    } catch {}
+  }
+
+  public static getSubmissions(userId: string): SubmissionResult[] {
+    try {
+      const raw = localStorage.getItem(`${this.STORAGE_KEY_SUBS}_${userId}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  public static recordSubmission(userId: string, sub: SubmissionResult & { xpEarned?: number }): User | null {
+    try {
+      const subs = this.getSubmissions(userId);
+      subs.unshift(sub);
+      localStorage.setItem(`${this.STORAGE_KEY_SUBS}_${userId}`, JSON.stringify(subs));
+
+      // Update user completion & XP
+      const user = this.getUserById(userId);
+      if (!user) return null;
+
+      const completedLessons = [...user.completedLessons];
+      let newXp = user.totalXp;
+      let newWeeklyXp = user.weeklyXp;
+
+      if (sub.passed && !completedLessons.includes(sub.lessonId)) {
+        completedLessons.push(sub.lessonId);
+        newXp += (sub.xpEarned || 50);
+        newWeeklyXp += (sub.xpEarned || 50);
+      }
+
+      // Check badges
+      const userBadges = [...user.badges];
+      if (sub.passed && !userBadges.includes("first_step")) {
+        userBadges.push("first_step");
+      }
+      if (sub.score === 100 && !userBadges.includes("perfect_score")) {
+        userBadges.push("perfect_score");
+      }
+
+      return this.updateUser(userId, {
+        completedLessons,
+        totalXp: newXp,
+        weeklyXp: newWeeklyXp,
+        badges: userBadges
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  public static getNotes(userId: string): PersonalNote[] {
+    try {
+      const raw = localStorage.getItem(`${this.STORAGE_KEY_NOTES}_${userId}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  public static saveNotes(userId: string, notes: PersonalNote[]) {
+    try {
+      localStorage.setItem(`${this.STORAGE_KEY_NOTES}_${userId}`, JSON.stringify(notes));
+    } catch {}
+  }
+
+  public static getGroups(userId?: string): StudyGroup[] {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY_GROUPS);
+      if (raw) {
+        const groups = JSON.parse(raw);
+        if (Array.isArray(groups) && groups.length > 0) return groups as StudyGroup[];
+      }
+    } catch {}
+    const defaultGroups = INITIAL_STUDY_GROUPS as StudyGroup[];
+    this.saveGroups(defaultGroups);
+    return defaultGroups;
+  }
+
+  public static saveGroups(groups: StudyGroup[]) {
+    try {
+      localStorage.setItem(this.STORAGE_KEY_GROUPS, JSON.stringify(groups));
+    } catch {}
+  }
+
+  public static getNotifications(userId: string): NotificationItem[] {
+    try {
+      const raw = localStorage.getItem(`${this.STORAGE_KEY_NOTIFS}_${userId}`);
+      return raw ? JSON.parse(raw) : [
+        {
+          id: "notif-welcome",
+          title: "Chào mừng bạn đến với PyEdu!",
+          message: "Chúc bạn có những giờ học lập trình Python thật vui và bổ ích cùng thầy và các bạn!",
+          timestamp: "Vừa xong",
+          read: false,
+          type: "system"
+        }
+      ];
+    } catch {
+      return [];
+    }
+  }
+
+  public static saveNotifications(userId: string, notifs: NotificationItem[]) {
+    try {
+      localStorage.setItem(`${this.STORAGE_KEY_NOTIFS}_${userId}`, JSON.stringify(notifs));
+    } catch {}
+  }
+}
+
+// API Service with seamless server/offline resilience
+export const ApiService = {
+  async fetchUsers(): Promise<User[]> {
+    const data = await safeFetchJson<{ users: User[] }>("/api/auth/users");
+    if (data?.users && Array.isArray(data.users) && data.users.length > 0) {
+      LocalDataManager.saveUsers(data.users);
+      return data.users;
+    }
+    return LocalDataManager.getUsers();
+  },
+
+  async fetchGroups(userId?: string): Promise<StudyGroup[]> {
+    const data = await safeFetchJson<{ groups: StudyGroup[] }>(`/api/groups${userId ? `?userId=${userId}` : ''}`);
+    if (data?.groups && Array.isArray(data.groups) && data.groups.length > 0) {
+      LocalDataManager.saveGroups(data.groups);
+      return data.groups;
+    }
+    return LocalDataManager.getGroups(userId);
+  },
+
+  async login(usernameOrEmail: string): Promise<User | null> {
+    const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usernameOrEmail })
+    });
+
+    if (data?.user) return data.user;
+
+    // Fallback: search in local users
+    const users = LocalDataManager.getUsers();
+    const query = usernameOrEmail.trim().toLowerCase();
+    const matched = users.find(u => u.username.toLowerCase() === query || u.email.toLowerCase() === query);
+    return matched || null;
+  },
+
+  async register(userData: {
+    username: string;
+    email: string;
+    fullName: string;
+    grade: string;
+    role: 'student' | 'teacher';
+    school?: string;
+    password?: string;
+  }): Promise<User | null> {
+    const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
+
+    if (data?.user) return data.user;
+
+    // Fallback: register locally
+    const users = LocalDataManager.getUsers();
+    const newUser: User = {
+      id: `usr-${Date.now()}`,
+      username: userData.username.trim(),
+      email: userData.email.trim(),
+      fullName: userData.fullName.trim(),
+      grade: userData.grade || "Lớp 10A1",
+      school: userData.school || "THPT Chuyên Tin Học",
+      role: userData.role || "student",
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${userData.username}`,
+      totalXp: 0,
+      weeklyXp: 0,
+      streakDays: 1,
+      lastActiveDate: new Date().toISOString().split("T")[0],
+      completedLessons: [],
+      badges: [],
+      dailyGoal: 20,
+      reminderTime: "19:30",
+      reminderEnabled: true
+    };
+
+    users.push(newUser);
+    LocalDataManager.saveUsers(users);
+    return newUser;
+  },
+
+  async loadUserData(userId: string) {
+    const data = await safeFetchJson<{
+      user?: User;
+      codes?: Record<string, string>;
+      submissions?: SubmissionResult[];
+      notes?: PersonalNote[];
+      groups?: StudyGroup[];
+      notifications?: NotificationItem[];
+    }>(`/api/user/${userId}/data`);
+
+    if (data?.user) {
+      return data;
+    }
+
+    // Fallback: assemble from local manager
+    const user = LocalDataManager.getUserById(userId);
+    const codes = LocalDataManager.getCodes(userId);
+    const submissions = LocalDataManager.getSubmissions(userId);
+    const notes = LocalDataManager.getNotes(userId);
+    const groups = LocalDataManager.getGroups(userId);
+    const notifications = LocalDataManager.getNotifications(userId);
+
+    return {
+      user: user || undefined,
+      codes,
+      submissions,
+      notes,
+      groups,
+      notifications
+    };
+  },
+
+  async saveCode(userId: string, lessonId: string, code: string) {
+    LocalDataManager.saveCode(userId, lessonId, code);
+    await safeFetchJson(`/api/user/${userId}/code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lessonId, code })
+    });
+  },
+
+  async recordSubmission(userId: string, payload: {
+    lessonId: string;
+    passed: boolean;
+    score: number;
+    totalTests: number;
+    passedTests: number;
+    runtimeMs: number;
+    testResults: any[];
+    xpReward: number;
+  }): Promise<User | null> {
+    const data = await safeFetchJson<{ success: boolean; user: User }>(`/api/user/${userId}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (data?.user) {
+      LocalDataManager.updateUser(userId, data.user);
+      return data.user;
+    }
+
+    return LocalDataManager.recordSubmission(userId, {
+      lessonId: payload.lessonId,
+      passed: payload.passed,
+      score: payload.score,
+      totalTests: payload.totalTests,
+      passedTests: payload.passedTests,
+      runtimeMs: payload.runtimeMs,
+      testResults: payload.testResults,
+      timestamp: new Date().toISOString(),
+      xpEarned: payload.xpReward
+    });
+  },
+
+  async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
+    LocalDataManager.updateUser(userId, updates);
+    const data = await safeFetchJson<{ success: boolean; user: User }>(`/api/user/${userId}/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates)
+    });
+    return data?.user || LocalDataManager.getUserById(userId);
+  },
+
+  async joinGroup(groupId: string, userId: string) {
+    const groups = LocalDataManager.getGroups(userId);
+    const target = groups.find(g => g.id === groupId);
+    if (target) {
+      target.isJoined = true;
+      target.memberCount += 1;
+      LocalDataManager.saveGroups(groups);
+    }
+    await safeFetchJson(`/api/groups/${groupId}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId })
+    });
+  },
+
+  async leaveGroup(groupId: string, userId: string) {
+    const groups = LocalDataManager.getGroups(userId);
+    const target = groups.find(g => g.id === groupId);
+    if (target) {
+      target.isJoined = false;
+      target.memberCount = Math.max(1, target.memberCount - 1);
+      LocalDataManager.saveGroups(groups);
+    }
+    await safeFetchJson(`/api/groups/${groupId}/leave`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId })
+    });
+  },
+
+  async sendGroupMessage(groupId: string, payload: any) {
+    const groups = LocalDataManager.getGroups();
+    const target = groups.find(g => g.id === groupId);
+    const msg: GroupMessage = {
+      id: `msg-${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      likes: 0,
+      isLiked: false,
+      userId: payload.userId,
+      userName: payload.userName,
+      userAvatar: payload.userAvatar,
+      userRole: payload.userRole || 'student',
+      content: payload.content,
+      codeSnippet: payload.codeSnippet
+    };
+    if (target) {
+      target.messages.push(msg);
+      LocalDataManager.saveGroups(groups);
+    }
+    const data = await safeFetchJson<{ success: boolean; message: any }>(`/api/groups/${groupId}/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return data?.message || msg;
+  },
+
+  async likeGroupMessage(groupId: string, messageId: string, userId: string) {
+    const groups = LocalDataManager.getGroups();
+    const target = groups.find(g => g.id === groupId);
+    if (target) {
+      const msg = target.messages.find(m => m.id === messageId);
+      if (msg) {
+        msg.isLiked = !msg.isLiked;
+        msg.likes = msg.isLiked ? msg.likes + 1 : Math.max(0, msg.likes - 1);
+        LocalDataManager.saveGroups(groups);
+      }
+    }
+    await safeFetchJson(`/api/groups/${groupId}/message/${messageId}/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId })
+    });
+  },
+
+  async addNote(payload: any): Promise<PersonalNote> {
+    const newNote: PersonalNote = {
+      id: `note-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...payload
+    };
+    const notes = LocalDataManager.getNotes(payload.userId);
+    notes.unshift(newNote);
+    LocalDataManager.saveNotes(payload.userId, notes);
+
+    const data = await safeFetchJson<{ success: boolean; note: PersonalNote }>("/api/notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return data?.note || newNote;
+  },
+
+  async updateNote(userId: string, id: string, updates: Partial<PersonalNote>) {
+    const notes = LocalDataManager.getNotes(userId);
+    const idx = notes.findIndex(n => n.id === id);
+    if (idx !== -1) {
+      notes[idx] = { ...notes[idx], ...updates, updatedAt: new Date().toISOString() };
+      LocalDataManager.saveNotes(userId, notes);
+    }
+    await safeFetchJson(`/api/notes/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates)
+    });
+  },
+
+  async deleteNote(userId: string, id: string) {
+    const notes = LocalDataManager.getNotes(userId).filter(n => n.id !== id);
+    LocalDataManager.saveNotes(userId, notes);
+    await safeFetchJson(`/api/notes/${id}`, { method: "DELETE" });
+  },
+
+  async markNotificationRead(userId: string, id: string) {
+    const notifs = LocalDataManager.getNotifications(userId);
+    const target = notifs.find(n => n.id === id);
+    if (target) {
+      target.read = true;
+      LocalDataManager.saveNotifications(userId, notifs);
+    }
+    await safeFetchJson(`/api/notifications/${id}/read`, { method: "PUT" });
+  },
+
+  async clearNotifications(userId: string) {
+    LocalDataManager.saveNotifications(userId, []);
+    await safeFetchJson(`/api/notifications/${userId}`, { method: "DELETE" });
+  }
+};

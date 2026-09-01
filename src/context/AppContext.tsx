@@ -10,7 +10,8 @@ import {
   NotificationItem,
   AIChatMessage
 } from "../types";
-import { CURRICULUM_MODULES, BADGES_DATA, INITIAL_LEADERBOARD, INITIAL_STUDY_GROUPS, OFFLINE_HANDBOOK_TOPICS } from "../data/curriculum";
+import { CURRICULUM_MODULES, BADGES_DATA, INITIAL_STUDY_GROUPS, OFFLINE_HANDBOOK_TOPICS } from "../data/curriculum";
+import { ApiService } from "../services/apiClient";
 import confetti from "canvas-confetti";
 
 interface AppContextType {
@@ -119,71 +120,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ]);
   const [isAiThinking, setIsAiThinking] = useState(false);
 
-  // Helper to load user's full SQLite data
-  const loadUserDataFromSqlite = async (user: User) => {
+  // Helper to load user's full SQLite / persistent data
+  const loadUserData = async (user: User) => {
     try {
-      const res = await fetch(`/api/user/${user.id}/data`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          setCurrentUser(data.user);
-          localStorage.setItem("pyedu_current_user", JSON.stringify(data.user));
-        }
-        if (data.codes) {
-          setUserCodes(data.codes);
-        }
-        if (data.submissions) {
-          // Group submissions by lessonId
-          const grouped: Record<string, SubmissionResult[]> = {};
-          data.submissions.forEach((sub: SubmissionResult) => {
-            if (!grouped[sub.lessonId]) grouped[sub.lessonId] = [];
-            grouped[sub.lessonId].push(sub);
-          });
-          setLessonSubmissions(grouped);
-        }
-        if (data.notes) {
-          setPersonalNotes(data.notes);
-        }
-        if (data.groups && data.groups.length > 0) {
-          setStudyGroups(data.groups);
-        }
-        if (data.notifications) {
-          setNotifications(data.notifications);
-        }
+      const data = await ApiService.loadUserData(user.id);
+      if (data.user) {
+        setCurrentUser(data.user);
+        localStorage.setItem("pyedu_current_user", JSON.stringify(data.user));
+      }
+      if (data.codes) {
+        setUserCodes(data.codes);
+      }
+      if (data.submissions) {
+        const grouped: Record<string, SubmissionResult[]> = {};
+        data.submissions.forEach((sub: SubmissionResult) => {
+          if (!grouped[sub.lessonId]) grouped[sub.lessonId] = [];
+          grouped[sub.lessonId].push(sub);
+        });
+        setLessonSubmissions(grouped);
+      }
+      if (data.notes) {
+        setPersonalNotes(data.notes);
+      }
+      if (data.groups && data.groups.length > 0) {
+        setStudyGroups(data.groups);
+      }
+      if (data.notifications) {
+        setNotifications(data.notifications);
       }
     } catch (e) {
-      console.warn("Failed to load user SQLite data:", e);
+      console.warn("Notice: loadUserData handled safely:", e);
     }
   };
 
-  // Initial load of users & groups from SQLite
+  // Initial load of users & groups
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [usersRes, groupsRes] = await Promise.all([
-          fetch("/api/auth/users"),
-          fetch(`/api/groups${currentUser ? `?userId=${currentUser.id}` : ''}`)
+        const [users, groups] = await Promise.all([
+          ApiService.fetchUsers(),
+          ApiService.fetchGroups(currentUser?.id)
         ]);
 
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
-          if (usersData.users) {
-            setAllUsers(usersData.users);
-          }
+        if (users && users.length > 0) {
+          setAllUsers(users);
         }
 
-        if (groupsRes.ok) {
-          const groupsData = await groupsRes.json();
-          if (groupsData.groups && groupsData.groups.length > 0) {
-            setStudyGroups(groupsData.groups);
-          }
+        if (groups && groups.length > 0) {
+          setStudyGroups(groups);
         }
 
         if (currentUser) {
-          await loadUserDataFromSqlite(currentUser);
+          await loadUserData(currentUser);
         }
       } catch (err) {
-        console.error("Initial load error:", err);
+        console.warn("Initial load notice:", err);
       }
     };
 
@@ -203,7 +194,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isLessonUnlocked = (lessonId: string): boolean => {
     if (teacherMode || currentUser?.role === 'teacher') return true;
 
-    // Flatten all lessons in order
     const allLessons = CURRICULUM_MODULES.flatMap(m => m.lessons);
     const index = allLessons.findIndex(l => l.id === lessonId);
     if (index <= 0) return true; // Lesson 1 is always unlocked
@@ -226,12 +216,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setUserCodeForLesson = (lessonId: string, code: string) => {
     setUserCodes(prev => ({ ...prev, [lessonId]: code }));
     if (currentUser) {
-      // Sync to SQLite in background
-      fetch(`/api/user/${currentUser.id}/code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId, code })
-      }).catch(err => console.error("Sync code error:", err));
+      ApiService.saveCode(currentUser.id, lessonId, code).catch(() => {});
     }
   };
 
@@ -261,31 +246,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     try {
-      // Record submission and update progress & XP in SQLite
-      const res = await fetch(`/api/user/${currentUser.id}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lessonId,
-          passed: result.passed,
-          score: result.score,
-          totalTests: result.totalTests,
-          passedTests: result.passedTests,
-          runtimeMs: result.runtimeMs,
-          testResults: result.testResults,
-          xpReward: xpEarned
-        })
+      const updatedUser = await ApiService.recordSubmission(currentUser.id, {
+        lessonId,
+        passed: result.passed,
+        score: result.score,
+        totalTests: result.totalTests,
+        passedTests: result.passedTests,
+        runtimeMs: result.runtimeMs,
+        testResults: result.testResults,
+        xpReward: xpEarned
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          setCurrentUser(data.user);
-          setAllUsers(prev => prev.map(u => u.id === data.user.id ? data.user : u));
-        }
+      if (updatedUser) {
+        setCurrentUser(updatedUser);
+        setAllUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
       }
     } catch (e) {
-      console.error("Submit recording error:", e);
+      console.warn("Submit recording notice:", e);
     }
   };
 
@@ -301,21 +278,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const markNotificationAsRead = async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    try {
-      await fetch(`/api/notifications/${id}/read`, { method: "PUT" });
-    } catch (e) {
-      console.error(e);
+    if (currentUser) {
+      await ApiService.markNotificationRead(currentUser.id, id);
     }
   };
 
   const clearAllNotifications = async () => {
     setNotifications([]);
     if (currentUser) {
-      try {
-        await fetch(`/api/notifications/${currentUser.id}`, { method: "DELETE" });
-      } catch (e) {
-        console.error(e);
-      }
+      await ApiService.clearNotifications(currentUser.id);
     }
   };
 
@@ -328,37 +299,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Login via SQLite
+  // Login via API / SQLite
   const login = async (usernameOrEmail: string): Promise<boolean> => {
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usernameOrEmail })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          setCurrentUser(data.user);
-          await loadUserDataFromSqlite(data.user);
-          // Refresh all users for leaderboards
-          const allRes = await fetch("/api/auth/users");
-          if (allRes.ok) {
-            const allData = await allRes.json();
-            setAllUsers(allData.users);
-          }
-          return true;
-        }
+      const user = await ApiService.login(usernameOrEmail);
+      if (user) {
+        setCurrentUser(user);
+        await loadUserData(user);
+        const users = await ApiService.fetchUsers();
+        setAllUsers(users);
+        return true;
       }
       return false;
     } catch (err) {
-      console.error("Login API error:", err);
+      console.warn("Login notice:", err);
       return false;
     }
   };
 
-  // Register via SQLite
+  // Register via API / SQLite
   const register = async (userData: {
     username: string;
     email: string;
@@ -369,29 +328,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     password?: string;
   }): Promise<boolean> => {
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          setCurrentUser(data.user);
-          await loadUserDataFromSqlite(data.user);
-          // Refresh all users
-          const allRes = await fetch("/api/auth/users");
-          if (allRes.ok) {
-            const allData = await allRes.json();
-            setAllUsers(allData.users);
-          }
-          return true;
-        }
+      const user = await ApiService.register(userData);
+      if (user) {
+        setCurrentUser(user);
+        await loadUserData(user);
+        const users = await ApiService.fetchUsers();
+        setAllUsers(users);
+        return true;
       }
       return false;
     } catch (err) {
-      console.error("Register API error:", err);
+      console.warn("Register notice:", err);
       return false;
     }
   };
@@ -412,86 +359,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAllUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
 
     try {
-      await fetch(`/api/user/${currentUser.id}/profile`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates)
-      });
+      await ApiService.updateProfile(currentUser.id, updates);
     } catch (e) {
-      console.error("Update profile API error:", e);
+      console.warn("Update profile notice:", e);
     }
   };
 
-  // Study group interactions with SQLite
+  // Study group interactions
   const joinGroup = async (groupId: string) => {
     if (!currentUser) return;
     setStudyGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: true, memberCount: g.memberCount + 1 } : g));
-    try {
-      await fetch(`/api/groups/${groupId}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id })
-      });
-    } catch (e) {
-      console.error("Join group error:", e);
-    }
+    await ApiService.joinGroup(groupId, currentUser.id);
   };
 
   const leaveGroup = async (groupId: string) => {
     if (!currentUser) return;
     setStudyGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: false, memberCount: Math.max(1, g.memberCount - 1) } : g));
-    try {
-      await fetch(`/api/groups/${groupId}/leave`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id })
-      });
-    } catch (e) {
-      console.error("Leave group error:", e);
-    }
+    await ApiService.leaveGroup(groupId, currentUser.id);
   };
 
   const sendMessageToGroup = async (groupId: string, content: string, codeSnippet?: string) => {
     if (!currentUser) return;
-    const optimisticMsg = {
-      id: `msg-${Date.now()}`,
+    const msg = await ApiService.sendGroupMessage(groupId, {
       userId: currentUser.id,
       userName: currentUser.fullName,
       userAvatar: currentUser.avatar,
       userRole: currentUser.role,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       content,
-      codeSnippet,
-      likes: 0,
-      isLiked: false,
-    };
-    setStudyGroups(prev => prev.map(g => g.id === groupId ? { ...g, messages: [...g.messages, optimisticMsg] } : g));
-
-    try {
-      const res = await fetch(`/api/groups/${groupId}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          userName: currentUser.fullName,
-          userAvatar: currentUser.avatar,
-          userRole: currentUser.role,
-          content,
-          codeSnippet
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.message) {
-          setStudyGroups(prev => prev.map(g => g.id === groupId ? {
-            ...g,
-            messages: g.messages.map(m => m.id === optimisticMsg.id ? data.message : m)
-          } : g));
-        }
-      }
-    } catch (e) {
-      console.error("Send message error:", e);
-    }
+      codeSnippet
+    });
+    setStudyGroups(prev => prev.map(g => g.id === groupId ? { ...g, messages: [...g.messages, msg] } : g));
   };
 
   const likeGroupMessage = async (groupId: string, messageId: string) => {
@@ -511,69 +408,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         })
       };
     }));
-
-    try {
-      await fetch(`/api/groups/${groupId}/message/${messageId}/like`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id })
-      });
-    } catch (e) {
-      console.error("Like message error:", e);
-    }
+    await ApiService.likeGroupMessage(groupId, messageId, currentUser.id);
   };
 
   // Notes with SQLite
   const addNote = async (note: Omit<PersonalNote, "id" | "createdAt" | "updatedAt">) => {
     if (!currentUser) return;
-    const optimisticNote: PersonalNote = {
-      id: `note-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const newNote = await ApiService.addNote({
+      userId: currentUser.id,
       ...note
-    };
-    setPersonalNotes(prev => [optimisticNote, ...prev]);
-
-    try {
-      const res = await fetch("/api/notes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          ...note
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.note) {
-          setPersonalNotes(prev => prev.map(n => n.id === optimisticNote.id ? data.note : n));
-        }
-      }
-    } catch (e) {
-      console.error("Add note error:", e);
-    }
+    });
+    setPersonalNotes(prev => [newNote, ...prev]);
   };
 
   const updateNote = async (id: string, updates: Partial<PersonalNote>) => {
+    if (!currentUser) return;
     setPersonalNotes(prev => prev.map(n => n.id === id ? { ...n, ...updates, updatedAt: new Date().toISOString() } : n));
-    try {
-      await fetch(`/api/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates)
-      });
-    } catch (e) {
-      console.error("Update note error:", e);
-    }
+    await ApiService.updateNote(currentUser.id, id, updates);
   };
 
   const deleteNote = async (id: string) => {
+    if (!currentUser) return;
     setPersonalNotes(prev => prev.filter(n => n.id !== id));
-    try {
-      await fetch(`/api/notes/${id}`, { method: "DELETE" });
-    } catch (e) {
-      console.error("Delete note error:", e);
-    }
+    await ApiService.deleteNote(currentUser.id, id);
   };
 
   // 24/7 AI tutor handler
@@ -603,8 +460,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         })
       });
 
-      const data = await response.json();
-      const replyText = data.response || "Thầy đã nhận được câu hỏi. Em hãy thử kiểm tra lại cú pháp và cách đặt tên biến nhé!";
+      let replyText = "";
+      if (response.ok) {
+        const data = await response.json();
+        replyText = data.response;
+      }
+
+      if (!replyText) {
+        replyText = `Chào em! Thầy là AI Gia Sư Python. Với bài "${selectedLesson.title}", em hãy chú ý:
+1. Đọc kỹ định dạng đầu vào và đầu ra mong muốn.
+2. Kiểm tra lại thụt dòng (indentation) và kiểu dữ liệu của biến.
+3. Nếu cần gợi ý giải thuật từng bước, em cứ nhắn thầy nhé! 🚀`;
+      }
 
       const aiReply: AIChatMessage = {
         id: `model-${Date.now()}`,
@@ -616,7 +483,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsAiThinking(false);
       return replyText;
     } catch (err: any) {
-      console.error("AI chat error:", err);
+      console.warn("AI chat fallback notice:", err);
       const fallbackReply: AIChatMessage = {
         id: `model-${Date.now()}`,
         role: 'model',
@@ -629,7 +496,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Compute dynamic leaderboards from allUsers in SQLite
+  // Compute dynamic leaderboards from allUsers
   const userListForLeaderboard = allUsers.length > 0 ? allUsers : (currentUser ? [currentUser] : []);
 
   // Sort by Total XP

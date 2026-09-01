@@ -2,7 +2,8 @@ import initSqlJs, { Database } from "sql.js";
 import fs from "fs";
 import path from "path";
 
-const DB_DIR = path.join(process.cwd(), "data");
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DB_DIR = isVercel ? "/tmp" : path.join(process.cwd(), "data");
 const DB_PATH = path.join(DB_DIR, "pyedu.sqlite");
 
 let dbInstance: Database | null = null;
@@ -18,7 +19,7 @@ export function saveDatabase() {
     const buffer = Buffer.from(data);
     fs.writeFileSync(DB_PATH, buffer);
   } catch (error) {
-    console.error("Error saving SQLite database:", error);
+    console.warn("Notice: SQLite save to disk skipped or unavailable:", error);
   }
 }
 

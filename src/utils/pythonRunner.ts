@@ -222,6 +222,23 @@ export class PythonRunner {
         return d;
       },
       set: (v: any) => new Set(v || []),
+      abs: (v: any) => Math.abs(Number(v)),
+      round: (v: any, digits = 0) => {
+        const factor = Math.pow(10, digits);
+        return Math.round(Number(v) * factor) / factor;
+      },
+      type: (v: any) => {
+        if (typeof v === "number") return Number.isInteger(v) ? "<class 'int'>" : "<class 'float'>";
+        if (typeof v === "string") return "<class 'str'>";
+        if (typeof v === "boolean") return "<class 'bool'>";
+        if (Array.isArray(v)) return "<class 'list'>";
+        if (typeof v === "object" && v !== null) return "<class 'dict'>";
+        return `<class '${typeof v}'>`;
+      },
+      map: (fn: any, iter: any) => {
+        const arr = Array.isArray(iter) ? iter : (typeof iter === "string" ? iter.split("") : []);
+        return arr.map(fn);
+      },
       print: (...args: any[]) => {
         const text = args.map(arg => {
           if (arg === null || arg === undefined) return "None";
@@ -485,8 +502,30 @@ function transpilePythonToJs(pyCode: string): string {
       continue;
     }
 
+    // Break and Continue statements
+    if (line === "break" || line === "continue" || line === "pass") {
+      if (line === "pass") {
+        jsLines.push(" ".repeat(indent) + "// pass");
+      } else {
+        jsLines.push(" ".repeat(indent) + `${line};`);
+      }
+      continue;
+    }
+
+    // Return statement
+    if (line.startsWith("return ") || line === "return") {
+      jsLines.push(" ".repeat(indent) + `${line};`);
+      continue;
+    }
+
+    // List and String slice [::-1]
+    line = line.replace(/([a-zA-Z0-9_\(\)]+)\[::-1\]/g, "(typeof $1 === 'string' ? $1.split('').reverse().join('') : [...$1].reverse())");
+
     // List append / pop / remove in python
     line = line.replace(/\.append\(/g, ".push(");
+
+    // String / List count: s.count(x) -> (s.split(x).length - 1)
+    line = line.replace(/([a-zA-Z0-9_\(\)]+)\.count\(([^)]+)\)/g, "($1.split ? $1.split($2).length - 1 : $1.filter((item) => item === $2).length)");
 
     // Variable assignment: add 'let' if not already declared or if top level
     if (/^[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*/.test(line) && !line.startsWith("let ") && !line.startsWith("const ") && !line.startsWith("var ")) {

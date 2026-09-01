@@ -42,20 +42,29 @@ export interface InteractiveChallenge {
   hint: string;
 }
 
+export interface MultipleChoiceQuiz {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
 export interface LessonTheory {
   summary: string;
   keyPoints: string[];
   conceptIllustration: {
-    type: 'flow' | 'syntax' | 'memory' | 'comparison';
+    type: 'flow' | 'syntax' | 'memory' | 'comparison' | 'variables' | 'branching' | 'loops' | 'strings' | string;
     title: string;
     description: string;
     visualData: any;
   };
   examples: LessonExample[];
-  interactiveChallenge: InteractiveChallenge;
+  interactiveChallenge?: InteractiveChallenge;
+  multipleChoice?: MultipleChoiceQuiz;
 }
 
 export interface LessonPractice {
+  id?: string;
   title: string;
   difficulty: 'Cơ bản' | 'Trung bình' | 'Nâng cao';
   problemStatement: string;

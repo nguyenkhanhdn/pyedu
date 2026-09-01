@@ -85,10 +85,14 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
   // Interactive challenge in theory state
   const [theoryPlaygroundCode, setTheoryPlaygroundCode] = useState<string>(
-    selectedLesson.theory.interactiveChallenge.initialCode
+    selectedLesson.theory.interactiveChallenge?.initialCode || ""
   );
   const [theoryPlaygroundOutput, setTheoryPlaygroundOutput] = useState<string>("");
   const [isTheoryRunning, setIsTheoryRunning] = useState<boolean>(false);
+
+  // Multiple Choice Quiz state in theory
+  const [quizSelectedIndex, setQuizSelectedIndex] = useState<number | null>(null);
+  const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
 
   // Hints drawer
   const [showHints, setShowHints] = useState<boolean>(false);
@@ -107,8 +111,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     setConsoleError("");
     setExecutionTime(null);
     setLatestSubmission(lessonSubmissions[selectedLesson.id]?.[0] || null);
-    setTheoryPlaygroundCode(selectedLesson.theory.interactiveChallenge.initialCode);
+    setTheoryPlaygroundCode(selectedLesson.theory.interactiveChallenge?.initialCode || "");
     setTheoryPlaygroundOutput("");
+    setQuizSelectedIndex(null);
+    setQuizSubmitted(false);
     setShowHints(false);
     setUnlockedHintLevel(0);
   }, [selectedLesson.id]);
@@ -208,50 +214,50 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   const isCompleted = isLessonCompleted(selectedLesson.id);
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 text-slate-100">
+    <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 text-slate-800">
       {/* Toast alert */}
       {noteSavedToast && (
-        <div className="fixed top-20 right-8 z-50 px-4 py-3 bg-emerald-600 text-white text-xs font-semibold rounded-xl shadow-xl animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
+        <div className="fixed top-20 right-8 z-50 px-4 py-3 bg-emerald-600 text-white text-xs font-semibold rounded-2xl shadow-xl animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4" />
           <span>{noteSavedToast}</span>
         </div>
       )}
 
       {/* LEFT SIDEBAR: Curriculum Tree */}
-      <aside className="w-full lg:w-80 lg:min-w-[20rem] bg-slate-900 border-r border-slate-800 flex flex-col h-auto lg:h-full max-h-[30vh] lg:max-h-full overflow-y-auto">
-        <div className="p-4 border-b border-slate-800 bg-slate-900/90 sticky top-0 z-10">
+      <aside className="w-full lg:w-80 lg:min-w-[20rem] bg-white border-r border-slate-200 flex flex-col h-auto lg:h-full max-h-[30vh] lg:max-h-full overflow-y-auto">
+        <div className="p-4 border-b border-slate-200 bg-white/95 sticky top-0 z-10">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-sm text-slate-200 flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-indigo-400" />
-              <span>Lộ trình Python (13 bài)</span>
+            <h2 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-indigo-600" />
+              <span>Lộ trình Python ({modules.flatMap(m => m.lessons).length} bài)</span>
             </h2>
             {teacherMode && (
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">
+              <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200">
                 Unlocked All
               </span>
             )}
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Hoàn thành bài tập để mở khóa bài tiếp theo</p>
+          <p className="text-[11px] text-slate-500 mt-1">Hoàn thành bài tập để mở khóa bài tiếp theo</p>
         </div>
 
         <div className="p-2 space-y-2 flex-1">
           {modules.map((module) => (
-            <div key={module.id} className="rounded-xl border border-slate-800 bg-slate-850 overflow-hidden">
+            <div key={module.id} className="rounded-2xl border border-slate-200 bg-slate-50/50 overflow-hidden">
               {/* Module Header */}
               <button
                 onClick={() => toggleModuleExpand(module.id)}
-                className="w-full p-3 flex items-center justify-between text-left hover:bg-slate-800/80 transition-colors"
+                className="w-full p-3 flex items-center justify-between text-left hover:bg-slate-100/70 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`h-6 w-6 rounded-lg bg-gradient-to-tr ${module.color} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                  <div className={`h-6 w-6 rounded-lg bg-gradient-to-tr ${module.color} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-xs`}>
                     {module.order}
                   </div>
-                  <span className="text-xs font-semibold text-slate-200 truncate">{module.title}</span>
+                  <span className="text-xs font-semibold text-slate-800 truncate">{module.title}</span>
                 </div>
                 {expandedModules[module.id] ? (
-                  <ChevronDown className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                  <ChevronDown className="h-4 w-4 text-slate-500 flex-shrink-0" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-slate-500 flex-shrink-0" />
                 )}
               </button>
 
@@ -268,35 +274,35 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                         key={lesson.id}
                         disabled={!unlocked}
                         onClick={() => handleSelectLesson(lesson)}
-                        className={`w-full p-2.5 rounded-lg text-left transition-all flex items-center justify-between group ${
+                        className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer ${
                           isSelected
-                            ? "bg-indigo-600/20 border border-indigo-500/40 text-white"
+                            ? "bg-indigo-50 border border-indigo-200 text-indigo-950 font-semibold shadow-xs"
                             : unlocked
-                            ? "hover:bg-slate-800 text-slate-300 border border-transparent"
-                            : "opacity-40 cursor-not-allowed text-slate-500 border border-transparent"
+                            ? "hover:bg-slate-100 text-slate-700 border border-transparent"
+                            : "opacity-40 cursor-not-allowed text-slate-400 border border-transparent"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 pr-2">
                           {completed ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                           ) : unlocked ? (
-                            <Unlock className="h-3.5 w-3.5 text-indigo-400 flex-shrink-0" />
+                            <Unlock className="h-3.5 w-3.5 text-indigo-600 flex-shrink-0" />
                           ) : (
-                            <Lock className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+                            <Lock className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                           )}
                           <div className="min-w-0">
                             <p className="text-xs font-medium truncate">{lesson.title}</p>
-                            <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                            <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
                               <span className="flex items-center gap-0.5">
                                 <Clock className="h-2.5 w-2.5" /> {lesson.durationMin}p
                               </span>
-                              <span className="text-amber-400 font-semibold">+{lesson.xpReward} XP</span>
+                              <span className="text-amber-600 font-semibold">+{lesson.xpReward} XP</span>
                             </div>
                           </div>
                         </div>
 
                         {isSelected && (
-                          <div className="h-2 w-2 rounded-full bg-indigo-400 flex-shrink-0 animate-ping" />
+                          <div className="h-2 w-2 rounded-full bg-indigo-600 flex-shrink-0 animate-ping" />
                         )}
                       </button>
                     );
@@ -309,31 +315,31 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
       </aside>
 
       {/* RIGHT MAIN AREA: Dual Pane (Theory & Visuals OR Code Compiler & Auto-Grader) */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
         {/* Top Lesson Action Bar */}
-        <div className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-4 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
                 {selectedLesson.moduleTitle}
               </span>
               {isCompleted && (
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1">
+                <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" /> Đã hoàn thành
                 </span>
               )}
             </div>
-            <h1 className="text-base sm:text-lg font-bold text-white truncate">{selectedLesson.title}</h1>
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">{selectedLesson.title}</h1>
           </div>
 
           {/* Pane Switcher Tabs */}
-          <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
+          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
               onClick={() => setActivePane("theory")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activePane === "theory"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <Lightbulb className="h-3.5 w-3.5" />
@@ -341,10 +347,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             </button>
             <button
               onClick={() => setActivePane("practice")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activePane === "practice"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <Code2 className="h-3.5 w-3.5" />
@@ -359,20 +365,20 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             /* ================= PANE 1: VISUAL THEORY & INTERACTIVE TRY-IT ================= */
             <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6 animate-in fade-in">
               {/* Theory Summary */}
-              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
+              <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3">
+                <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm">
                   <Info className="h-4 w-4" />
                   <span>Tổng quan kiến thức</span>
                 </div>
-                <p className="text-sm text-slate-300 leading-relaxed">{selectedLesson.theory.summary}</p>
+                <p className="text-sm text-slate-700 leading-relaxed">{selectedLesson.theory.summary}</p>
                 <div className="pt-2">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Điểm cốt lõi cần nhớ:
                   </h4>
-                  <ul className="space-y-1.5 text-xs text-slate-300">
+                  <ul className="space-y-1.5 text-xs text-slate-700">
                     {selectedLesson.theory.keyPoints.map((pt, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 mt-1.5 flex-shrink-0" />
                         <span className="leading-normal">{pt}</span>
                       </li>
                     ))}
@@ -381,29 +387,78 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
               </div>
 
               {/* Visual Concept Illustration Card */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950/20 to-slate-900 border border-indigo-500/20 space-y-3">
+              <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-blue-400 font-semibold text-sm">
+                  <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm">
                     <Layers className="h-4 w-4" />
                     <span>Minh họa trực quan: {selectedLesson.theory.conceptIllustration.title}</span>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-semibold">
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
                     Sơ đồ trực quan
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {selectedLesson.theory.conceptIllustration.description}
                 </p>
 
                 {/* Render specific diagram type */}
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                  {selectedLesson.theory.conceptIllustration.visualData.variables && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {selectedLesson.theory.conceptIllustration.visualData.variables.map((item: any, idx: number) => (
+                        <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl text-center shadow-xs">
+                          <p className="text-[10px] text-slate-500 uppercase">{item.name}</p>
+                          <p className="font-mono text-emerald-700 font-bold text-sm my-1">{String(item.value)}</p>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">{item.type}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedLesson.theory.conceptIllustration.visualData.codeSnippet && (
+                    <div className="space-y-2">
+                      <div className="rounded-xl bg-slate-900 p-3 font-mono text-xs text-emerald-300 overflow-x-auto whitespace-pre">
+                        {selectedLesson.theory.conceptIllustration.visualData.codeSnippet}
+                      </div>
+                      {selectedLesson.theory.conceptIllustration.visualData.outputPreview && (
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 font-mono text-[11px] text-slate-700 whitespace-pre">
+                          <span className="text-slate-400 mr-1.5 font-sans font-semibold">Kết quả:</span>
+                          {selectedLesson.theory.conceptIllustration.visualData.outputPreview}
+                        </div>
+                      )}
+                      {selectedLesson.theory.conceptIllustration.visualData.explanation && (
+                        <p className="text-[11px] text-slate-600 italic">
+                          💡 {selectedLesson.theory.conceptIllustration.visualData.explanation}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {selectedLesson.theory.conceptIllustration.visualData.condition && !selectedLesson.theory.conceptIllustration.visualData.codeSnippet && (
+                    <div className="space-y-2">
+                      <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl font-mono text-xs text-indigo-900 font-semibold">
+                        Điều kiện: {selectedLesson.theory.conceptIllustration.visualData.condition}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
+                          <span className="font-bold text-[10px] uppercase text-emerald-700 block mb-0.5">Nếu Đúng (True):</span>
+                          {selectedLesson.theory.conceptIllustration.visualData.ifTrue}
+                        </div>
+                        <div className="p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-700">
+                          <span className="font-bold text-[10px] uppercase text-slate-500 block mb-0.5">Nếu Sai (False):</span>
+                          {selectedLesson.theory.conceptIllustration.visualData.ifFalse}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedLesson.theory.conceptIllustration.visualData.items && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {selectedLesson.theory.conceptIllustration.visualData.items.map((item: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-center">
-                          <p className="text-[10px] text-slate-400 uppercase">{item.name || `Index ${item.index}`}</p>
-                          <p className="font-mono text-emerald-400 font-bold text-sm my-1">{item.value || item.val}</p>
-                          {item.type && <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 text-indigo-300 rounded font-mono">{item.type}</span>}
+                        <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl text-center shadow-xs">
+                          <p className="text-[10px] text-slate-500 uppercase">{item.name || `Index ${item.index}`}</p>
+                          <p className="font-mono text-emerald-700 font-bold text-sm my-1">{item.value || item.val}</p>
+                          {item.type && <span className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">{item.type}</span>}
                         </div>
                       ))}
                     </div>
@@ -411,20 +466,20 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                   {selectedLesson.theory.conceptIllustration.visualData.table && (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
+                      <table className="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-slate-200">
                         <thead>
-                          <tr className="border-b border-slate-800 text-[11px] text-slate-400">
-                            <th className="p-2">Phép toán</th>
-                            <th className="p-2">Ý nghĩa</th>
-                            <th className="p-2">Kết quả</th>
+                          <tr className="border-b border-slate-200 bg-slate-50 text-[11px] text-slate-500">
+                            <th className="p-2.5">Phép toán</th>
+                            <th className="p-2.5">Ý nghĩa</th>
+                            <th className="p-2.5">Kết quả</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
+                        <tbody className="divide-y divide-slate-100 font-mono text-xs">
                           {selectedLesson.theory.conceptIllustration.visualData.table.map((row: any, idx: number) => (
-                            <tr key={idx} className="hover:bg-slate-900/50">
-                              <td className="p-2 text-indigo-400">{row.op}</td>
-                              <td className="p-2 font-sans text-slate-300">{row.meaning}</td>
-                              <td className="p-2 text-emerald-400 font-bold">{row.result}</td>
+                            <tr key={idx} className="hover:bg-slate-50/70">
+                              <td className="p-2.5 text-indigo-700 font-bold">{row.op}</td>
+                              <td className="p-2.5 font-sans text-slate-700">{row.meaning}</td>
+                              <td className="p-2.5 text-emerald-700 font-bold">{row.result}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -435,11 +490,11 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   {selectedLesson.theory.conceptIllustration.visualData.steps && (
                     <div className="space-y-2">
                       {selectedLesson.theory.conceptIllustration.visualData.steps.map((step: string, idx: number) => (
-                        <div key={idx} className="flex items-center gap-3 p-2 bg-slate-900 rounded-lg">
+                        <div key={idx} className="flex items-center gap-3 p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs">
                           <span className="h-5 w-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
                             {idx + 1}
                           </span>
-                          <span className="text-slate-300 font-medium">{step}</span>
+                          <span className="text-slate-700 font-medium">{step}</span>
                         </div>
                       ))}
                     </div>
@@ -449,32 +504,32 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
               {/* Code Examples with Explanations */}
               <div className="space-y-4">
-                <h3 className="font-bold text-sm text-slate-200 flex items-center gap-2">
-                  <Code2 className="h-4 w-4 text-emerald-400" />
+                <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                  <Code2 className="h-4 w-4 text-emerald-600" />
                   <span>Ví Dụ Minh Họa Cụ Thể</span>
                 </h3>
                 {selectedLesson.theory.examples.map((ex, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5">
+                  <div key={idx} className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-semibold text-white">{ex.title}</h4>
+                      <h4 className="text-xs font-semibold text-slate-900">{ex.title}</h4>
                       <button
                         onClick={() => {
                           setEditorCode(ex.code);
                           setActivePane("practice");
                         }}
-                        className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                        className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer"
                       >
                         <span>Thử chạy code này</span>
                         <ArrowRight className="h-3 w-3" />
                       </button>
                     </div>
-                    <p className="text-xs text-slate-400">{ex.explanation}</p>
-                    <div className="rounded-xl bg-slate-950 p-3 border border-slate-800 font-mono text-xs text-emerald-300 overflow-x-auto">
+                    <p className="text-xs text-slate-500">{ex.explanation}</p>
+                    <div className="rounded-2xl bg-slate-900 p-3.5 border border-slate-800 font-mono text-xs text-emerald-300 overflow-x-auto">
                       <pre>{ex.code}</pre>
                     </div>
                     {ex.output && (
-                      <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/50 text-[11px] font-mono text-slate-300">
-                        <span className="text-slate-500 mr-2">Output:</span>
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700">
+                        <span className="text-slate-400 mr-2">Output:</span>
                         <span>{ex.output}</span>
                       </div>
                     )}
@@ -482,52 +537,152 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 ))}
               </div>
 
-              {/* Interactive Mini Challenge Playground */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/30 to-purple-950/30 border border-indigo-500/30 space-y-3">
-                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Thử Thách Tương Tác Ngay Lập Tức</span>
-                </div>
-                <p className="text-xs text-slate-300">{selectedLesson.theory.interactiveChallenge.prompt}</p>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl bg-slate-950 border border-slate-800 p-3">
-                    <textarea
-                      rows={3}
-                      value={theoryPlaygroundCode}
-                      onChange={(e) => setTheoryPlaygroundCode(e.target.value)}
-                      className="w-full bg-transparent font-mono text-xs text-emerald-300 focus:outline-none resize-none"
-                    />
-                  </div>
-
+              {/* Multiple Choice Quiz if present */}
+              {selectedLesson.theory.multipleChoice && (
+                <div className="p-5 rounded-3xl bg-amber-50/50 border border-amber-200 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-[11px] text-slate-400 italic">
-                      💡 Gợi ý: {selectedLesson.theory.interactiveChallenge.hint}
-                    </p>
-                    <button
-                      onClick={handleRunTheoryPlayground}
-                      disabled={isTheoryRunning}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition-all"
-                    >
-                      <Play className="h-3 w-3" />
-                      <span>{isTheoryRunning ? "Đang chạy..." : "Thử Ngay"}</span>
-                    </button>
+                    <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                      <HelpCircle className="h-4 w-4 text-amber-600" />
+                      <span>Câu Hỏi Trắc Nghiệm Củng Cố</span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold">
+                      Kiểm tra nhanh
+                    </span>
                   </div>
 
-                  {theoryPlaygroundOutput && (
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200">
-                      <span className="text-indigo-400 font-semibold mr-2">Kết quả:</span>
-                      {theoryPlaygroundOutput}
+                  <p className="text-xs font-semibold text-slate-800">
+                    {selectedLesson.theory.multipleChoice.question}
+                  </p>
+
+                  <div className="space-y-2">
+                    {selectedLesson.theory.multipleChoice.options.map((opt, idx) => {
+                      const isSelected = quizSelectedIndex === idx;
+                      const isCorrect = idx === selectedLesson.theory.multipleChoice?.correctIndex;
+                      let btnStyle = "bg-white border-slate-200 hover:border-indigo-300 text-slate-700";
+
+                      if (quizSubmitted) {
+                        if (isCorrect) {
+                          btnStyle = "bg-emerald-50 border-emerald-500 text-emerald-900 font-semibold";
+                        } else if (isSelected && !isCorrect) {
+                          btnStyle = "bg-rose-50 border-rose-500 text-rose-900";
+                        }
+                      } else if (isSelected) {
+                        btnStyle = "bg-indigo-50 border-indigo-500 text-indigo-900 font-semibold";
+                      }
+
+                      return (
+                        <button
+                          key={idx}
+                          disabled={quizSubmitted}
+                          onClick={() => setQuizSelectedIndex(idx)}
+                          className={`w-full p-3 rounded-2xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer ${btnStyle}`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                              {String.fromCharCode(65 + idx)}
+                            </span>
+                            <span>{opt}</span>
+                          </div>
+                          {quizSubmitted && isCorrect && (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                          )}
+                          {quizSubmitted && isSelected && !isCorrect && (
+                            <XCircle className="h-4 w-4 text-rose-600 flex-shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    {!quizSubmitted ? (
+                      <button
+                        disabled={quizSelectedIndex === null}
+                        onClick={() => setQuizSubmitted(true)}
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                      >
+                        Kiểm Tra Đáp Án
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setQuizSubmitted(false);
+                          setQuizSelectedIndex(null);
+                        }}
+                        className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                      >
+                        Làm Lại
+                      </button>
+                    )}
+                  </div>
+
+                  {quizSubmitted && (
+                    <div className={`p-3 rounded-2xl text-xs space-y-1 ${
+                      quizSelectedIndex === selectedLesson.theory.multipleChoice.correctIndex
+                        ? "bg-emerald-50 border border-emerald-200 text-emerald-900"
+                        : "bg-rose-50 border border-rose-200 text-rose-900"
+                    }`}>
+                      <p className="font-bold">
+                        {quizSelectedIndex === selectedLesson.theory.multipleChoice.correctIndex
+                          ? "🎉 Chính xác! Bạn đã hiểu đúng bản chất vấn đề."
+                          : "❌ Chưa chính xác. Hãy xem giải thích bên dưới:"}
+                      </p>
+                      <p className="text-[11px] leading-relaxed">
+                        {selectedLesson.theory.multipleChoice.explanation}
+                      </p>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {/* Interactive Mini Challenge Playground if present */}
+              {selectedLesson.theory.interactiveChallenge && (
+                <div className="p-5 rounded-3xl bg-indigo-50/50 border border-indigo-200 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 text-indigo-900 font-bold text-sm">
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    <span>Thử Thách Tương Tác Ngay Lập Tức</span>
+                  </div>
+                  <p className="text-xs text-slate-700">{selectedLesson.theory.interactiveChallenge.prompt}</p>
+
+                  <div className="space-y-2">
+                    <div className="rounded-2xl bg-slate-900 border border-slate-800 p-3.5">
+                      <textarea
+                        rows={3}
+                        value={theoryPlaygroundCode}
+                        onChange={(e) => setTheoryPlaygroundCode(e.target.value)}
+                        className="w-full bg-transparent font-mono text-xs text-emerald-300 focus:outline-none resize-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] text-slate-600 italic">
+                        💡 Gợi ý: {selectedLesson.theory.interactiveChallenge.hint}
+                      </p>
+                      <button
+                        onClick={handleRunTheoryPlayground}
+                        disabled={isTheoryRunning}
+                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                      >
+                        <Play className="h-3 w-3" />
+                        <span>{isTheoryRunning ? "Đang chạy..." : "Thử Ngay"}</span>
+                      </button>
+                    </div>
+
+                    {theoryPlaygroundOutput && (
+                      <div className="p-3 rounded-2xl bg-white border border-slate-200 text-xs font-mono text-slate-800 shadow-xs">
+                        <span className="text-indigo-600 font-semibold mr-2">Kết quả:</span>
+                        {theoryPlaygroundOutput}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Move to Practice Button */}
               <div className="pt-4 flex justify-end">
                 <button
                   onClick={() => setActivePane("practice")}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all"
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-2xl shadow-md shadow-indigo-600/20 flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <span>Chuyển Sang Bài Tập Thực Hành & Chấm Điểm</span>
                   <ArrowRight className="h-4 w-4" />
@@ -538,109 +693,109 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             /* ================= PANE 2: INTEGRATED COMPILER & AUTOMATED GRADER ================= */
             <div className="flex flex-col xl:flex-row h-full min-h-[500px]">
               {/* Problem Description Column */}
-              <div className="w-full xl:w-2/5 p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-800 overflow-y-auto space-y-4 bg-slate-900/50">
+              <div className="w-full xl:w-2/5 p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-200 overflow-y-auto space-y-4 bg-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                       selectedLesson.practice.difficulty === 'Cơ bản'
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : selectedLesson.practice.difficulty === 'Trung bình'
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}>
                       {selectedLesson.practice.difficulty}
                     </span>
-                    <span className="text-xs text-amber-400 font-semibold">
+                    <span className="text-xs text-amber-600 font-semibold">
                       +{selectedLesson.xpReward} XP Thưởng
                     </span>
                   </div>
 
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/30 font-semibold">
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
                     Bài tập không lời giải
                   </span>
                 </div>
 
                 <div>
-                  <h2 className="text-base font-bold text-white">{selectedLesson.practice.title}</h2>
-                  <div className="mt-2 text-xs text-slate-300 whitespace-pre-line leading-relaxed">
+                  <h2 className="text-base font-bold text-slate-900">{selectedLesson.practice.title}</h2>
+                  <div className="mt-2 text-xs text-slate-700 whitespace-pre-line leading-relaxed">
                     {selectedLesson.practice.problemStatement}
                   </div>
                 </div>
 
                 {/* Input/Output Specifications */}
-                <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
+                <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
                   <div>
-                    <h4 className="font-semibold text-slate-400">Quy cách Đầu vào (Input):</h4>
-                    <p className="text-slate-300 whitespace-pre-line">{selectedLesson.practice.inputFormat}</p>
+                    <h4 className="font-semibold text-slate-700">Quy cách Đầu vào (Input):</h4>
+                    <p className="text-slate-600 whitespace-pre-line">{selectedLesson.practice.inputFormat}</p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-400">Quy cách Đầu ra (Output):</h4>
-                    <p className="text-slate-300 whitespace-pre-line">{selectedLesson.practice.outputFormat}</p>
+                    <h4 className="font-semibold text-slate-700">Quy cách Đầu ra (Output):</h4>
+                    <p className="text-slate-600 whitespace-pre-line">{selectedLesson.practice.outputFormat}</p>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-400">Ràng buộc (Constraints):</h4>
-                    <p className="text-slate-400 font-mono">{selectedLesson.practice.constraints}</p>
+                    <h4 className="font-semibold text-slate-700">Ràng buộc (Constraints):</h4>
+                    <p className="text-slate-500 font-mono">{selectedLesson.practice.constraints}</p>
                   </div>
                 </div>
 
                 {/* Sample Test Cases */}
-                <div className="space-y-3 pt-2 border-t border-slate-800">
-                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <div className="space-y-3 pt-2 border-t border-slate-200">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     Ví Dụ Mẫu (Sample Cases):
                   </h4>
                   {selectedLesson.practice.sampleCases.map((sample, idx) => (
-                    <div key={idx} className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                    <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                       <div className="grid grid-cols-2 gap-2 font-mono">
                         <div>
                           <p className="text-[10px] text-slate-500 mb-0.5">Input Mẫu:</p>
-                          <div className="p-2 rounded bg-slate-900 text-slate-200 whitespace-pre-line">
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-slate-800 whitespace-pre-line">
                             {sample.input || "(Trống)"}
                           </div>
                         </div>
                         <div>
                           <p className="text-[10px] text-slate-500 mb-0.5">Output Mẫu:</p>
-                          <div className="p-2 rounded bg-slate-900 text-emerald-400 whitespace-pre-line font-bold">
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-emerald-700 whitespace-pre-line font-bold">
                             {sample.output}
                           </div>
                         </div>
                       </div>
                       {sample.explanation && (
-                        <p className="text-[11px] text-slate-400 italic">Giải thích: {sample.explanation}</p>
+                        <p className="text-[11px] text-slate-500 italic">Giải thích: {sample.explanation}</p>
                       )}
                     </div>
                   ))}
                 </div>
 
                 {/* Detailed Guidance & Hints Drawer */}
-                <div className="pt-2 border-t border-slate-800">
+                <div className="pt-2 border-t border-slate-200">
                   <button
                     onClick={() => setShowHints(!showHints)}
-                    className="w-full py-2 px-3 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-indigo-400 flex items-center justify-between transition-colors"
+                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-indigo-700 flex items-center justify-between transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Lightbulb className="h-4 w-4 text-amber-400" />
+                      <Lightbulb className="h-4 w-4 text-amber-500" />
                       <span>Hướng Dẫn Chi Tiết & Gợi Ý Tư Duy</span>
                     </div>
                     <span>{showHints ? "Ẩn gợi ý ▲" : "Xem gợi ý ▼"}</span>
                   </button>
 
                   {showHints && (
-                    <div className="mt-2 p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs animate-in fade-in">
-                      <p className="text-[11px] text-slate-400">
+                    <div className="mt-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs animate-in fade-in">
+                      <p className="text-[11px] text-slate-500">
                         PyEdu cung cấp các bước gợi ý tư duy dần dần để rèn luyện kỹ năng tự lập trình:
                       </p>
                       {selectedLesson.practice.hints.map((hint, idx) => (
-                        <div key={idx} className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
-                          <p className="text-indigo-400 font-semibold text-[11px] mb-1">Gợi ý bước {idx + 1}:</p>
-                          <p className="text-slate-300 font-mono text-[11px]">{hint}</p>
+                        <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+                          <p className="text-indigo-700 font-semibold text-[11px] mb-1">Gợi ý bước {idx + 1}:</p>
+                          <p className="text-slate-700 font-mono text-[11px]">{hint}</p>
                         </div>
                       ))}
                       <div className="pt-1">
                         <button
                           onClick={handleAskAiAboutError}
-                          className="w-full py-2 bg-gradient-to-r from-violet-600/30 to-indigo-600/30 hover:from-violet-600/40 hover:to-indigo-600/40 border border-violet-500/40 text-violet-300 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                          className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
-                          <Bot className="h-3.5 w-3.5 text-violet-400" />
+                          <Bot className="h-3.5 w-3.5 text-indigo-600" />
                           <span>Hỏi AI Tutor giải thích thêm về gợi ý này</span>
                         </button>
                       </div>
@@ -650,7 +805,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
               </div>
 
               {/* Code Editor & Auto-Grader Terminal Column */}
-              <div className="w-full xl:w-3/5 flex flex-col h-full bg-slate-950">
+              <div className="w-full xl:w-3/5 flex flex-col h-full bg-slate-900">
                 {/* Editor Header Toolbar */}
                 <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -661,7 +816,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowCustomInput(!showCustomInput)}
-                      className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                         showCustomInput ? "bg-indigo-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                       }`}
                       title="Tùy chỉnh dữ liệu đầu vào cho lệnh input()"
@@ -671,7 +826,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                     <button
                       onClick={handleSaveToNotes}
-                      className="p-1.5 rounded text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer"
                       title="Lưu đoạn code này vào Sổ tay Ghi chú"
                     >
                       <FilePlus2 className="h-4 w-4" />
@@ -679,7 +834,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                     <button
                       onClick={() => setEditorCode(selectedLesson.practice.starterCode)}
-                      className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                       title="Đặt lại mã nguồn mẫu ban đầu"
                     >
                       <RotateCcw className="h-4 w-4" />
@@ -689,8 +844,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                 {/* Optional Custom Stdin Input Box */}
                 {showCustomInput && (
-                  <div className="p-3 bg-slate-900/90 border-b border-slate-800 animate-in fade-in">
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <div className="p-3 bg-slate-850 border-b border-slate-800 animate-in fade-in">
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                       Dữ liệu đầu vào tiêu chuẩn (Custom Stdin cho lệnh input()):
                     </label>
                     <textarea
@@ -698,7 +853,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       value={customInput}
                       onChange={(e) => setCustomInput(e.target.value)}
                       placeholder="Nhập các dòng input, mỗi dòng tương ứng một lần gọi input()..."
-                      className="w-full p-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+                      className="w-full p-2 bg-slate-950 border border-slate-700 rounded-xl text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 )}
@@ -706,7 +861,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 {/* Python Code Editor Area */}
                 <div className="flex-1 relative flex bg-slate-950 font-mono text-xs sm:text-sm overflow-hidden">
                   {/* Line numbers simulation */}
-                  <div className="py-3 px-2 bg-slate-900/60 text-slate-600 text-right select-none border-r border-slate-800/80 font-mono text-xs w-10">
+                  <div className="py-3 px-2 bg-slate-900/80 text-slate-500 text-right select-none border-r border-slate-800 font-mono text-xs w-10">
                     {editorCode.split("\n").map((_, i) => (
                       <div key={i}>{i + 1}</div>
                     ))}
@@ -748,7 +903,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <button
                       onClick={handleRunCode}
                       disabled={isRunning || isGrading}
-                      className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-700 disabled:opacity-50"
+                      className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-700 disabled:opacity-50 cursor-pointer"
                     >
                       <Play className="h-3.5 w-3.5 text-emerald-400" />
                       <span>{isRunning ? "Đang chạy..." : "Chạy Thử"}</span>
@@ -758,7 +913,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <button
                       onClick={handleGradeCode}
                       disabled={isRunning || isGrading}
-                      className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       <Award className="h-4 w-4" />
                       <span>{isGrading ? "Đang chấm điểm..." : "Chấm Bài Tự Động"}</span>
@@ -769,7 +924,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 {/* OUTPUT TERMINAL & AUTO-GRADING REPORT */}
                 <div className="h-48 sm:h-56 bg-slate-950 border-t border-slate-800 flex flex-col">
                   {/* Terminal Header */}
-                  <div className="px-4 py-2 bg-slate-900/90 border-b border-slate-800/80 flex items-center justify-between text-xs font-semibold">
+                  <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs font-semibold">
                     <span className="text-slate-400 flex items-center gap-2">
                       <Terminal className="h-3.5 w-3.5 text-indigo-400" />
                       <span>Kết Quả Thực Thi & Chấm Điểm</span>
@@ -817,8 +972,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                               key={t.testId}
                               className={`p-2.5 rounded-xl border text-xs ${
                                 t.passed
-                                  ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
-                                  : "bg-rose-950/20 border-rose-500/30 text-rose-300"
+                                  ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-300"
+                                  : "bg-rose-950/30 border-rose-500/30 text-rose-300"
                               }`}
                             >
                               <div className="flex items-center justify-between mb-1">
@@ -852,9 +1007,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           <div className="pt-2 flex justify-end">
                             <button
                               onClick={handleAskAiAboutError}
-                              className="px-3 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-violet-600/30 transition-all"
+                              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition-all cursor-pointer"
                             >
-                              <Bot className="h-3.5 w-3.5 text-violet-300" />
+                              <Bot className="h-3.5 w-3.5 text-indigo-200" />
                               <span>Hỏi Trợ lý AI Tutor cách sửa lỗi này 🤖</span>
                             </button>
                           </div>
@@ -869,7 +1024,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                         <pre className="whitespace-pre-wrap text-xs text-rose-300">{consoleError}</pre>
                         <button
                           onClick={handleAskAiAboutError}
-                          className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Bot className="h-3.5 w-3.5" />
                           <span>Nhờ AI giải thích nguyên nhân lỗi</span>

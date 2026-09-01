@@ -33,7 +33,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col font-sans text-slate-100 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-indigo-500 selection:text-white">
       {/* Navigation Bar */}
       <Navbar
         onOpenAuth={() => setIsAuthOpen(true)}

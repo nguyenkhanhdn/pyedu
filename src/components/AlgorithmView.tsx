@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
-import { AlgorithmProblem, AlgorithmLevel, AlgorithmSubmission, TestCase } from "../types";
+import { AlgorithmProblem, AlgorithmLevel, AlgorithmSubmission } from "../types";
 import { PythonRunner } from "../utils/pythonRunner";
 import {
   Target,
@@ -33,7 +33,9 @@ import {
   ArrowLeft,
   Info,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Tag,
+  CheckCheck
 } from "lucide-react";
 
 interface AlgorithmViewProps {
@@ -42,11 +44,11 @@ interface AlgorithmViewProps {
 
 export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContext }) => {
   const {
-    algorithmProblems,
-    algorithmSubmissions,
-    solvedProblemIds,
+    algorithmProblems = [],
+    algorithmSubmissions = [],
+    solvedProblemIds = [],
     submitAlgorithmProblem,
-    algorithmLeaderboard,
+    algorithmLeaderboard = [],
     currentUser
   } = useApp();
 
@@ -54,7 +56,9 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   const [activeSubTab, setActiveSubTab] = useState<'bank' | 'workspace' | 'solutions' | 'leaderboard'>('bank');
   
   // Selected problem in Workspace
-  const [selectedProblem, setSelectedProblem] = useState<AlgorithmProblem>(algorithmProblems[0]);
+  const [selectedProblem, setSelectedProblem] = useState<AlgorithmProblem | null>(() => {
+    return algorithmProblems.length > 0 ? algorithmProblems[0] : null;
+  });
 
   // Filters for Problem Bank
   const [selectedLevel, setSelectedLevel] = useState<AlgorithmLevel | 'all'>('all');
@@ -67,31 +71,40 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   const [leaderboardSearch, setLeaderboardSearch] = useState<string>('');
 
   // Workspace State
-  const [userCode, setUserCode] = useState<string>(selectedProblem.starterCode);
+  const [userCode, setUserCode] = useState<string>(() => {
+    return algorithmProblems.length > 0 ? algorithmProblems[0].starterCode : "";
+  });
   const [isRunningSample, setIsRunningSample] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [runResult, setRunResult] = useState<any>(null);
   const [submissionOutcome, setSubmissionOutcome] = useState<any>(null);
-  const [customInput, setCustomInput] = useState<string>("");
+  const [customInput, setCustomInput] = useState<string>(() => {
+    return algorithmProblems.length > 0 ? algorithmProblems[0].sampleCases?.[0]?.input || "" : "";
+  });
   const [workspaceTab, setWorkspaceTab] = useState<'statement' | 'tests' | 'hints'>('statement');
-  const [showHint, setShowHint] = useState<boolean>(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [viewingSolutionCode, setViewingSolutionCode] = useState<AlgorithmSubmission | null>(null);
 
-  // Sync userCode when selected problem changes
+  // Sync userCode and input when selected problem changes
   useEffect(() => {
+    if (!selectedProblem) {
+      if (algorithmProblems.length > 0) {
+        setSelectedProblem(algorithmProblems[0]);
+      }
+      return;
+    }
+
     // Check if user has a previous code submission for this problem
     const lastSub = algorithmSubmissions.find(s => s.problemId === selectedProblem.id);
     if (lastSub) {
       setUserCode(lastSub.code);
     } else {
-      setUserCode(selectedProblem.starterCode);
+      setUserCode(selectedProblem.starterCode || "");
     }
     setRunResult(null);
     setSubmissionOutcome(null);
-    setShowHint(false);
-    setCustomInput(selectedProblem.sampleTests[0]?.input || "");
-  }, [selectedProblem.id]);
+    setCustomInput(selectedProblem.sampleCases?.[0]?.input || "");
+  }, [selectedProblem?.id, algorithmProblems]);
 
   // Handle problem selection from bank
   const handleSelectProblem = (problem: AlgorithmProblem) => {
@@ -101,15 +114,16 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Run with sample tests or custom input
   const handleRunSample = async () => {
+    if (!selectedProblem) return;
     setIsRunningSample(true);
     setRunResult(null);
     try {
-      const inputToUse = customInput !== "" ? customInput : selectedProblem.sampleTests[0]?.input || "";
+      const inputToUse = customInput !== "" ? customInput : (selectedProblem.sampleCases?.[0]?.input || "");
       const res = await PythonRunner.runCode(userCode, inputToUse);
       setRunResult({
         ...res,
         inputUsed: inputToUse,
-        expectedOutput: selectedProblem.sampleTests[0]?.expectedOutput
+        expectedOutput: selectedProblem.sampleCases?.[0]?.output || ""
       });
     } catch (err: any) {
       setRunResult({
@@ -125,10 +139,12 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Submit and grade all test cases
   const handleSubmitAndGrade = async () => {
+    if (!selectedProblem) return;
     setIsSubmitting(true);
     setSubmissionOutcome(null);
     try {
-      const evalResult = await PythonRunner.evaluateTestSuite(userCode, selectedProblem.testCases);
+      const testCases = selectedProblem.testCases || [];
+      const evalResult = await PythonRunner.evaluateTestSuite(userCode, testCases);
       setSubmissionOutcome(evalResult);
       await submitAlgorithmProblem(selectedProblem.id, evalResult, userCode);
     } catch (err: any) {
@@ -136,7 +152,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
         passed: false,
         score: 0,
         passedTests: 0,
-        totalTests: selectedProblem.testCases.length,
+        totalTests: selectedProblem.testCases?.length || 0,
         runtimeMs: 0,
         testResults: []
       });
@@ -147,7 +163,9 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Reset code to starter code
   const handleResetCode = () => {
-    setUserCode(selectedProblem.starterCode);
+    if (selectedProblem) {
+      setUserCode(selectedProblem.starterCode || "");
+    }
     setRunResult(null);
     setSubmissionOutcome(null);
   };
@@ -161,7 +179,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // AI Tutor support with problem context
   const handleAskAiForProblem = () => {
-    if (onOpenAiWithContext) {
+    if (onOpenAiWithContext && selectedProblem) {
       onOpenAiWithContext({
         type: 'algorithm_problem',
         problem: selectedProblem,
@@ -172,15 +190,15 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   };
 
   // Extract all unique topics
-  const allTopics = Array.from(new Set(algorithmProblems.map(p => p.topic)));
+  const allTopics = Array.from(new Set(algorithmProblems.map(p => p.topic).filter(Boolean)));
 
   // Filter problems for Problem Bank
   const filteredProblems = algorithmProblems.filter(p => {
     const matchLevel = selectedLevel === 'all' || p.level === selectedLevel;
     const matchTopic = selectedTopic === 'all' || p.topic === selectedTopic;
-    const matchSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchSearch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        (p.problemStatement || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        (p.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
     const isSolved = solvedProblemIds.includes(p.id);
     const matchStatus = statusFilter === 'all' || (statusFilter === 'solved' && isSolved) || (statusFilter === 'unsolved' && !isSolved);
     return matchLevel && matchTopic && matchSearch && matchStatus;
@@ -188,8 +206,8 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Filter leaderboard
   const filteredLeaderboard = algorithmLeaderboard.filter(entry => {
-    const matchSearch = entry.fullName.toLowerCase().includes(leaderboardSearch.toLowerCase()) ||
-                        entry.username.toLowerCase().includes(leaderboardSearch.toLowerCase());
+    const matchSearch = (entry.fullName || '').toLowerCase().includes(leaderboardSearch.toLowerCase()) ||
+                        (entry.username || '').toLowerCase().includes(leaderboardSearch.toLowerCase());
     return matchSearch;
   });
 
@@ -304,11 +322,11 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-900 text-base">Cấp Độ Tiểu Học</span>
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full">
-                          Lớp 1 - 5
+                          Khối 3 - 5
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Tư duy số học, tính toán cơ bản, quy luật dãy số, vòng lặp đơn giản & vẽ hình
+                        Tư duy số học, tính toán cơ bản, quy luật dãy số, vòng lặp & vẽ hình
                       </p>
                     </div>
                   </div>
@@ -347,7 +365,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-900 text-base">Cấp Độ THCS</span>
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-800 rounded-full">
-                          Lớp 6 - 9
+                          Khối 6 - 9
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
@@ -471,14 +489,14 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         <div className="flex items-center gap-1.5">
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              problem.difficulty === 'easy'
+                              problem.difficulty === 'Dễ'
                                 ? 'bg-green-100 text-green-800'
-                                : problem.difficulty === 'medium'
+                                : problem.difficulty === 'Trung bình'
                                 ? 'bg-amber-100 text-amber-800'
                                 : 'bg-rose-100 text-rose-800'
                             }`}
                           >
-                            {problem.difficulty === 'easy' ? 'Dễ' : problem.difficulty === 'medium' ? 'Trung bình' : 'Nâng cao'}
+                            {problem.difficulty}
                           </span>
 
                           <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
@@ -494,7 +512,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                           {problem.title}
                         </h3>
                         <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                          {problem.description}
+                          {problem.problemStatement}
                         </p>
                       </div>
 
@@ -503,7 +521,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
                           {problem.topic}
                         </span>
-                        {problem.tags.slice(0, 2).map((t, idx) => (
+                        {(problem.tags || []).slice(0, 2).map((t, idx) => (
                           <span key={idx} className="px-1.5 py-0.5 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px]">
                             #{t}
                           </span>
@@ -541,7 +559,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                 </p>
                 <button
                   onClick={() => { setSelectedLevel('all'); setSelectedTopic('all'); setSearchQuery(''); setStatusFilter('all'); }}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-indigo-700 transition-colors"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-indigo-700 transition-colors cursor-pointer"
                 >
                   Xóa bộ lọc
                 </button>
@@ -552,403 +570,438 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
         {/* TAB 2: WORKSPACE (SOLVER ENVIRONMENT) */}
         {activeSubTab === 'workspace' && (
-          <div className="h-full flex flex-col lg:flex-row overflow-hidden">
-            {/* Left Column: Problem Details, Inputs/Outputs, Hints */}
-            <div className="lg:w-1/2 flex flex-col border-r border-slate-200 bg-white overflow-hidden">
-              {/* Workspace Top Toolbar */}
-              <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-                <button
-                  onClick={() => setActiveSubTab('bank')}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  <span>Danh sách đề</span>
-                </button>
-
-                {/* Sub tabs: Statement / Sample Tests / Hint */}
-                <div className="flex items-center gap-1 bg-slate-200/70 p-0.5 rounded-lg text-xs font-semibold">
+          selectedProblem ? (
+            <div className="h-full flex flex-col lg:flex-row overflow-hidden">
+              {/* Left Column: Problem Details, Inputs/Outputs, Hints */}
+              <div className="lg:w-1/2 flex flex-col border-r border-slate-200 bg-white overflow-hidden">
+                {/* Workspace Top Toolbar */}
+                <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                   <button
-                    onClick={() => setWorkspaceTab('statement')}
-                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
-                      workspaceTab === 'statement' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    onClick={() => setActiveSubTab('bank')}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
                   >
-                    Đề bài
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>Danh sách đề</span>
                   </button>
-                  <button
-                    onClick={() => setWorkspaceTab('tests')}
-                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
-                      workspaceTab === 'tests' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Test mẫu ({selectedProblem.sampleTests.length})
-                  </button>
-                  <button
-                    onClick={() => setWorkspaceTab('hints')}
-                    className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
-                      workspaceTab === 'hints' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Gợi ý giải
-                  </button>
-                </div>
 
-                {/* Ask AI button */}
-                <button
-                  onClick={handleAskAiForProblem}
-                  className="flex items-center gap-1.5 text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                  title="Nhờ AI Gia sư giải thích hoặc gợi ý hướng đi"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-violet-600" />
-                  <span className="hidden sm:inline">Hỏi AI Tutor</span>
-                </button>
-              </div>
-
-              {/* Scrollable Problem Statement Content */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                {/* Header Info */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                        selectedProblem.level === 'primary'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  {/* Sub tabs: Statement / Sample Tests / Hint */}
+                  <div className="flex items-center gap-1 bg-slate-200/70 p-0.5 rounded-lg text-xs font-semibold">
+                    <button
+                      onClick={() => setWorkspaceTab('statement')}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                        workspaceTab === 'statement' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      {selectedProblem.level === 'primary' ? 'Tiểu học' : 'THCS'}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                        selectedProblem.difficulty === 'easy'
-                          ? 'bg-green-100 text-green-800'
-                          : selectedProblem.difficulty === 'medium'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-rose-100 text-rose-800'
+                      Đề bài
+                    </button>
+                    <button
+                      onClick={() => setWorkspaceTab('tests')}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                        workspaceTab === 'tests' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      {selectedProblem.difficulty === 'easy' ? 'Độ khó: Dễ' : selectedProblem.difficulty === 'medium' ? 'Độ khó: Trung bình' : 'Độ khó: Nâng cao'}
-                    </span>
-                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                      +{selectedProblem.points} XP
-                    </span>
-                    <span className="text-xs text-slate-500 flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {selectedProblem.timeLimitMs}ms
-                    </span>
+                      Test mẫu ({selectedProblem.sampleCases?.length || 0})
+                    </button>
+                    <button
+                      onClick={() => setWorkspaceTab('hints')}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer ${
+                        workspaceTab === 'hints' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Gợi ý giải
+                    </button>
                   </div>
 
-                  <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                    {selectedProblem.title}
-                  </h2>
+                  {/* Ask AI button */}
+                  <button
+                    onClick={handleAskAiForProblem}
+                    className="flex items-center gap-1.5 text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    title="Nhờ AI Gia sư giải thích hoặc gợi ý hướng đi"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-violet-600" />
+                    <span className="hidden sm:inline">Hỏi AI Tutor</span>
+                  </button>
                 </div>
 
-                {workspaceTab === 'statement' && (
-                  <div className="space-y-5 text-sm">
-                    {/* Problem Description */}
-                    <div className="space-y-2">
-                      <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-400">
-                        Mô tả bài toán
-                      </h4>
-                      <p className="text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        {selectedProblem.description}
-                      </p>
-                    </div>
-
-                    {/* Input / Output Formats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 space-y-1">
-                        <span className="font-bold text-xs text-blue-900 flex items-center gap-1.5">
-                          <Layers className="h-3.5 w-3.5 text-blue-600" /> Dữ liệu vào (Input)
-                        </span>
-                        <p className="text-xs text-blue-800 leading-relaxed">
-                          {selectedProblem.inputFormat}
-                        </p>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 space-y-1">
-                        <span className="font-bold text-xs text-emerald-900 flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Dữ liệu ra (Output)
-                        </span>
-                        <p className="text-xs text-emerald-800 leading-relaxed">
-                          {selectedProblem.outputFormat}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Constraints */}
-                    <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-1">
-                      <span className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
-                        <Info className="h-3.5 w-3.5 text-amber-600" /> Ràng buộc dữ liệu (Constraints)
+                {/* Scrollable Problem Statement Content */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                  {/* Header Info */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                          selectedProblem.level === 'primary'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        }`}
+                      >
+                        {selectedProblem.level === 'primary' ? 'Tiểu học' : 'THCS'}
                       </span>
-                      <p className="text-xs text-amber-800 font-mono">
-                        {selectedProblem.constraints}
-                      </p>
-                    </div>
-
-                    {/* Sample Tests in Statement View */}
-                    <div className="space-y-3">
-                      <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-400">
-                        Ví dụ mẫu (Sample Cases)
-                      </h4>
-                      {selectedProblem.sampleTests.map((sample, idx) => (
-                        <div key={sample.id} className="rounded-xl border border-slate-200 overflow-hidden text-xs">
-                          <div className="bg-slate-100 px-3 py-1.5 font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
-                            <span>Ví dụ {idx + 1}</span>
-                            {sample.explanation && (
-                              <span className="text-[11px] font-normal text-slate-500 italic">
-                                {sample.explanation}
-                              </span>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 bg-white">
-                            <div className="p-3">
-                              <span className="font-bold text-[10px] text-slate-400 block uppercase mb-1">Input</span>
-                              <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-slate-800">{sample.input || "(rỗng)"}</pre>
-                            </div>
-                            <div className="p-3">
-                              <span className="font-bold text-[10px] text-slate-400 block uppercase mb-1">Output mong đợi</span>
-                              <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-emerald-700 font-semibold">{sample.expectedOutput}</pre>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {workspaceTab === 'tests' && (
-                  <div className="space-y-4 text-xs">
-                    <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-900">
-                      <strong>Kiểm thử bài toán:</strong> Dưới đây là các bộ test ví dụ được sử dụng để chạy thử mã nguồn trước khi nộp chính thức.
-                    </div>
-                    {selectedProblem.sampleTests.map((sample, idx) => (
-                      <div key={sample.id} className="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between font-bold text-slate-800">
-                          <span>Bộ Test mẫu #{idx + 1}</span>
-                          <button
-                            onClick={() => {
-                              setCustomInput(sample.input);
-                              handleRunSample();
-                            }}
-                            className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
-                          >
-                            <Play className="h-3 w-3" /> Nạp & Chạy test này
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 font-mono">
-                          <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                            <span className="text-[10px] font-sans font-bold text-slate-400 block">Input</span>
-                            <span>{sample.input || "(không có)"}</span>
-                          </div>
-                          <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                            <span className="text-[10px] font-sans font-bold text-slate-400 block">Expected Output</span>
-                            <span className="text-emerald-700 font-bold">{sample.expectedOutput}</span>
-                          </div>
-                        </div>
-                        {sample.explanation && (
-                          <p className="text-slate-500 italic mt-1">{sample.explanation}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {workspaceTab === 'hints' && (
-                  <div className="space-y-4 text-xs">
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
-                      <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
-                        <Sparkles className="h-4 w-4 text-amber-600" />
-                        <span>Gợi ý hướng giải thuật toán</span>
-                      </div>
-                      <p className="text-amber-800 leading-relaxed whitespace-pre-line">
-                        {selectedProblem.hint}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-violet-50 border border-violet-200 rounded-2xl space-y-2">
-                      <div className="flex items-center gap-2 text-violet-900 font-bold text-sm">
-                        <GraduationCap className="h-4 w-4 text-violet-600" />
-                        <span>Lời khuyên từ giáo viên</span>
-                      </div>
-                      <p className="text-violet-800 leading-relaxed">
-                        Hãy đọc kỹ định dạng đầu vào (input), chú ý ép kiểu dữ liệu bằng <code>int()</code> hoặc <code>float()</code> khi nhập từ bàn phím. Sử dụng phương thức <code>split()</code> nếu đề bài nhập nhiều số trên cùng 1 dòng.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column: Code Editor & Execution Results */}
-            <div className="lg:w-1/2 flex flex-col bg-slate-900 text-slate-100 overflow-hidden">
-              {/* Code Editor Header */}
-              <div className="p-2.5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <Code className="h-4 w-4 text-indigo-400" />
-                  <span className="font-mono font-semibold text-slate-200">solution.py</span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleCopyCode(userCode)}
-                    className="p-1.5 rounded-md hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
-                    title="Sao chép mã nguồn"
-                  >
-                    {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  </button>
-
-                  <button
-                    onClick={handleResetCode}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors cursor-pointer"
-                    title="Khôi phục lại mã mẫu ban đầu"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    <span>Mẫu gốc</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Code Editor Area */}
-              <div className="flex-1 relative bg-slate-950 p-4 font-mono text-xs overflow-auto">
-                <textarea
-                  value={userCode}
-                  onChange={(e) => setUserCode(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Tab') {
-                      e.preventDefault();
-                      const start = e.currentTarget.selectionStart;
-                      const end = e.currentTarget.selectionEnd;
-                      const newValue = userCode.substring(0, start) + '    ' + userCode.substring(end);
-                      setUserCode(newValue);
-                      setTimeout(() => {
-                        e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 4;
-                      }, 0);
-                    }
-                  }}
-                  className="w-full h-full bg-transparent text-emerald-400 focus:outline-none resize-none font-mono text-xs sm:text-sm leading-relaxed"
-                  placeholder="# Nhập code Python của bạn tại đây..."
-                  spellCheck={false}
-                />
-              </div>
-
-              {/* Execution & Custom Input Controls */}
-              <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
-                {/* Custom Input preview */}
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-400 font-semibold whitespace-nowrap">Input thử:</span>
-                  <input
-                    type="text"
-                    value={customInput}
-                    onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder="Dữ liệu đầu vào cho input()..."
-                    className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                {/* Actions: Run Sample & Submit */}
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <button
-                    onClick={handleRunSample}
-                    disabled={isRunningSample || isSubmitting}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
-                  >
-                    <Play className="h-4 w-4 text-emerald-400" />
-                    <span>{isRunningSample ? "Đang chạy..." : "Chạy thử (Sample)"}</span>
-                  </button>
-
-                  <button
-                    onClick={handleSubmitAndGrade}
-                    disabled={isSubmitting || isRunningSample}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-600/30"
-                  >
-                    <Send className="h-4 w-4" />
-                    <span>{isSubmitting ? "Đang chấm điểm..." : "Nộp bài & Chấm (Grade)"}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Result Drawer / Panel */}
-              {(runResult || submissionOutcome) && (
-                <div className="max-h-64 overflow-y-auto bg-slate-900 border-t border-slate-800 p-4 space-y-3 animate-in fade-in text-xs font-mono">
-                  {/* Single Run Result */}
-                  {runResult && !submissionOutcome && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between font-sans">
-                        <span className="font-bold text-slate-300">Kết quả chạy thử:</span>
-                        <span className="text-[10px] text-slate-400">{runResult.executionTimeMs}ms</span>
-                      </div>
-
-                      {runResult.error ? (
-                        <div className="p-3 bg-rose-950/70 border border-rose-800 rounded-xl text-rose-300 whitespace-pre-wrap">
-                          {runResult.error}
-                        </div>
-                      ) : (
-                        <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-100 whitespace-pre-wrap">
-                          {runResult.output || "(Không có dữ liệu xuất ra)"}
-                        </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          selectedProblem.difficulty === 'Dễ'
+                            ? 'bg-green-100 text-green-800'
+                            : selectedProblem.difficulty === 'Trung bình'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-rose-100 text-rose-800'
+                        }`}
+                      >
+                        {selectedProblem.difficulty}
+                      </span>
+                      <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                        +{selectedProblem.points} XP
+                      </span>
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> {selectedProblem.timeLimit || "1.0s"}
+                      </span>
+                      {selectedProblem.source && (
+                        <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                          {selectedProblem.source}
+                        </span>
                       )}
                     </div>
-                  )}
 
-                  {/* Submission Automated Grading Outcome */}
-                  {submissionOutcome && (
-                    <div className="space-y-3 font-sans">
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                        <div className="flex items-center gap-2">
-                          {submissionOutcome.passed ? (
-                            <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg">
-                              <CheckCircle2 className="h-5 w-5" />
-                            </div>
-                          ) : (
-                            <div className="p-1.5 bg-rose-500/20 text-rose-400 rounded-lg">
-                              <XCircle className="h-5 w-5" />
-                            </div>
-                          )}
-                          <div>
-                            <span className={`font-bold text-sm ${submissionOutcome.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {submissionOutcome.passed ? 'ACCEPTED (Chấp nhận 100%)' : `WRONG ANSWER (${submissionOutcome.score}%)`}
-                            </span>
-                            <p className="text-xs text-slate-400 font-mono">
-                              Vượt qua {submissionOutcome.passedTests}/{submissionOutcome.totalTests} test cases
-                            </p>
-                          </div>
-                        </div>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                      {selectedProblem.title}
+                    </h2>
+                  </div>
 
-                        <div className="text-right">
-                          <span className="text-lg font-black text-amber-400">
-                            {submissionOutcome.score}/100
-                          </span>
-                          <span className="text-[10px] block text-slate-400 font-mono">
-                            {submissionOutcome.runtimeMs}ms
-                          </span>
+                  {workspaceTab === 'statement' && (
+                    <div className="space-y-5 text-sm">
+                      {/* Problem Description */}
+                      <div className="space-y-2">
+                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-400">
+                          Mô tả bài toán
+                        </h4>
+                        <div className="text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm font-sans">
+                          {selectedProblem.problemStatement}
                         </div>
                       </div>
 
-                      {/* Test case breakdown list */}
-                      <div className="space-y-1.5 font-mono text-xs">
-                        {submissionOutcome.testResults?.map((t: any, idx: number) => (
-                          <div
-                            key={t.testId || idx}
-                            className={`p-2.5 rounded-lg border flex items-center justify-between ${
-                              t.passed
-                                ? 'bg-emerald-950/40 border-emerald-900/60 text-emerald-300'
-                                : 'bg-rose-950/40 border-rose-900/60 text-rose-300'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>{t.passed ? '✓' : '✗'} Test #{idx + 1} {t.isHidden ? '(Ẩn)' : ''}</span>
+                      {/* Input / Output Formats */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 space-y-1">
+                          <span className="font-bold text-xs text-blue-900 flex items-center gap-1.5">
+                            <Layers className="h-3.5 w-3.5 text-blue-600" /> Dữ liệu vào (Input)
+                          </span>
+                          <p className="text-xs text-blue-800 leading-relaxed whitespace-pre-line">
+                            {selectedProblem.inputFormat}
+                          </p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 space-y-1">
+                          <span className="font-bold text-xs text-emerald-900 flex items-center gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Dữ liệu ra (Output)
+                          </span>
+                          <p className="text-xs text-emerald-800 leading-relaxed whitespace-pre-line">
+                            {selectedProblem.outputFormat}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Constraints */}
+                      <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-1">
+                        <span className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
+                          <Info className="h-3.5 w-3.5 text-amber-600" /> Ràng buộc dữ liệu (Constraints)
+                        </span>
+                        <p className="text-xs text-amber-800 font-mono">
+                          {selectedProblem.constraints}
+                        </p>
+                      </div>
+
+                      {/* Sample Tests in Statement View */}
+                      <div className="space-y-3">
+                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-400">
+                          Ví dụ mẫu (Sample Cases)
+                        </h4>
+                        {(selectedProblem.sampleCases || []).map((sample, idx) => (
+                          <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden text-xs">
+                            <div className="bg-slate-100 px-3 py-1.5 font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
+                              <span>Ví dụ {idx + 1}</span>
+                              {sample.explanation && (
+                                <span className="text-[11px] font-normal text-slate-500 italic">
+                                  {sample.explanation}
+                                </span>
+                              )}
                             </div>
-                            <span>{t.executionTimeMs}ms</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 bg-white">
+                              <div className="p-3">
+                                <span className="font-bold text-[10px] text-slate-400 block uppercase mb-1">Input</span>
+                                <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-slate-800 whitespace-pre-wrap">{sample.input || "(rỗng)"}</pre>
+                              </div>
+                              <div className="p-3">
+                                <span className="font-bold text-[10px] text-slate-400 block uppercase mb-1">Output mong đợi</span>
+                                <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-emerald-700 font-semibold whitespace-pre-wrap">{sample.output}</pre>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
+
+                  {workspaceTab === 'tests' && (
+                    <div className="space-y-4 text-xs">
+                      <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-900">
+                        <strong>Kiểm thử bài toán:</strong> Dưới đây là các bộ test ví dụ được sử dụng để chạy thử mã nguồn trước khi nộp chính thức.
+                      </div>
+                      {(selectedProblem.sampleCases || []).map((sample, idx) => (
+                        <div key={idx} className="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
+                          <div className="flex items-center justify-between font-bold text-slate-800">
+                            <span>Bộ Test mẫu #{idx + 1}</span>
+                            <button
+                              onClick={() => {
+                                setCustomInput(sample.input);
+                                handleRunSample();
+                              }}
+                              className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <Play className="h-3 w-3" /> Nạp & Chạy test này
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 font-mono">
+                            <div className="p-2 bg-slate-50 rounded border border-slate-200">
+                              <span className="text-[10px] font-sans font-bold text-slate-400 block">Input</span>
+                              <span className="whitespace-pre-wrap">{sample.input || "(không có)"}</span>
+                            </div>
+                            <div className="p-2 bg-slate-50 rounded border border-slate-200">
+                              <span className="text-[10px] font-sans font-bold text-slate-400 block">Expected Output</span>
+                              <span className="text-emerald-700 font-bold whitespace-pre-wrap">{sample.output}</span>
+                            </div>
+                          </div>
+                          {sample.explanation && (
+                            <p className="text-slate-500 italic mt-1">{sample.explanation}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {workspaceTab === 'hints' && (
+                    <div className="space-y-4 text-xs">
+                      {(selectedProblem.hints || []).map((hint, idx) => (
+                        <div key={idx} className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+                          <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                            <Sparkles className="h-4 w-4 text-amber-600" />
+                            <span>Gợi ý #{idx + 1}</span>
+                          </div>
+                          <p className="text-amber-800 leading-relaxed whitespace-pre-line">
+                            {hint}
+                          </p>
+                        </div>
+                      ))}
+
+                      {selectedProblem.solutionExplanation && (
+                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
+                          <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
+                            <CheckCheck className="h-4 w-4 text-emerald-600" />
+                            <span>Hướng dẫn thuật toán chi tiết</span>
+                          </div>
+                          <p className="text-emerald-800 leading-relaxed whitespace-pre-line">
+                            {selectedProblem.solutionExplanation}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="p-4 bg-violet-50 border border-violet-200 rounded-2xl space-y-2">
+                        <div className="flex items-center gap-2 text-violet-900 font-bold text-sm">
+                          <GraduationCap className="h-4 w-4 text-violet-600" />
+                          <span>Lời khuyên từ giáo viên</span>
+                        </div>
+                        <p className="text-violet-800 leading-relaxed">
+                          Hãy đọc kỹ định dạng đầu vào (input), chú ý ép kiểu dữ liệu bằng <code>int()</code> hoặc <code>float()</code> khi nhập từ bàn phím. Sử dụng phương thức <code>split()</code> nếu đề bài nhập nhiều số trên cùng 1 dòng.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Right Column: Code Editor & Execution Results */}
+              <div className="lg:w-1/2 flex flex-col bg-slate-900 text-slate-100 overflow-hidden">
+                {/* Code Editor Header */}
+                <div className="p-2.5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <Code className="h-4 w-4 text-indigo-400" />
+                    <span className="font-mono font-semibold text-slate-200">solution.py</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleCopyCode(userCode)}
+                      className="p-1.5 rounded-md hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                      title="Sao chép mã nguồn"
+                    >
+                      {copiedCode ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+
+                    <button
+                      onClick={handleResetCode}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium transition-colors cursor-pointer"
+                      title="Khôi phục lại mã mẫu ban đầu"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span>Mẫu gốc</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Code Editor Area */}
+                <div className="flex-1 relative bg-slate-950 p-4 font-mono text-xs overflow-auto">
+                  <textarea
+                    value={userCode}
+                    onChange={(e) => setUserCode(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = e.currentTarget.selectionStart;
+                        const end = e.currentTarget.selectionEnd;
+                        const newValue = userCode.substring(0, start) + '    ' + userCode.substring(end);
+                        setUserCode(newValue);
+                        setTimeout(() => {
+                          e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 4;
+                        }, 0);
+                      }
+                    }}
+                    className="w-full h-full bg-transparent text-emerald-400 focus:outline-none resize-none font-mono text-xs sm:text-sm leading-relaxed"
+                    placeholder="# Nhập code Python của bạn tại đây..."
+                    spellCheck={false}
+                  />
+                </div>
+
+                {/* Execution & Custom Input Controls */}
+                <div className="p-3 bg-slate-900 border-t border-slate-800 space-y-2">
+                  {/* Custom Input preview */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-slate-400 font-semibold whitespace-nowrap">Input thử:</span>
+                    <input
+                      type="text"
+                      value={customInput}
+                      onChange={(e) => setCustomInput(e.target.value)}
+                      placeholder="Dữ liệu đầu vào cho input()..."
+                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  {/* Actions: Run Sample & Submit */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      onClick={handleRunSample}
+                      disabled={isRunningSample || isSubmitting}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+                    >
+                      <Play className="h-4 w-4 text-emerald-400" />
+                      <span>{isRunningSample ? "Đang chạy..." : "Chạy thử (Sample)"}</span>
+                    </button>
+
+                    <button
+                      onClick={handleSubmitAndGrade}
+                      disabled={isSubmitting || isRunningSample}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-600/30"
+                    >
+                      <Send className="h-4 w-4" />
+                      <span>{isSubmitting ? "Đang chấm điểm..." : "Nộp bài & Chấm (Grade)"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Result Drawer / Panel */}
+                {(runResult || submissionOutcome) && (
+                  <div className="max-h-64 overflow-y-auto bg-slate-900 border-t border-slate-800 p-4 space-y-3 animate-in fade-in text-xs font-mono">
+                    {/* Single Run Result */}
+                    {runResult && !submissionOutcome && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between font-sans">
+                          <span className="font-bold text-slate-300">Kết quả chạy thử:</span>
+                          <span className="text-[10px] text-slate-400">{runResult.executionTimeMs}ms</span>
+                        </div>
+
+                        {runResult.error ? (
+                          <div className="p-3 bg-rose-950/70 border border-rose-800 rounded-xl text-rose-300 whitespace-pre-wrap">
+                            {runResult.error}
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-100 whitespace-pre-wrap">
+                            {runResult.output || "(Không có dữ liệu xuất ra)"}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Submission Automated Grading Outcome */}
+                    {submissionOutcome && (
+                      <div className="space-y-3 font-sans">
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700">
+                          <div className="flex items-center gap-2">
+                            {submissionOutcome.passed ? (
+                              <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                                <CheckCircle2 className="h-5 w-5" />
+                              </div>
+                            ) : (
+                              <div className="p-1.5 bg-rose-500/20 text-rose-400 rounded-lg">
+                                <XCircle className="h-5 w-5" />
+                              </div>
+                            )}
+                            <div>
+                              <span className={`font-bold text-sm ${submissionOutcome.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {submissionOutcome.passed ? 'ACCEPTED (Chấp nhận 100%)' : `WRONG ANSWER (${submissionOutcome.score}%)`}
+                              </span>
+                              <p className="text-xs text-slate-400 font-mono">
+                                Vượt qua {submissionOutcome.passedTests}/{submissionOutcome.totalTests} test cases
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="text-lg font-black text-amber-400">
+                              {submissionOutcome.score}/100
+                            </span>
+                            <span className="text-[10px] block text-slate-400 font-mono">
+                              {submissionOutcome.runtimeMs}ms
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Test case breakdown list */}
+                        <div className="space-y-1.5 font-mono text-xs">
+                          {submissionOutcome.testResults?.map((t: any, idx: number) => (
+                            <div
+                              key={t.testId || idx}
+                              className={`p-2.5 rounded-lg border flex items-center justify-between ${
+                                t.passed
+                                  ? 'bg-emerald-950/40 border-emerald-900/60 text-emerald-300'
+                                  : 'bg-rose-950/40 border-rose-900/60 text-rose-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{t.passed ? '✓' : '✗'} Test #{idx + 1} {t.isHidden ? '(Ẩn)' : ''}</span>
+                              </div>
+                              <span>{t.executionTimeMs}ms</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-3 m-6">
+              <BookOpen className="h-10 w-10 text-slate-300 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-700">Chưa chọn bài toán nào</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Vui lòng chọn một đề bài từ Ngân hàng đề để bắt đầu luyện tập giải thuật toán.
+              </p>
+              <button
+                onClick={() => setActiveSubTab('bank')}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-indigo-700 transition-colors cursor-pointer"
+              >
+                Đến ngân hàng đề
+              </button>
+            </div>
+          )
         )}
 
         {/* TAB 3: MY SOLUTIONS (LỊCH SỬ BÀI GIẢI ĐÃ LÀM) */}
@@ -1261,7 +1314,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
               </button>
             </div>
             <div className="p-4 bg-slate-950 font-mono text-xs max-h-96 overflow-y-auto">
-              <pre className="text-emerald-400">{viewingSolutionCode.code}</pre>
+              <pre className="text-emerald-400 whitespace-pre-wrap">{viewingSolutionCode.code}</pre>
             </div>
             <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-end gap-2 text-xs">
               <button

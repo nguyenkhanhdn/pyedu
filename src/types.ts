@@ -93,6 +93,7 @@ export interface Lesson {
   xpReward: number;
   theory: LessonTheory;
   practice: LessonPractice;
+  practices?: LessonPractice[];
 }
 
 export interface Module {

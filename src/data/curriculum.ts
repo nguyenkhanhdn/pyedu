@@ -8,6 +8,7 @@ import { MODULE_4_STRINGS } from "./curriculum/module4_strings";
 import { MODULE_5_LISTS } from "./curriculum/module5_lists";
 import { MODULE_6_FUNCTIONS } from "./curriculum/module6_functions";
 import { MODULE_7_ADVANCED } from "./curriculum/module7_advanced";
+import { MODULE_8_REVISION } from "./curriculum/module8_revision";
 
 export { BADGES_DATA, INITIAL_LEADERBOARD, INITIAL_STUDY_GROUPS, OFFLINE_HANDBOOK_TOPICS };
 
@@ -18,5 +19,6 @@ export const CURRICULUM_MODULES: Module[] = [
   MODULE_4_STRINGS,
   MODULE_5_LISTS,
   MODULE_6_FUNCTIONS,
-  MODULE_7_ADVANCED
+  MODULE_7_ADVANCED,
+  MODULE_8_REVISION
 ];

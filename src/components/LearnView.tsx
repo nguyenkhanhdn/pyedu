@@ -66,10 +66,21 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     "module-3": true,
   });
 
-  // Code editor state for current lesson
-  const currentCode = userCodes[selectedLesson.id] !== undefined
-    ? userCodes[selectedLesson.id]
-    : selectedLesson.practice.starterCode;
+  // Multiple Practice Exercises Support
+  const availablePractices = selectedLesson.practices && selectedLesson.practices.length > 0
+    ? selectedLesson.practices
+    : [selectedLesson.practice];
+
+  const [activePracticeIndex, setActivePracticeIndex] = useState<number>(0);
+  const currentPractice = availablePractices[activePracticeIndex] || selectedLesson.practice;
+  const practiceStorageKey = selectedLesson.practices && selectedLesson.practices.length > 1
+    ? `${selectedLesson.id}_p${activePracticeIndex}`
+    : selectedLesson.id;
+
+  // Code editor state for current lesson and active practice
+  const currentCode = userCodes[practiceStorageKey] !== undefined
+    ? userCodes[practiceStorageKey]
+    : currentPractice.starterCode;
 
   const [editorCode, setEditorCode] = useState<string>(currentCode);
   const [customInput, setCustomInput] = useState<string>("");
@@ -101,23 +112,32 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   // Quick note modal/toast state
   const [noteSavedToast, setNoteSavedToast] = useState<string | null>(null);
 
-  // Sync editor when selectedLesson changes
+  // Reset active practice on lesson change
   useEffect(() => {
-    const saved = userCodes[selectedLesson.id] !== undefined
-      ? userCodes[selectedLesson.id]
-      : selectedLesson.practice.starterCode;
+    setActivePracticeIndex(0);
+  }, [selectedLesson.id]);
+
+  // Sync editor when selectedLesson or activePracticeIndex changes
+  useEffect(() => {
+    const key = selectedLesson.practices && selectedLesson.practices.length > 1
+      ? `${selectedLesson.id}_p${activePracticeIndex}`
+      : selectedLesson.id;
+    const activePrac = (selectedLesson.practices && selectedLesson.practices[activePracticeIndex]) || selectedLesson.practice;
+    const saved = userCodes[key] !== undefined
+      ? userCodes[key]
+      : activePrac.starterCode;
     setEditorCode(saved);
     setConsoleOutput("");
     setConsoleError("");
     setExecutionTime(null);
-    setLatestSubmission(lessonSubmissions[selectedLesson.id]?.[0] || null);
+    setLatestSubmission(lessonSubmissions[key]?.[0] || lessonSubmissions[selectedLesson.id]?.[0] || null);
     setTheoryPlaygroundCode(selectedLesson.theory.interactiveChallenge?.initialCode || "");
     setTheoryPlaygroundOutput("");
     setQuizSelectedIndex(null);
     setQuizSubmitted(false);
     setShowHints(false);
     setUnlockedHintLevel(0);
-  }, [selectedLesson.id]);
+  }, [selectedLesson.id, activePracticeIndex]);
 
   const toggleModuleExpand = (modId: string) => {
     setExpandedModules(prev => ({ ...prev, [modId]: !prev[modId] }));
@@ -134,10 +154,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     setConsoleError("");
     setConsoleOutput("Đang biên dịch và thực thi Python...");
 
-    const inputToUse = showCustomInput ? customInput : (selectedLesson.practice.sampleCases[0]?.input || "");
+    const inputToUse = showCustomInput ? customInput : (currentPractice.sampleCases[0]?.input || "");
     const result = await PythonRunner.runCode(editorCode, inputToUse);
 
-    setUserCodeForLesson(selectedLesson.id, editorCode);
+    setUserCodeForLesson(practiceStorageKey, editorCode);
     setIsRunning(false);
     setConsoleOutput(result.output || "(Chương trình không in gì ra màn hình)");
     if (result.error) {
@@ -150,11 +170,11 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   const handleGradeCode = async () => {
     setIsGrading(true);
     setConsoleError("");
-    setUserCodeForLesson(selectedLesson.id, editorCode);
+    setUserCodeForLesson(practiceStorageKey, editorCode);
 
-    const evaluation = await PythonRunner.evaluateTestSuite(editorCode, selectedLesson.practice.testCases);
+    const evaluation = await PythonRunner.evaluateTestSuite(editorCode, currentPractice.testCases);
     const submissionResult: SubmissionResult = {
-      lessonId: selectedLesson.id,
+      lessonId: practiceStorageKey,
       passed: evaluation.passed,
       score: evaluation.score,
       totalTests: evaluation.totalTests,
@@ -694,16 +714,55 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             <div className="flex flex-col xl:flex-row h-full min-h-[500px]">
               {/* Problem Description Column */}
               <div className="w-full xl:w-2/5 p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-200 overflow-y-auto space-y-4 bg-white">
+                {/* Multi-practice exercise selector if lesson has multiple practices */}
+                {availablePractices.length > 1 && (
+                  <div className="space-y-1.5 pb-2 border-b border-slate-200">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-700">Danh sách bài tập ôn tập:</span>
+                      <span className="text-[11px] text-indigo-600 font-semibold">
+                        Bài {activePracticeIndex + 1} / {availablePractices.length}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 overflow-x-auto">
+                      {availablePractices.map((prac, pIdx) => {
+                        const isPActive = activePracticeIndex === pIdx;
+                        const pKey = `${selectedLesson.id}_p${pIdx}`;
+                        const isSubPassed = lessonSubmissions[pKey]?.[0]?.passed || (pIdx === 0 && isCompleted);
+
+                        return (
+                          <button
+                            key={prac.id || pIdx}
+                            onClick={() => setActivePracticeIndex(pIdx)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                              isPActive
+                                ? "bg-white text-indigo-700 shadow-xs border border-indigo-200"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                            }`}
+                          >
+                            {isSubPassed && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />}
+                            <span>{prac.title.split(":")[0] || `Bài ${pIdx + 1}`}</span>
+                            <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
+                              prac.difficulty === 'Cơ bản' ? 'bg-emerald-100 text-emerald-800' : prac.difficulty === 'Trung bình' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+                            }`}>
+                              {prac.difficulty}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                      selectedLesson.practice.difficulty === 'Cơ bản'
+                      currentPractice.difficulty === 'Cơ bản'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : selectedLesson.practice.difficulty === 'Trung bình'
+                        : currentPractice.difficulty === 'Trung bình'
                         ? 'bg-amber-50 text-amber-700 border border-amber-200'
                         : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}>
-                      {selectedLesson.practice.difficulty}
+                      {currentPractice.difficulty}
                     </span>
                     <span className="text-xs text-amber-600 font-semibold">
                       +{selectedLesson.xpReward} XP Thưởng
@@ -716,9 +775,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 </div>
 
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">{selectedLesson.practice.title}</h2>
+                  <h2 className="text-base font-bold text-slate-900">{currentPractice.title}</h2>
                   <div className="mt-2 text-xs text-slate-700 whitespace-pre-line leading-relaxed">
-                    {selectedLesson.practice.problemStatement}
+                    {currentPractice.problemStatement}
                   </div>
                 </div>
 
@@ -726,15 +785,15 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
                   <div>
                     <h4 className="font-semibold text-slate-700">Quy cách Đầu vào (Input):</h4>
-                    <p className="text-slate-600 whitespace-pre-line">{selectedLesson.practice.inputFormat}</p>
+                    <p className="text-slate-600 whitespace-pre-line">{currentPractice.inputFormat}</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-700">Quy cách Đầu ra (Output):</h4>
-                    <p className="text-slate-600 whitespace-pre-line">{selectedLesson.practice.outputFormat}</p>
+                    <p className="text-slate-600 whitespace-pre-line">{currentPractice.outputFormat}</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-700">Ràng buộc (Constraints):</h4>
-                    <p className="text-slate-500 font-mono">{selectedLesson.practice.constraints}</p>
+                    <p className="text-slate-500 font-mono">{currentPractice.constraints}</p>
                   </div>
                 </div>
 
@@ -743,7 +802,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     Ví Dụ Mẫu (Sample Cases):
                   </h4>
-                  {selectedLesson.practice.sampleCases.map((sample, idx) => (
+                  {currentPractice.sampleCases.map((sample, idx) => (
                     <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                       <div className="grid grid-cols-2 gap-2 font-mono">
                         <div>
@@ -784,7 +843,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       <p className="text-[11px] text-slate-500">
                         PyEdu cung cấp các bước gợi ý tư duy dần dần để rèn luyện kỹ năng tự lập trình:
                       </p>
-                      {selectedLesson.practice.hints.map((hint, idx) => (
+                      {currentPractice.hints.map((hint, idx) => (
                         <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
                           <p className="text-indigo-700 font-semibold text-[11px] mb-1">Gợi ý bước {idx + 1}:</p>
                           <p className="text-slate-700 font-mono text-[11px]">{hint}</p>
@@ -833,7 +892,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     </button>
 
                     <button
-                      onClick={() => setEditorCode(selectedLesson.practice.starterCode)}
+                      onClick={() => setEditorCode(currentPractice.starterCode)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
                       title="Đặt lại mã nguồn mẫu ban đầu"
                     >

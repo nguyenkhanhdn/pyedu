@@ -1,6 +1,8 @@
 import { AlgorithmProblem, AlgorithmLeaderboardEntry } from "../types";
+import { ALL_TOPIC_PROBLEMS } from "./problems";
 
 export const ALGORITHM_PROBLEMS: AlgorithmProblem[] = [
+  ...ALL_TOPIC_PROBLEMS,
   // ==========================================
   // CẤP ĐỘ 1: TIỂU HỌC (KHỐI 3 - 5 & BẢNG A TIN HỌC TRẺ)
   // ==========================================

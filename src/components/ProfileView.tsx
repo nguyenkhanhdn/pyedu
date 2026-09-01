@@ -14,10 +14,18 @@ import {
   Target,
   Sparkles,
   Save,
-  GraduationCap
+  GraduationCap,
+  Database,
+  ArrowRight,
+  ShieldCheck
 } from "lucide-react";
+import { isSupabaseConfigured } from "../lib/supabase";
 
-export const ProfileView: React.FC = () => {
+interface ProfileViewProps {
+  onOpenSupabaseSync?: () => void;
+}
+
+export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSupabaseSync }) => {
   const {
     currentUser,
     updateUserProfile,
@@ -336,6 +344,54 @@ export const ProfileView: React.FC = () => {
               </button>
             </div>
           </form>
+
+          {/* Supabase Cloud Database Management Card */}
+          <div className="p-6 rounded-3xl bg-slate-900 text-slate-100 border border-slate-800 shadow-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-base">
+                <Database className="h-5 w-5" />
+                <h2>CSDL Supabase (PostgreSQL)</h2>
+              </div>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isSupabaseConfigured()
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                    : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                }`}
+              >
+                {isSupabaseConfigured() ? "Đã kết nối Cloud" : "Chế độ Local/SQLite"}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Lưu trữ vĩnh viễn hồ sơ học sinh, điểm số, 120+ bài tập thuật toán, tiến trình học và các nhóm học lên cơ sở dữ liệu Supabase Cloud.
+            </p>
+
+            <div className="p-3 bg-slate-950/60 rounded-2xl border border-slate-800 text-xs space-y-1.5 font-mono text-slate-300">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Trạng thái:</span>
+                <span className={isSupabaseConfigured() ? "text-emerald-400 font-semibold" : "text-amber-400 font-semibold"}>
+                  {isSupabaseConfigured() ? "Sẵn sàng ghi/đọc" : "Chưa cấu hình API Key"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Đồng bộ:</span>
+                <span className="text-slate-200">Profiles, Codes, 120+ Đề, Subs</span>
+              </div>
+            </div>
+
+            {onOpenSupabaseSync && (
+              <button
+                type="button"
+                onClick={onOpenSupabaseSync}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-950/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Database className="h-4 w-4" />
+                <span>Mở Trung Tâm Chuyển Dữ Liệu Supabase</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -11,16 +11,19 @@ import {
   Bot,
   LogOut,
   ShieldCheck,
-  Target
+  Target,
+  Database
 } from "lucide-react";
+import { isSupabaseConfigured } from "../lib/supabase";
 
 interface NavbarProps {
   onOpenAuth: () => void;
   onToggleAi: () => void;
+  onOpenSupabaseSync?: () => void;
   isAiOpen: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, isAiOpen }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSupabaseSync, isAiOpen }) => {
   const {
     currentUser,
     logout,
@@ -175,6 +178,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, isAiOpen
               </div>
               <span className="font-semibold text-slate-700">{progressPercent}%</span>
             </div>
+
+            {/* Supabase Cloud DB Connection Button */}
+            {onOpenSupabaseSync && (
+              <button
+                onClick={onOpenSupabaseSync}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                  isSupabaseConfigured()
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
+                }`}
+                title="Quản lý CSDL Supabase (PostgreSQL Cloud) & Đồng bộ dữ liệu"
+              >
+                <Database className={`h-4 w-4 ${isSupabaseConfigured() ? "text-emerald-600" : "text-slate-500"}`} />
+                <span className="hidden xl:inline">Supabase</span>
+                <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+              </button>
+            )}
 
             {/* 24/7 AI Tutor Toggle Button */}
             <button

@@ -1,5 +1,6 @@
-import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage } from "../types";
-import { INITIAL_STUDY_GROUPS } from "../data/curriculum";
+import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission } from "../types";
+import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
+import { SupabaseService } from "./supabaseService";
 
 // Initial seed users for offline / static fallback
 const INITIAL_FALLBACK_USERS: User[] = [
@@ -95,10 +96,11 @@ async function safeFetchJson<T>(url: string, options?: RequestInit): Promise<T |
 }
 
 // Local persistent storage manager
-class LocalDataManager {
+export class LocalDataManager {
   private static STORAGE_KEY_USERS = "pyedu_offline_users";
   private static STORAGE_KEY_CODES = "pyedu_offline_codes";
   private static STORAGE_KEY_SUBS = "pyedu_offline_subs";
+  private static STORAGE_KEY_ALGO_SUBS = "pyedu_algo_submissions";
   private static STORAGE_KEY_NOTES = "pyedu_offline_notes";
   private static STORAGE_KEY_GROUPS = "pyedu_offline_groups";
   private static STORAGE_KEY_NOTIFS = "pyedu_offline_notifs";
@@ -201,6 +203,31 @@ class LocalDataManager {
     }
   }
 
+  public static getAlgorithmSubmissions(userId: string): AlgorithmSubmission[] {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY_ALGO_SUBS);
+      if (!raw) return [];
+      const all: AlgorithmSubmission[] = JSON.parse(raw);
+      return all;
+    } catch {
+      return [];
+    }
+  }
+
+  public static saveAlgorithmSubmission(sub: AlgorithmSubmission) {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY_ALGO_SUBS);
+      const all: AlgorithmSubmission[] = raw ? JSON.parse(raw) : [];
+      const idx = all.findIndex(s => s.id === sub.id || (s.problemId === sub.problemId && s.score <= sub.score));
+      if (idx >= 0) {
+        all[idx] = sub;
+      } else {
+        all.unshift(sub);
+      }
+      localStorage.setItem(this.STORAGE_KEY_ALGO_SUBS, JSON.stringify(all));
+    } catch {}
+  }
+
   public static getNotes(userId: string): PersonalNote[] {
     try {
       const raw = localStorage.getItem(`${this.STORAGE_KEY_NOTES}_${userId}`);
@@ -260,9 +287,17 @@ class LocalDataManager {
   }
 }
 
-// API Service with seamless server/offline resilience
+// API Service with seamless Supabase > Server API > Local Storage resilience
 export const ApiService = {
   async fetchUsers(): Promise<User[]> {
+    if (SupabaseService.isAvailable()) {
+      const supabaseUsers = await SupabaseService.getAllUsers();
+      if (supabaseUsers && supabaseUsers.length > 0) {
+        LocalDataManager.saveUsers(supabaseUsers);
+        return supabaseUsers;
+      }
+    }
+
     const data = await safeFetchJson<{ users: User[] }>("/api/auth/users");
     if (data?.users && Array.isArray(data.users) && data.users.length > 0) {
       LocalDataManager.saveUsers(data.users);
@@ -272,6 +307,14 @@ export const ApiService = {
   },
 
   async fetchGroups(userId?: string): Promise<StudyGroup[]> {
+    if (SupabaseService.isAvailable() && userId) {
+      const supabaseGroups = await SupabaseService.getStudyGroups(userId);
+      if (supabaseGroups && supabaseGroups.length > 0) {
+        LocalDataManager.saveGroups(supabaseGroups);
+        return supabaseGroups;
+      }
+    }
+
     const data = await safeFetchJson<{ groups: StudyGroup[] }>(`/api/groups${userId ? `?userId=${userId}` : ''}`);
     if (data?.groups && Array.isArray(data.groups) && data.groups.length > 0) {
       LocalDataManager.saveGroups(data.groups);
@@ -281,6 +324,14 @@ export const ApiService = {
   },
 
   async login(usernameOrEmail: string): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      const suUser = await SupabaseService.getUserByCredentials(usernameOrEmail);
+      if (suUser) {
+        LocalDataManager.updateUser(suUser.id, suUser);
+        return suUser;
+      }
+    }
+
     const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -305,6 +356,16 @@ export const ApiService = {
     school?: string;
     password?: string;
   }): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      const suUser = await SupabaseService.createUser(userData);
+      if (suUser) {
+        const users = LocalDataManager.getUsers();
+        users.push(suUser);
+        LocalDataManager.saveUsers(users);
+        return suUser;
+      }
+    }
+
     const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -320,7 +381,7 @@ export const ApiService = {
       username: userData.username.trim(),
       email: userData.email.trim(),
       fullName: userData.fullName.trim(),
-      grade: userData.grade || "Lớp 10A1",
+      grade: userData.grade || "Lớp 10 Tin",
       school: userData.school || "THPT Chuyên Tin Học",
       role: userData.role || "student",
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${userData.username}`,
@@ -341,6 +402,13 @@ export const ApiService = {
   },
 
   async loadUserData(userId: string) {
+    if (SupabaseService.isAvailable()) {
+      const suData = await SupabaseService.loadUserData(userId);
+      if (suData && suData.user) {
+        return suData;
+      }
+    }
+
     const data = await safeFetchJson<{
       user?: User;
       codes?: Record<string, string>;
@@ -374,6 +442,11 @@ export const ApiService = {
 
   async saveCode(userId: string, lessonId: string, code: string) {
     LocalDataManager.saveCode(userId, lessonId, code);
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.saveUserCode(userId, lessonId, code);
+    }
+
     await safeFetchJson(`/api/user/${userId}/code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -391,6 +464,19 @@ export const ApiService = {
     testResults: any[];
     xpReward: number;
   }): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.recordSubmission(userId, {
+        lessonId: payload.lessonId,
+        passed: payload.passed,
+        score: payload.score,
+        totalTests: payload.totalTests,
+        passedTests: payload.passedTests,
+        runtimeMs: payload.runtimeMs,
+        testResults: payload.testResults,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const data = await safeFetchJson<{ success: boolean; user: User }>(`/api/user/${userId}/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -415,8 +501,31 @@ export const ApiService = {
     });
   },
 
+  async fetchAlgorithmProblems(): Promise<AlgorithmProblem[]> {
+    if (SupabaseService.isAvailable()) {
+      const suProblems = await SupabaseService.getAlgorithmProblems();
+      if (suProblems && suProblems.length > 0) {
+        return suProblems;
+      }
+    }
+    return ALGORITHM_PROBLEMS;
+  },
+
+  async recordAlgorithmSubmission(userId: string, submission: AlgorithmSubmission): Promise<void> {
+    LocalDataManager.saveAlgorithmSubmission(submission);
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.saveAlgorithmSubmission(userId, submission);
+    }
+  },
+
   async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     LocalDataManager.updateUser(userId, updates);
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.updateUserProfile(userId, updates);
+    }
+
     const data = await safeFetchJson<{ success: boolean; user: User }>(`/api/user/${userId}/profile`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -433,6 +542,11 @@ export const ApiService = {
       target.memberCount += 1;
       LocalDataManager.saveGroups(groups);
     }
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.joinGroup(groupId, userId);
+    }
+
     await safeFetchJson(`/api/groups/${groupId}/join`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -448,6 +562,11 @@ export const ApiService = {
       target.memberCount = Math.max(1, target.memberCount - 1);
       LocalDataManager.saveGroups(groups);
     }
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.leaveGroup(groupId, userId);
+    }
+
     await safeFetchJson(`/api/groups/${groupId}/leave`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -474,6 +593,12 @@ export const ApiService = {
       target.messages.push(msg);
       LocalDataManager.saveGroups(groups);
     }
+
+    if (SupabaseService.isAvailable()) {
+      const suMsg = await SupabaseService.addGroupMessage(groupId, payload);
+      if (suMsg) return suMsg;
+    }
+
     const data = await safeFetchJson<{ success: boolean; message: any }>(`/api/groups/${groupId}/message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -493,6 +618,11 @@ export const ApiService = {
         LocalDataManager.saveGroups(groups);
       }
     }
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.likeGroupMessage(messageId);
+    }
+
     await safeFetchJson(`/api/groups/${groupId}/message/${messageId}/like`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -511,6 +641,11 @@ export const ApiService = {
     notes.unshift(newNote);
     LocalDataManager.saveNotes(payload.userId, notes);
 
+    if (SupabaseService.isAvailable()) {
+      const suNote = await SupabaseService.addNote(payload.userId, payload);
+      if (suNote) return suNote;
+    }
+
     const data = await safeFetchJson<{ success: boolean; note: PersonalNote }>("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -526,6 +661,11 @@ export const ApiService = {
       notes[idx] = { ...notes[idx], ...updates, updatedAt: new Date().toISOString() };
       LocalDataManager.saveNotes(userId, notes);
     }
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.updateNote(id, updates);
+    }
+
     await safeFetchJson(`/api/notes/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -536,6 +676,11 @@ export const ApiService = {
   async deleteNote(userId: string, id: string) {
     const notes = LocalDataManager.getNotes(userId).filter(n => n.id !== id);
     LocalDataManager.saveNotes(userId, notes);
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.deleteNote(id);
+    }
+
     await safeFetchJson(`/api/notes/${id}`, { method: "DELETE" });
   },
 

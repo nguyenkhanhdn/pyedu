@@ -16,11 +16,13 @@ import { ProfileView } from "./components/ProfileView";
 import { AuthModal } from "./components/AuthModal";
 import { AiTutorDrawer } from "./components/AiTutorDrawer";
 import { AuthGateView } from "./components/AuthGateView";
+import { SupabaseSyncModal } from "./components/SupabaseSyncModal";
 
 function AppContent() {
   const { currentUser, activeTab } = useApp();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [aiContext, setAiContext] = useState<any>(undefined);
 
   // If student/user is not logged in, enforce the authentication gate
@@ -39,6 +41,7 @@ function AppContent() {
       <Navbar
         onOpenAuth={() => setIsAuthOpen(true)}
         onToggleAi={() => setIsAiOpen(!isAiOpen)}
+        onOpenSupabaseSync={() => setIsSupabaseModalOpen(true)}
         isAiOpen={isAiOpen}
       />
 
@@ -54,7 +57,9 @@ function AppContent() {
         {activeTab === "groups" && <StudyGroupsView />}
         {activeTab === "notes" && <NotesView />}
         {activeTab === "handbook" && <OfflineHandbookView />}
-        {activeTab === "profile" && <ProfileView />}
+        {activeTab === "profile" && (
+          <ProfileView onOpenSupabaseSync={() => setIsSupabaseModalOpen(true)} />
+        )}
       </main>
 
       {/* 24/7 AI Tutor Drawer */}
@@ -68,6 +73,12 @@ function AppContent() {
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
+      />
+
+      {/* Supabase Database Migration & Sync Modal */}
+      <SupabaseSyncModal
+        isOpen={isSupabaseModalOpen}
+        onClose={() => setIsSupabaseModalOpen(false)}
       />
     </div>
   );

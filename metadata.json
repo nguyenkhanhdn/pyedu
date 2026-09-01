@@ -1,0 +1,6 @@
+{
+  "name": "PyEdu - Nền Tảng Học Lập Trình Python & Chấm Điểm Tự Động",
+  "description": "Hệ thống học lập trình Python trực quan từ cơ bản đến nâng cao với trình biên dịch tích hợp, chấm điểm tự động, lộ trình mở khóa bài học, bảng xếp hạng tuần, chatbot AI trợ giảng 24/7 và học nhóm.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

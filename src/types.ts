@@ -211,3 +211,63 @@ export interface AIChatMessage {
   text: string;
   timestamp: string;
 }
+
+export type AlgorithmLevel = 'primary' | 'secondary';
+
+export interface AlgorithmProblem {
+  id: string;
+  title: string;
+  level: AlgorithmLevel;
+  gradeGroup: string; // e.g. "Tiểu học (Khối 3-5)" | "THCS (Khối 6-9)"
+  topic: string;
+  difficulty: 'Dễ' | 'Trung bình' | 'Khó' | 'HSG';
+  tags: string[];
+  points: number; // XP thưởng
+  timeLimit: string;
+  memoryLimit: string;
+  source?: string;
+  problemStatement: string;
+  inputFormat: string;
+  outputFormat: string;
+  constraints: string;
+  sampleCases: {
+    input: string;
+    output: string;
+    explanation: string;
+  }[];
+  starterCode: string;
+  hints: string[];
+  solutionExplanation?: string;
+  testCases: TestCase[];
+}
+
+export interface AlgorithmSubmission {
+  id: string;
+  problemId: string;
+  problemTitle: string;
+  level: AlgorithmLevel;
+  code: string;
+  score: number; // 0 - 100
+  passed: boolean;
+  passedTests: number;
+  totalTests: number;
+  runtimeMs: number;
+  testResults: TestResultDetail[];
+  timestamp: string;
+}
+
+export interface AlgorithmLeaderboardEntry {
+  rank: number;
+  userId: string;
+  fullName: string;
+  username: string;
+  avatar: string;
+  grade: string;
+  level: 'primary' | 'secondary' | 'all';
+  totalScore: number;
+  solvedCount: number;
+  primarySolved: number;
+  secondarySolved: number;
+  accuracy: number;
+  isCurrentUser?: boolean;
+}

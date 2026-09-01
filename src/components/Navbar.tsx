@@ -10,7 +10,8 @@ import {
   Bell,
   Bot,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Target
 } from "lucide-react";
 
 interface NavbarProps {
@@ -78,6 +79,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, isAiOpen
             >
               <Code className="h-4 w-4" />
               <span>Bài học & code</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("algorithms")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === "algorithms"
+                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <Target className="h-4 w-4 text-emerald-500" />
+              <span className="flex items-center gap-1.5">
+                Giải đề (Thuật toán)
+                <span className="px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300">
+                  Mới
+                </span>
+              </span>
             </button>
 
             <button
@@ -304,6 +322,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, isAiOpen
             }`}
           >
             Bài Học
+          </button>
+          <button
+            onClick={() => setActiveTab("algorithms")}
+            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+              activeTab === "algorithms" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Giải Đề 🎯
           </button>
           <button
             onClick={() => setActiveTab("leaderboard")}

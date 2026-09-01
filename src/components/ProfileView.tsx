@@ -25,6 +25,9 @@ export const ProfileView: React.FC = () => {
     modules,
     getLessonProgressPercentage,
     lessonSubmissions,
+    algorithmProblems,
+    algorithmSubmissions,
+    solvedProblemIds,
     triggerDailyReminder
   } = useApp();
 
@@ -129,7 +132,7 @@ export const ProfileView: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-base text-slate-900 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-indigo-600" />
-                <span>Tiến Độ Lộ Trình Python</span>
+                <span>Tiến Độ Lộ Trình Lý Thuyết & Thực Hành</span>
               </h2>
               <span className="text-xs font-bold text-indigo-600">{progressPercentage}% Hoàn thành</span>
             </div>
@@ -141,7 +144,52 @@ export const ProfileView: React.FC = () => {
               />
             </div>
             <p className="text-xs text-slate-500">
-              Bạn đã hoàn thành {currentUser.completedLessons.length} trên tổng số {totalLessons} bài tập và thử thách thuật toán.
+              Bạn đã hoàn thành {currentUser.completedLessons.length} trên tổng số {totalLessons} bài học & thực hành Python.
+            </p>
+          </div>
+
+          {/* Algorithm Problem Solving Overview Card */}
+          <div className="p-6 rounded-3xl bg-white border border-slate-200 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                <Target className="h-4 w-4 text-emerald-600" />
+                <span>Thành Tích Giải Đề Thuật Toán</span>
+              </h2>
+              <span className="text-xs font-bold text-emerald-700">
+                {solvedProblemIds.length}/{algorithmProblems.length} Bài Đã Giải
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-800 mb-1">
+                  <span>Cấp Tiểu Học</span>
+                  <span>{algorithmProblems.filter(p => p.level === 'primary' && solvedProblemIds.includes(p.id)).length}/{algorithmProblems.filter(p => p.level === 'primary').length}</span>
+                </div>
+                <div className="w-full bg-emerald-200/60 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-full rounded-full"
+                    style={{ width: `${algorithmProblems.filter(p => p.level === 'primary').length > 0 ? (algorithmProblems.filter(p => p.level === 'primary' && solvedProblemIds.includes(p.id)).length / algorithmProblems.filter(p => p.level === 'primary').length) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-2xl">
+                <div className="flex items-center justify-between text-xs font-bold text-indigo-800 mb-1">
+                  <span>Cấp THCS</span>
+                  <span>{algorithmProblems.filter(p => p.level === 'secondary' && solvedProblemIds.includes(p.id)).length}/{algorithmProblems.filter(p => p.level === 'secondary').length}</span>
+                </div>
+                <div className="w-full bg-indigo-200/60 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-indigo-600 h-full rounded-full"
+                    style={{ width: `${algorithmProblems.filter(p => p.level === 'secondary').length > 0 ? (algorithmProblems.filter(p => p.level === 'secondary' && solvedProblemIds.includes(p.id)).length / algorithmProblems.filter(p => p.level === 'secondary').length) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Tổng số lần nộp bài giải đề: {algorithmSubmissions.length} lượt nộp. Hãy tiếp tục giải thêm để thăng hạng trên Bảng xếp hạng Thuật toán! 🎯
             </p>
           </div>
 

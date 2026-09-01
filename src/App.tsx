@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { AppProvider, useApp } from "./context/AppContext";
 import { Navbar } from "./components/Navbar";
 import { LearnView } from "./components/LearnView";
+import { AlgorithmView } from "./components/AlgorithmView";
 import { LeaderboardView } from "./components/LeaderboardView";
 import { StudyGroupsView } from "./components/StudyGroupsView";
 import { NotesView } from "./components/NotesView";
@@ -45,6 +46,9 @@ function AppContent() {
       <main className="flex-1 flex flex-col overflow-hidden">
         {activeTab === "learn" && (
           <LearnView onOpenAiWithContext={handleOpenAiWithContext} />
+        )}
+        {activeTab === "algorithms" && (
+          <AlgorithmView onOpenAiWithContext={handleOpenAiWithContext} />
         )}
         {activeTab === "leaderboard" && <LeaderboardView />}
         {activeTab === "groups" && <StudyGroupsView />}

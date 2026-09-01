@@ -8,9 +8,20 @@ import {
   StudyGroup,
   PersonalNote,
   NotificationItem,
-  AIChatMessage
+  AIChatMessage,
+  AlgorithmProblem,
+  AlgorithmSubmission,
+  AlgorithmLeaderboardEntry,
+  AlgorithmLevel
 } from "../types";
-import { CURRICULUM_MODULES, BADGES_DATA, INITIAL_STUDY_GROUPS, OFFLINE_HANDBOOK_TOPICS } from "../data/curriculum";
+import {
+  CURRICULUM_MODULES,
+  BADGES_DATA,
+  INITIAL_STUDY_GROUPS,
+  OFFLINE_HANDBOOK_TOPICS,
+  ALGORITHM_PROBLEMS,
+  INITIAL_ALGORITHM_LEADERBOARD
+} from "../data/curriculum";
 import { ApiService } from "../services/apiClient";
 import confetti from "canvas-confetti";
 
@@ -37,6 +48,13 @@ interface AppContextType {
   setUserCodeForLesson: (lessonId: string, code: string) => void;
   submitLessonCode: (lessonId: string, result: SubmissionResult) => Promise<void>;
   lessonSubmissions: Record<string, SubmissionResult[]>;
+
+  // Algorithm / Problem Solving Module
+  algorithmProblems: AlgorithmProblem[];
+  algorithmSubmissions: AlgorithmSubmission[];
+  solvedProblemIds: string[];
+  submitAlgorithmProblem: (problemId: string, result: SubmissionResult, code: string) => Promise<void>;
+  algorithmLeaderboard: AlgorithmLeaderboardEntry[];
 
   // Leaderboard
   leaderboard: LeaderboardEntry[];
@@ -74,8 +92,8 @@ interface AppContextType {
   handbookTopics: typeof OFFLINE_HANDBOOK_TOPICS;
 
   // Active View Tab
-  activeTab: 'learn' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile';
-  setActiveTab: (tab: 'learn' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile') => void;
+  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile';
+  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -99,6 +117,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 4. Submissions per lesson
   const [lessonSubmissions, setLessonSubmissions] = useState<Record<string, SubmissionResult[]>>({});
+
+  // 4.1 Algorithm Problem Solving Submissions & State
+  const [algorithmSubmissions, setAlgorithmSubmissions] = useState<AlgorithmSubmission[]>(() => {
+    const saved = localStorage.getItem("pyedu_algo_submissions");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Unique solved algorithm problems
+  const solvedProblemIds = Array.from(new Set(
+    algorithmSubmissions.filter(s => s.passed).map(s => s.problemId)
+  ));
 
   // 5. Notes
   const [personalNotes, setPersonalNotes] = useState<PersonalNote[]>([]);
@@ -263,6 +292,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (e) {
       console.warn("Submit recording notice:", e);
+    }
+  };
+
+  // Submit Algorithm Problem Solution Handler
+  const submitAlgorithmProblem = async (problemId: string, result: SubmissionResult, code: string) => {
+    const problem = ALGORITHM_PROBLEMS.find(p => p.id === problemId);
+    const probTitle = problem?.title || problemId;
+    const probLevel: AlgorithmLevel = problem?.level || 'primary';
+    const probPoints = problem?.points || 40;
+
+    const newSub: AlgorithmSubmission = {
+      id: `algo-sub-${Date.now()}`,
+      problemId,
+      problemTitle: probTitle,
+      level: probLevel,
+      code,
+      score: result.score,
+      passed: result.passed,
+      passedTests: result.passedTests,
+      totalTests: result.totalTests,
+      runtimeMs: result.runtimeMs,
+      testResults: result.testResults,
+      timestamp: new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+    };
+
+    const updatedSubmissions = [newSub, ...algorithmSubmissions];
+    setAlgorithmSubmissions(updatedSubmissions);
+    try {
+      localStorage.setItem("pyedu_algo_submissions", JSON.stringify(updatedSubmissions));
+    } catch (e) {
+      console.warn("Could not save to localStorage:", e);
+    }
+
+    if (result.passed) {
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {
+        // ignore in iframe
+      }
+
+      // Check if user has already solved this problem before
+      const alreadySolved = algorithmSubmissions.some(s => s.problemId === problemId && s.passed);
+
+      if (currentUser && !alreadySolved) {
+        const updatedTotalXp = (currentUser.totalXp || 0) + probPoints;
+        const updatedWeeklyXp = (currentUser.weeklyXp || 0) + probPoints;
+        const updatedUser = {
+          ...currentUser,
+          totalXp: updatedTotalXp,
+          weeklyXp: updatedWeeklyXp
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem("pyedu_current_user", JSON.stringify(updatedUser));
+        setAllUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+
+        // Update server profile
+        ApiService.updateProfile(currentUser.id, {
+          totalXp: updatedTotalXp,
+          weeklyXp: updatedWeeklyXp
+        }).catch(() => {});
+
+        addNotification({
+          title: `🏆 Đã giải xong: ${probTitle}`,
+          message: `Tuyệt vời! Bạn đã vượt qua 100% test cases của bài toán "${probTitle}" (${probLevel === 'primary' ? 'Tiểu học' : 'THCS'}) và nhận được +${probPoints} XP!`,
+          type: "contest",
+          linkTab: "algorithms"
+        });
+      }
     }
   };
 
@@ -535,6 +636,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isCurrentUser: u.id === currentUser?.id
     }));
 
+  // Compute Algorithm Leaderboard
+  const userPassedSubs = algorithmSubmissions.filter(s => s.passed);
+  const userSolvedPrimary = Array.from(new Set(userPassedSubs.filter(s => s.level === 'primary').map(s => s.problemId))).length;
+  const userSolvedSecondary = Array.from(new Set(userPassedSubs.filter(s => s.level === 'secondary').map(s => s.problemId))).length;
+  const userSolvedTotal = userSolvedPrimary + userSolvedSecondary;
+
+  // Calculate algorithm score: sum of points for each solved problem
+  const userAlgoScore = Array.from(new Set(userPassedSubs.map(s => s.problemId)))
+    .reduce<number>((acc: number, pId: string) => {
+      const p = ALGORITHM_PROBLEMS.find(prob => prob.id === pId);
+      return acc + (p?.points || 40);
+    }, 0);
+
+  const userAlgoAccuracy = algorithmSubmissions.length > 0
+    ? Math.round((userPassedSubs.length / algorithmSubmissions.length) * 100)
+    : 100;
+
+  const currentUserAlgoEntry: AlgorithmLeaderboardEntry | null = currentUser ? {
+    rank: 1,
+    userId: currentUser.id,
+    fullName: currentUser.fullName,
+    username: currentUser.username,
+    avatar: currentUser.avatar,
+    grade: currentUser.grade,
+    level: 'all',
+    totalScore: userAlgoScore,
+    solvedCount: userSolvedTotal,
+    primarySolved: userSolvedPrimary,
+    secondarySolved: userSolvedSecondary,
+    accuracy: userAlgoAccuracy,
+    isCurrentUser: true
+  } : null;
+
+  // Merge current user with INITIAL_ALGORITHM_LEADERBOARD
+  const rawAlgoList: AlgorithmLeaderboardEntry[] = [...INITIAL_ALGORITHM_LEADERBOARD];
+  if (currentUserAlgoEntry) {
+    const existingIdx = rawAlgoList.findIndex(e => e.userId === currentUserAlgoEntry.userId);
+    if (existingIdx >= 0) {
+      rawAlgoList[existingIdx] = currentUserAlgoEntry;
+    } else {
+      rawAlgoList.push(currentUserAlgoEntry);
+    }
+  }
+
+  // Sort by totalScore desc, then solvedCount desc, then accuracy desc
+  const algorithmLeaderboard: AlgorithmLeaderboardEntry[] = rawAlgoList
+    .sort((a, b) => b.totalScore - a.totalScore || b.solvedCount - a.solvedCount || b.accuracy - a.accuracy)
+    .map((entry, idx) => ({
+      ...entry,
+      rank: idx + 1
+    }));
+
   const userBadges = BADGES_DATA.filter(b => currentUser?.badges.includes(b.id));
 
   return (
@@ -560,6 +713,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setUserCodeForLesson,
         submitLessonCode,
         lessonSubmissions,
+
+        // Algorithm Problem Solving
+        algorithmProblems: ALGORITHM_PROBLEMS,
+        algorithmSubmissions,
+        solvedProblemIds,
+        submitAlgorithmProblem,
+        algorithmLeaderboard,
 
         leaderboard,
         weeklyLeaderboard,

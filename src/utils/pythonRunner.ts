@@ -53,7 +53,15 @@ export class PythonRunner {
   public static async runCode(code: string, stdinInput: string = ""): Promise<ExecutionResult> {
     const startTime = performance.now();
 
-    // 1. Try Pyodide if available
+    // 1. Try Pyodide if available or initialize it
+    if (!this.pyodideInstance && typeof window !== "undefined" && (window as any).loadPyodide) {
+      try {
+        await this.initPyodide();
+      } catch {
+        // Fall back to JS engine
+      }
+    }
+
     if (this.pyodideInstance) {
       try {
         const inputLines = stdinInput ? stdinInput.split("\n") : [];
@@ -131,6 +139,98 @@ export class PythonRunner {
     const inputLines = stdinInput !== "" ? stdinInput.trim().split("\n").map(l => l.trim()) : [];
     let currentInputIdx = 0;
 
+    // Callable type functions that represent Python classes
+    const intFunc: any = (v: any) => {
+      if (v === undefined || v === null) return 0;
+      if (typeof v === "boolean") return v ? 1 : 0;
+      if (typeof v === "number") return Math.trunc(v);
+      const s = String(v).trim();
+      if (!/^-?\d+$/.test(s)) {
+        throw new Error(`ValueError: invalid literal for int() with base 10: '${v}'`);
+      }
+      return parseInt(s, 10);
+    };
+    intFunc.toString = () => "<class 'int'>";
+    intFunc.valueOf = () => "<class 'int'>";
+    intFunc[Symbol.toPrimitive] = () => "<class 'int'>";
+
+    const floatFunc: any = (v: any) => {
+      if (v === undefined || v === null) return 0.0;
+      if (typeof v === "boolean") return v ? 1.0 : 0.0;
+      if (typeof v === "number") return v;
+      const s = String(v).trim();
+      const n = parseFloat(s);
+      if (isNaN(n) || !/^-?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s)) {
+        throw new Error(`ValueError: could not convert string to float: '${v}'`);
+      }
+      return n;
+    };
+    floatFunc.toString = () => "<class 'float'>";
+    floatFunc.valueOf = () => "<class 'float'>";
+    floatFunc[Symbol.toPrimitive] = () => "<class 'float'>";
+
+    const strFunc: any = (v: any) => {
+      if (v === null || v === undefined) return "None";
+      if (typeof v === "boolean") return v ? "True" : "False";
+      if (typeof v === "function" && v.toString) return v.toString();
+      return String(v);
+    };
+    strFunc.toString = () => "<class 'str'>";
+    strFunc.valueOf = () => "<class 'str'>";
+    strFunc[Symbol.toPrimitive] = () => "<class 'str'>";
+
+    const boolFunc: any = (v: any) => {
+      if (v === "False" || v === "0" || v === "" || v === 0 || v === false || v === null || v === undefined) return false;
+      return Boolean(v);
+    };
+    boolFunc.toString = () => "<class 'bool'>";
+    boolFunc.valueOf = () => "<class 'bool'>";
+    boolFunc[Symbol.toPrimitive] = () => "<class 'bool'>";
+
+    const listFunc: any = (v: any) => {
+      if (v === undefined || v === null) return [];
+      if (Array.isArray(v)) return [...v];
+      if (typeof v === "string") return v.split("");
+      return Array.from(v);
+    };
+    listFunc.toString = () => "<class 'list'>";
+    listFunc.valueOf = () => "<class 'list'>";
+    listFunc[Symbol.toPrimitive] = () => "<class 'list'>";
+
+    const dictFunc: any = (entries?: any) => {
+      const d: Record<string, any> = {};
+      if (entries && Array.isArray(entries)) {
+        for (const item of entries) {
+          if (Array.isArray(item) && item.length === 2) d[item[0]] = item[1];
+        }
+      }
+      return d;
+    };
+    dictFunc.toString = () => "<class 'dict'>";
+    dictFunc.valueOf = () => "<class 'dict'>";
+    dictFunc[Symbol.toPrimitive] = () => "<class 'dict'>";
+
+    const setFunc: any = (v?: any) => new Set(v || []);
+    setFunc.toString = () => "<class 'set'>";
+    setFunc.valueOf = () => "<class 'set'>";
+    setFunc[Symbol.toPrimitive] = () => "<class 'set'>";
+
+    const tupleFunc: any = (v?: any) => listFunc(v);
+    tupleFunc.toString = () => "<class 'tuple'>";
+    tupleFunc.valueOf = () => "<class 'tuple'>";
+    tupleFunc[Symbol.toPrimitive] = () => "<class 'tuple'>";
+
+    const typeFunc = (v: any) => {
+      if (v === null || v === undefined) return "<class 'NoneType'>";
+      if (typeof v === "number") return Number.isInteger(v) ? intFunc : floatFunc;
+      if (typeof v === "string") return strFunc;
+      if (typeof v === "boolean") return boolFunc;
+      if (Array.isArray(v)) return listFunc;
+      if (v instanceof Set) return setFunc;
+      if (typeof v === "object") return dictFunc;
+      return `<class '${typeof v}'>`;
+    };
+
     // Custom simulated standard library
     const scope: Record<string, any> = {
       math: {
@@ -192,6 +292,11 @@ export class PythonRunner {
         const copy = [...arr].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
         return reverse ? copy.reverse() : copy;
       },
+      reversed: (arr: any) => {
+        if (typeof arr === "string") return arr.split("").reverse().join("");
+        if (Array.isArray(arr)) return [...arr].reverse();
+        return arr;
+      },
       enumerate: (arr: any[]) => arr.map((item, idx) => [idx, item]),
       zip: (...arrays: any[][]) => {
         const minLen = Math.min(...arrays.map(a => a.length));
@@ -201,50 +306,57 @@ export class PythonRunner {
         }
         return res;
       },
-      str: (v: any) => String(v),
-      int: (v: any) => {
-        const n = parseInt(v, 10);
-        if (isNaN(n)) throw new Error(`ValueError: invalid literal for int() with base 10: '${v}'`);
-        return n;
-      },
-      float: (v: any) => {
-        const n = parseFloat(v);
-        if (isNaN(n)) throw new Error(`ValueError: could not convert string to float: '${v}'`);
-        return n;
-      },
-      bool: (v: any) => Boolean(v),
-      list: (v: any) => Array.isArray(v) ? [...v] : Array.from(v || []),
-      dict: (entries?: [any, any][]) => {
-        const d: Record<string, any> = {};
-        if (entries) {
-          for (const [k, v] of entries) d[k] = v;
-        }
-        return d;
-      },
-      set: (v: any) => new Set(v || []),
+      str: strFunc,
+      int: intFunc,
+      float: floatFunc,
+      bool: boolFunc,
+      list: listFunc,
+      dict: dictFunc,
+      set: setFunc,
+      tuple: tupleFunc,
       abs: (v: any) => Math.abs(Number(v)),
       round: (v: any, digits = 0) => {
         const factor = Math.pow(10, digits);
         return Math.round(Number(v) * factor) / factor;
       },
-      type: (v: any) => {
-        if (typeof v === "number") return Number.isInteger(v) ? "<class 'int'>" : "<class 'float'>";
-        if (typeof v === "string") return "<class 'str'>";
-        if (typeof v === "boolean") return "<class 'bool'>";
-        if (Array.isArray(v)) return "<class 'list'>";
-        if (typeof v === "object" && v !== null) return "<class 'dict'>";
-        return `<class '${typeof v}'>`;
+      pow: (base: number, exp: number) => Math.pow(base, exp),
+      divmod: (a: number, b: number) => [Math.floor(a / b), a % b],
+      type: typeFunc,
+      isinstance: (val: any, targetType: any) => {
+        if (targetType === intFunc) return typeof val === "number" && Number.isInteger(val);
+        if (targetType === floatFunc) return typeof val === "number";
+        if (targetType === strFunc) return typeof val === "string";
+        if (targetType === boolFunc) return typeof val === "boolean";
+        if (targetType === listFunc) return Array.isArray(val);
+        if (targetType === dictFunc) return typeof val === "object" && val !== null && !Array.isArray(val);
+        if (targetType === setFunc) return val instanceof Set;
+        return false;
       },
+      all: (iterable: any[]) => Array.from(iterable).every(Boolean),
+      any: (iterable: any[]) => Array.from(iterable).some(Boolean),
+      ord: (c: string) => String(c).charCodeAt(0),
+      chr: (n: number) => String.fromCharCode(Number(n)),
+      bin: (n: number) => "0b" + Number(n).toString(2),
+      hex: (n: number) => "0x" + Number(n).toString(16),
+      oct: (n: number) => "0o" + Number(n).toString(8),
       map: (fn: any, iter: any) => {
         const arr = Array.isArray(iter) ? iter : (typeof iter === "string" ? iter.split("") : []);
         return arr.map(fn);
+      },
+      filter: (fn: any, iter: any) => {
+        const arr = Array.isArray(iter) ? iter : (typeof iter === "string" ? iter.split("") : []);
+        return arr.filter(fn);
       },
       print: (...args: any[]) => {
         const text = args.map(arg => {
           if (arg === null || arg === undefined) return "None";
           if (typeof arg === "boolean") return arg ? "True" : "False";
+          if (typeof arg === "function" && arg.toString) return arg.toString();
           if (Array.isArray(arg)) return JSON.stringify(arg);
-          if (typeof arg === "object") return JSON.stringify(arg);
+          if (typeof arg === "object") {
+            if (arg instanceof Set) return "{" + Array.from(arg).join(", ") + "}";
+            return JSON.stringify(arg);
+          }
           return String(arg);
         }).join(" ");
         outputs.push(text);
@@ -295,7 +407,11 @@ export class PythonRunner {
       const runnerFn = new Function(
         "scope",
         `
-        const { print, input, len, range, sum, max, min, sorted, enumerate, zip, str, int, float, bool, list, dict, set, math, random } = scope;
+        const {
+          print, input, len, range, sum, max, min, sorted, reversed, enumerate, zip,
+          str, int, float, bool, list, dict, set, tuple, math, random,
+          type, abs, round, pow, divmod, isinstance, all, any, ord, chr, bin, hex, oct, map, filter
+        } = scope;
         const True = true;
         const False = false;
         const None = null;

@@ -61,8 +61,11 @@ function AppContent() {
         {activeTab === "profile" && (
           <ProfileView onOpenSupabaseSync={() => setIsSupabaseModalOpen(true)} />
         )}
-        {activeTab === "admin" && (
+        {activeTab === "admin" && currentUser.role === "admin" && (
           <AdminDashboard onOpenSupabaseSync={() => setIsSupabaseModalOpen(true)} />
+        )}
+        {activeTab === "admin" && currentUser.role !== "admin" && (
+          <LearnView onOpenAiWithContext={handleOpenAiWithContext} />
         )}
       </main>
 

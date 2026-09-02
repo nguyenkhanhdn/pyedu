@@ -236,6 +236,7 @@ export const AuthGateView: React.FC = () => {
             </div>
 
             {/* Quick Demo Switchers */}
+            {/*
             <div className="pt-2">
               <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
                 <GraduationCap className="h-3.5 w-3.5 text-indigo-600" />
@@ -285,6 +286,7 @@ export const AuthGateView: React.FC = () => {
                 </button>
               </div>
             </div>
+            */}
           </div>
 
           {/* Right Column: Authentication Card Form */}

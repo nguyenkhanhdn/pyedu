@@ -13,6 +13,7 @@ import { StudyGroupsView } from "./components/StudyGroupsView";
 import { NotesView } from "./components/NotesView";
 import { OfflineHandbookView } from "./components/OfflineHandbookView";
 import { ProfileView } from "./components/ProfileView";
+import { AdminDashboard } from "./components/AdminDashboard";
 import { AuthModal } from "./components/AuthModal";
 import { AiTutorDrawer } from "./components/AiTutorDrawer";
 import { AuthGateView } from "./components/AuthGateView";
@@ -59,6 +60,9 @@ function AppContent() {
         {activeTab === "handbook" && <OfflineHandbookView />}
         {activeTab === "profile" && (
           <ProfileView onOpenSupabaseSync={() => setIsSupabaseModalOpen(true)} />
+        )}
+        {activeTab === "admin" && (
+          <AdminDashboard onOpenSupabaseSync={() => setIsSupabaseModalOpen(true)} />
         )}
       </main>
 

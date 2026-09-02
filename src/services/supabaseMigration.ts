@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     password TEXT NOT NULL DEFAULT '123456',
     full_name TEXT NOT NULL,
     avatar TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'student',  -- 'student' | 'teacher'
+    role TEXT NOT NULL DEFAULT 'student',  -- 'student' | 'teacher' | 'admin'
     grade TEXT NOT NULL DEFAULT 'Lớp 10 Tin',
     school TEXT DEFAULT 'THPT Chuyên Tin',
     total_xp INTEGER NOT NULL DEFAULT 0,
@@ -201,6 +201,24 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.algorithm_problems ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.algorithm_submissions ENABLE ROW LEVEL SECURITY;
 
+-- Xóa policies cũ nếu đã tồn tại trước khi tạo mới (Tránh lỗi duplicate policy)
+DROP POLICY IF EXISTS "Allow public read users" ON public.users;
+DROP POLICY IF EXISTS "Allow public insert users" ON public.users;
+DROP POLICY IF EXISTS "Allow public update users" ON public.users;
+DROP POLICY IF EXISTS "Allow public read problems" ON public.algorithm_problems;
+DROP POLICY IF EXISTS "Allow public insert problems" ON public.algorithm_problems;
+DROP POLICY IF EXISTS "Allow public update problems" ON public.algorithm_problems;
+DROP POLICY IF EXISTS "Allow public access progress" ON public.user_progress;
+DROP POLICY IF EXISTS "Allow public access user_codes" ON public.user_codes;
+DROP POLICY IF EXISTS "Allow public access submissions" ON public.submissions;
+DROP POLICY IF EXISTS "Allow public access algo_subs" ON public.algorithm_submissions;
+DROP POLICY IF EXISTS "Allow public access notes" ON public.personal_notes;
+DROP POLICY IF EXISTS "Allow public access groups" ON public.study_groups;
+DROP POLICY IF EXISTS "Allow public access members" ON public.study_group_members;
+DROP POLICY IF EXISTS "Allow public access messages" ON public.group_messages;
+DROP POLICY IF EXISTS "Allow public access notifs" ON public.notifications;
+DROP POLICY IF EXISTS "Allow public access badges" ON public.user_badges;
+
 -- Tạo Policies cho phép truy xuất anon/authenticated
 CREATE POLICY "Allow public read users" ON public.users FOR SELECT USING (true);
 CREATE POLICY "Allow public insert users" ON public.users FOR INSERT WITH CHECK (true);
@@ -271,6 +289,26 @@ export async function migrateAllDataToSupabase(
     });
 
     const fallbackUsers: User[] = [
+      {
+        id: "usr-admin",
+        username: "admin",
+        email: "admin@pyedu.edu.vn",
+        password: "admin@password",
+        fullName: "Quản trị viên Hệ thống (Admin)",
+        avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=AdminPyEdu",
+        grade: "Ban Quản trị PyEdu",
+        school: "Hệ thống Đào tạo Lập trình PyEdu",
+        role: "admin",
+        totalXp: 9999,
+        weeklyXp: 1250,
+        streakDays: 60,
+        lastActiveDate: new Date().toISOString().split("T")[0],
+        completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1", "lesson-3-2", "lesson-4-1", "lesson-5-1", "lesson-6-1"],
+        badges: ["first_step", "streak_3", "streak_7", "streak_30", "perfect_score", "loop_master", "algo_wizard"],
+        dailyGoal: 60,
+        reminderTime: "08:00",
+        reminderEnabled: true
+      },
       {
         id: "usr-demo-1",
         username: "khanh_tin10",

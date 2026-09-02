@@ -130,7 +130,7 @@ export class SupabaseService {
     }
   }
 
-  public static async getUserByCredentials(usernameOrEmail: string): Promise<User | null> {
+  public static async getUserByCredentials(usernameOrEmail: string, password?: string): Promise<User | null> {
     const supabase = getSupabase();
     if (!supabase) return null;
 
@@ -143,6 +143,15 @@ export class SupabaseService {
         .maybeSingle();
 
       if (error || !u) return null;
+
+      // If password provided and user has password, check if it matches
+      if (password && u.password && u.password !== password) {
+        // For default admin account
+        if (u.username === "admin" && password !== "admin@password") {
+          return null;
+        }
+      }
+
       return await this.getUserById(u.id);
     } catch (e) {
       console.warn("Supabase getUserByCredentials error:", e);
@@ -155,7 +164,7 @@ export class SupabaseService {
     email: string;
     fullName: string;
     grade: string;
-    role: "student" | "teacher";
+    role: "student" | "teacher" | "admin";
     school?: string;
     password?: string;
   }): Promise<User | null> {
@@ -171,13 +180,13 @@ export class SupabaseService {
         id: newId,
         username: userData.username,
         email: userData.email,
-        password: userData.password || "123456",
+        password: userData.password || (userData.role === "admin" ? "admin@password" : "123456"),
         full_name: userData.fullName,
         avatar,
         role: userData.role || "student",
         grade: userData.grade || "Lớp 10 Tin",
         school: userData.school || "THPT Chuyên Tin Học",
-        total_xp: 0,
+        total_xp: userData.role === "admin" ? 9999 : 0,
         weekly_xp: 0,
         streak_days: 1,
         last_active_date: today,
@@ -202,6 +211,41 @@ export class SupabaseService {
     } catch (e) {
       console.error("Supabase createUser exception:", e);
       return null;
+    }
+  }
+
+  public static async deleteUser(userId: string): Promise<boolean> {
+    const supabase = getSupabase();
+    if (!supabase) return false;
+
+    try {
+      // CASCADE will delete user_badges, user_progress, user_codes, submissions, notes, etc.
+      const { error } = await supabase.from("users").delete().eq("id", userId);
+      return !error;
+    } catch (e) {
+      console.error("Supabase deleteUser error:", e);
+      return false;
+    }
+  }
+
+  public static async resetUserProgress(userId: string): Promise<boolean> {
+    const supabase = getSupabase();
+    if (!supabase) return false;
+
+    try {
+      await supabase.from("user_progress").delete().eq("user_id", userId);
+      await supabase.from("user_codes").delete().eq("user_id", userId);
+      await supabase.from("submissions").delete().eq("user_id", userId);
+      await supabase.from("algorithm_submissions").delete().eq("user_id", userId);
+      await supabase.from("users").update({
+        total_xp: 0,
+        weekly_xp: 0,
+        streak_days: 1,
+      }).eq("id", userId);
+      return true;
+    } catch (e) {
+      console.error("Supabase resetUserProgress error:", e);
+      return false;
     }
   }
 
@@ -777,6 +821,156 @@ export class SupabaseService {
     } catch (e) {
       console.warn("Supabase likeGroupMessage error:", e);
       return false;
+    }
+  }
+
+  // ===================== NOTIFICATIONS =====================
+
+  public static async getNotifications(userId: string): Promise<NotificationItem[] | null> {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("timestamp", { ascending: false });
+
+      if (error || !data) return null;
+
+      return data.map((n: any) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        timestamp: n.timestamp,
+        read: n.read,
+        linkTab: n.link_tab,
+      }));
+    } catch (e) {
+      console.warn("Supabase getNotifications error:", e);
+      return null;
+    }
+  }
+
+  public static async addNotification(userId: string, item: Omit<NotificationItem, "id" | "timestamp" | "read">): Promise<NotificationItem | null> {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+
+    try {
+      const newId = `notif-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+      const now = new Date().toISOString();
+
+      const { error } = await supabase.from("notifications").insert({
+        id: newId,
+        user_id: userId,
+        title: item.title,
+        message: item.message,
+        type: item.type || "system",
+        read: false,
+        link_tab: item.linkTab || null,
+        timestamp: now,
+      });
+
+      if (error) return null;
+
+      return {
+        id: newId,
+        title: item.title,
+        message: item.message,
+        type: item.type,
+        timestamp: "Vừa xong",
+        read: false,
+        linkTab: item.linkTab,
+      };
+    } catch (e) {
+      console.warn("Supabase addNotification error:", e);
+      return null;
+    }
+  }
+
+  public static async markNotificationRead(id: string): Promise<boolean> {
+    const supabase = getSupabase();
+    if (!supabase) return false;
+
+    try {
+      const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+      return !error;
+    } catch (e) {
+      console.warn("Supabase markNotificationRead error:", e);
+      return false;
+    }
+  }
+
+  public static async clearNotifications(userId: string): Promise<boolean> {
+    const supabase = getSupabase();
+    if (!supabase) return false;
+
+    try {
+      const { error } = await supabase.from("notifications").delete().eq("user_id", userId);
+      return !error;
+    } catch (e) {
+      console.warn("Supabase clearNotifications error:", e);
+      return false;
+    }
+  }
+
+  // ===================== ALGORITHM LEADERBOARD =====================
+
+  public static async getAlgorithmLeaderboard(): Promise<AlgorithmLeaderboardEntry[] | null> {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+
+    try {
+      const { data: users, error: userErr } = await supabase.from("users").select("*");
+      if (userErr || !users) return null;
+
+      const { data: subs, error: subErr } = await supabase.from("algorithm_submissions").select("*");
+      if (subErr || !subs) return null;
+
+      const userSubMap: Record<string, any[]> = {};
+      subs.forEach((s: any) => {
+        if (!userSubMap[s.user_id]) userSubMap[s.user_id] = [];
+        userSubMap[s.user_id].push(s);
+      });
+
+      const entries: AlgorithmLeaderboardEntry[] = users.map((u: any) => {
+        const uSubs = userSubMap[u.id] || [];
+        const passedSubs = uSubs.filter((s: any) => s.passed);
+        
+        const solvedProblemIds = Array.from(new Set(passedSubs.map((s: any) => s.problem_id)));
+        const primarySolved = Array.from(new Set(passedSubs.filter((s: any) => s.level === "primary").map((s: any) => s.problem_id))).length;
+        const secondarySolved = Array.from(new Set(passedSubs.filter((s: any) => s.level === "secondary").map((s: any) => s.problem_id))).length;
+        const solvedCount = solvedProblemIds.length;
+
+        // Calculate score
+        const totalScore = passedSubs.reduce((sum: number, s: any) => sum + (s.score || 0), 0);
+        const accuracy = uSubs.length > 0 ? Math.round((passedSubs.length / uSubs.length) * 100) : 100;
+
+        return {
+          rank: 0,
+          userId: u.id,
+          fullName: u.full_name,
+          username: u.username,
+          avatar: u.avatar,
+          grade: u.grade,
+          level: "all" as const,
+          totalScore: totalScore > 0 ? totalScore : (u.total_xp || 0),
+          solvedCount,
+          primarySolved,
+          secondarySolved,
+          accuracy,
+        };
+      });
+
+      // Sort by totalScore desc, then solvedCount desc
+      return entries
+        .sort((a, b) => b.totalScore - a.totalScore || b.solvedCount - a.solvedCount || b.accuracy - a.accuracy)
+        .map((entry, idx) => ({ ...entry, rank: idx + 1 }));
+    } catch (e) {
+      console.warn("Supabase getAlgorithmLeaderboard error:", e);
+      return null;
     }
   }
 }

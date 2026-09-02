@@ -7,6 +7,9 @@ export interface SupabaseConfig {
   anonKey: string;
 }
 
+export const DEFAULT_SUPABASE_URL = "https://kzgnyyudyhnjwgrspmxr.supabase.co";
+export const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6Z255eXVkeWhuandncnNwbXhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzM3NTIsImV4cCI6MjEwMzg0OTc1Mn0.IS3QNYzY7uX47nhXQy8l9BW3JdDDJSGzddFagXO7ENU";
+
 export function getStoredSupabaseConfig(): SupabaseConfig {
   const metaEnv = (import.meta as any).env || {};
   const envUrl = (metaEnv.VITE_SUPABASE_URL || "").trim();
@@ -19,8 +22,8 @@ export function getStoredSupabaseConfig(): SupabaseConfig {
     localKey = (localStorage.getItem("pyedu_supabase_anon_key") || "").trim();
   } catch {}
 
-  const url = localUrl || (envUrl !== "https://your-project.supabase.co" ? envUrl : "");
-  const anonKey = localKey || (envKey !== "your-anon-public-key" ? envKey : "");
+  const url = localUrl || (envUrl && envUrl !== "https://your-project.supabase.co" ? envUrl : DEFAULT_SUPABASE_URL);
+  const anonKey = localKey || (envKey && envKey !== "your-anon-public-key" ? envKey : DEFAULT_SUPABASE_ANON_KEY);
 
   return { url, anonKey };
 }

@@ -1,13 +1,34 @@
-import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission } from "../types";
+import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry } from "../types";
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
 
 // Initial seed users for offline / static fallback
 const INITIAL_FALLBACK_USERS: User[] = [
   {
+    id: "usr-admin",
+    username: "admin",
+    email: "admin@pyedu.edu.vn",
+    password: "admin@password",
+    fullName: "Quản trị viên Hệ thống (Admin)",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=AdminPyEdu",
+    grade: "Ban Quản trị PyEdu",
+    school: "Hệ thống Đào tạo Lập trình PyEdu",
+    role: "admin",
+    totalXp: 9999,
+    weeklyXp: 1250,
+    streakDays: 60,
+    lastActiveDate: new Date().toISOString().split("T")[0],
+    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1", "lesson-3-2", "lesson-4-1", "lesson-5-1", "lesson-6-1"],
+    badges: ["first_step", "streak_3", "streak_7", "streak_30", "perfect_score", "loop_master", "algo_wizard"],
+    dailyGoal: 60,
+    reminderTime: "08:00",
+    reminderEnabled: true
+  },
+  {
     id: "usr-demo-1",
     username: "khanh_tin10",
     email: "khanh.le@thpt-chuyentin.edu.vn",
+    password: "123",
     fullName: "Lê Minh Khánh",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=KhanhMinh",
     grade: "Lớp 10 Tin",
@@ -27,6 +48,7 @@ const INITIAL_FALLBACK_USERS: User[] = [
     id: "usr-teacher-1",
     username: "thaynam_gv",
     email: "nam.nguyen@thpt-chuyentin.edu.vn",
+    password: "123",
     fullName: "Thầy Nguyễn Hoàng Nam",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TeacherNam",
     grade: "Tổ trưởng Bộ môn Tin",
@@ -135,6 +157,48 @@ export class LocalDataManager {
     users[idx] = { ...users[idx], ...updates };
     this.saveUsers(users);
     return users[idx];
+  }
+
+  public static deleteUser(id: string): boolean {
+    const users = this.getUsers();
+    const filtered = users.filter(u => u.id !== id);
+    if (filtered.length === users.length) return false;
+    this.saveUsers(filtered);
+    try {
+      localStorage.removeItem(`${this.STORAGE_KEY_CODES}_${id}`);
+      localStorage.removeItem(`${this.STORAGE_KEY_SUBS}_${id}`);
+      localStorage.removeItem(`${this.STORAGE_KEY_NOTES}_${id}`);
+      localStorage.removeItem(`${this.STORAGE_KEY_NOTIFS}_${id}`);
+    } catch {}
+    return true;
+  }
+
+  public static resetUserProgress(id: string): User | null {
+    const user = this.getUserById(id);
+    if (!user) return null;
+    const updated = this.updateUser(id, {
+      completedLessons: [],
+      totalXp: user.role === 'admin' ? 9999 : 0,
+      weeklyXp: 0,
+      streakDays: 1,
+      badges: ["first_step"]
+    });
+    try {
+      localStorage.removeItem(`${this.STORAGE_KEY_CODES}_${id}`);
+      localStorage.removeItem(`${this.STORAGE_KEY_SUBS}_${id}`);
+    } catch {}
+    return updated;
+  }
+
+  public static batchAddXp(userIds: string[], xpAmount: number) {
+    const users = this.getUsers();
+    users.forEach(u => {
+      if (userIds.includes(u.id)) {
+        u.totalXp += xpAmount;
+        u.weeklyXp += xpAmount;
+      }
+    });
+    this.saveUsers(users);
   }
 
   public static getCodes(userId: string): Record<string, string> {
@@ -323,9 +387,9 @@ export const ApiService = {
     return LocalDataManager.getGroups(userId);
   },
 
-  async login(usernameOrEmail: string): Promise<User | null> {
+  async login(usernameOrEmail: string, password?: string): Promise<User | null> {
     if (SupabaseService.isAvailable()) {
-      const suUser = await SupabaseService.getUserByCredentials(usernameOrEmail);
+      const suUser = await SupabaseService.getUserByCredentials(usernameOrEmail, password);
       if (suUser) {
         LocalDataManager.updateUser(suUser.id, suUser);
         return suUser;
@@ -335,7 +399,7 @@ export const ApiService = {
     const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usernameOrEmail })
+      body: JSON.stringify({ usernameOrEmail, password })
     });
 
     if (data?.user) return data.user;
@@ -344,7 +408,18 @@ export const ApiService = {
     const users = LocalDataManager.getUsers();
     const query = usernameOrEmail.trim().toLowerCase();
     const matched = users.find(u => u.username.toLowerCase() === query || u.email.toLowerCase() === query);
-    return matched || null;
+    
+    if (matched) {
+      if (query === "admin") {
+        if (password && password !== "admin@password") {
+          return null; // Incorrect password for admin
+        }
+      } else if (password && matched.password && matched.password !== password) {
+        return null;
+      }
+      return matched;
+    }
+    return null;
   },
 
   async register(userData: {
@@ -352,7 +427,7 @@ export const ApiService = {
     email: string;
     fullName: string;
     grade: string;
-    role: 'student' | 'teacher';
+    role: 'student' | 'teacher' | 'admin';
     school?: string;
     password?: string;
   }): Promise<User | null> {
@@ -380,17 +455,18 @@ export const ApiService = {
       id: `usr-${Date.now()}`,
       username: userData.username.trim(),
       email: userData.email.trim(),
+      password: userData.password || (userData.role === 'admin' ? "admin@password" : "123456"),
       fullName: userData.fullName.trim(),
       grade: userData.grade || "Lớp 10 Tin",
       school: userData.school || "THPT Chuyên Tin Học",
       role: userData.role || "student",
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${userData.username}`,
-      totalXp: 0,
+      totalXp: userData.role === 'admin' ? 9999 : 0,
       weeklyXp: 0,
       streakDays: 1,
       lastActiveDate: new Date().toISOString().split("T")[0],
-      completedLessons: [],
-      badges: [],
+      completedLessons: userData.role === 'admin' ? ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1", "lesson-3-2", "lesson-4-1", "lesson-5-1", "lesson-6-1"] : [],
+      badges: userData.role === 'admin' ? ["first_step", "streak_3", "streak_7", "perfect_score", "loop_master", "algo_wizard"] : ["first_step"],
       dailyGoal: 20,
       reminderTime: "19:30",
       reminderEnabled: true
@@ -399,6 +475,46 @@ export const ApiService = {
     users.push(newUser);
     LocalDataManager.saveUsers(users);
     return newUser;
+  },
+
+  async adminDeleteUser(userId: string): Promise<boolean> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.deleteUser(userId);
+    }
+    await safeFetchJson(`/api/admin/users/${userId}`, { method: "DELETE" });
+    return LocalDataManager.deleteUser(userId);
+  },
+
+  async adminResetUserProgress(userId: string): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.resetUserProgress(userId);
+    }
+    await safeFetchJson(`/api/admin/users/${userId}/reset`, { method: "POST" });
+    return LocalDataManager.resetUserProgress(userId);
+  },
+
+  async adminUpdateUser(userId: string, updates: Partial<User> & { password?: string }): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.updateUserProfile(userId, updates);
+    }
+    await safeFetchJson(`/api/admin/users/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates)
+    });
+    return LocalDataManager.updateUser(userId, updates);
+  },
+
+  async adminBatchAddXp(userIds: string[], xpAmount: number): Promise<void> {
+    LocalDataManager.batchAddXp(userIds, xpAmount);
+    if (SupabaseService.isAvailable()) {
+      for (const uid of userIds) {
+        const u = LocalDataManager.getUserById(uid);
+        if (u) {
+          await SupabaseService.updateUserProfile(uid, { totalXp: u.totalXp, weeklyXp: u.weeklyXp });
+        }
+      }
+    }
   },
 
   async loadUserData(userId: string) {
@@ -684,6 +800,25 @@ export const ApiService = {
     await safeFetchJson(`/api/notes/${id}`, { method: "DELETE" });
   },
 
+  async addNotification(userId: string, item: Omit<NotificationItem, "id" | "timestamp" | "read">): Promise<NotificationItem> {
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      timestamp: "Vừa xong",
+      read: false,
+      ...item
+    };
+    const notifs = LocalDataManager.getNotifications(userId);
+    notifs.unshift(newNotif);
+    LocalDataManager.saveNotifications(userId, notifs);
+
+    if (SupabaseService.isAvailable()) {
+      const suNotif = await SupabaseService.addNotification(userId, item);
+      if (suNotif) return suNotif;
+    }
+
+    return newNotif;
+  },
+
   async markNotificationRead(userId: string, id: string) {
     const notifs = LocalDataManager.getNotifications(userId);
     const target = notifs.find(n => n.id === id);
@@ -691,11 +826,38 @@ export const ApiService = {
       target.read = true;
       LocalDataManager.saveNotifications(userId, notifs);
     }
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.markNotificationRead(id);
+    }
+
     await safeFetchJson(`/api/notifications/${id}/read`, { method: "PUT" });
   },
 
   async clearNotifications(userId: string) {
     LocalDataManager.saveNotifications(userId, []);
+
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.clearNotifications(userId);
+    }
+
     await safeFetchJson(`/api/notifications/${userId}`, { method: "DELETE" });
+  },
+
+  async fetchAlgorithmSubmissions(userId: string): Promise<AlgorithmSubmission[]> {
+    if (SupabaseService.isAvailable()) {
+      const suSubs = await SupabaseService.getAlgorithmSubmissions(userId);
+      if (suSubs && suSubs.length > 0) {
+        return suSubs;
+      }
+    }
+    return LocalDataManager.getAlgorithmSubmissions(userId);
+  },
+
+  async fetchAlgorithmLeaderboard(): Promise<AlgorithmLeaderboardEntry[] | null> {
+    if (SupabaseService.isAvailable()) {
+      return await SupabaseService.getAlgorithmLeaderboard();
+    }
+    return null;
   }
 };

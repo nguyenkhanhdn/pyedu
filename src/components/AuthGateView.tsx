@@ -33,7 +33,7 @@ export const AuthGateView: React.FC = () => {
   const [password, setPassword] = useState("123456");
   const [grade, setGrade] = useState("Lớp 10A1");
   const [school, setSchool] = useState("THPT Chuyên Tin");
-  const [role, setRole] = useState<"student" | "teacher">("student");
+  const [role, setRole] = useState<"student" | "teacher" | "admin">("student");
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -59,11 +59,12 @@ export const AuthGateView: React.FC = () => {
           fullName: fullName.trim(),
           grade,
           role,
-          school
+          school,
+          password: password.trim() || (role === "admin" ? "admin@password" : "123456")
         });
 
         if (success) {
-          setSuccessMessage("Đăng ký tài khoản học sinh thành công! Đang lưu vào CSDL SQLite và mở bài học...");
+          setSuccessMessage("Đăng ký tài khoản thành công! Đang lưu vào CSDL Supabase và mở giao diện...");
         } else {
           setErrorMessage("Tên đăng nhập hoặc Email đã tồn tại trong CSDL. Vui lòng chọn tên khác!");
         }
@@ -74,11 +75,11 @@ export const AuthGateView: React.FC = () => {
           return;
         }
 
-        const success = await login(username.trim());
+        const success = await login(username.trim(), password.trim() || undefined);
         if (success) {
-          setSuccessMessage("Đăng nhập thành công! Đang đồng bộ tiến độ từ CSDL SQLite...");
+          setSuccessMessage("Đăng nhập thành công! Đang đồng bộ tiến độ từ CSDL Supabase...");
         } else {
-          setErrorMessage("Không tìm thấy tài khoản trong CSDL SQLite. Hãy kiểm tra lại hoặc chuyển sang Đăng ký mới!");
+          setErrorMessage("Không tìm thấy tài khoản hoặc mật khẩu không chính xác. Hãy kiểm tra lại!");
         }
       }
     } catch (err: any) {
@@ -88,10 +89,10 @@ export const AuthGateView: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = async (identifier: string) => {
+  const handleQuickLogin = async (identifier: string, pwd?: string) => {
     setIsLoading(true);
     setErrorMessage("");
-    const ok = await login(identifier);
+    const ok = await login(identifier, pwd);
     if (!ok) {
       setErrorMessage("Không thể đăng nhập tài khoản mẫu.");
     }
@@ -243,7 +244,21 @@ export const AuthGateView: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => handleQuickLogin("khanh_it")}
+                  onClick={() => handleQuickLogin("admin", "admin@password")}
+                  className="px-3 py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 hover:border-purple-400 rounded-xl text-xs text-left transition-all flex items-center gap-2 group cursor-pointer shadow-xs"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-purple-600 border border-purple-700 flex items-center justify-center text-white font-bold text-xs">
+                    <Shield className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-purple-950 group-hover:text-purple-700">Admin Quản trị</p>
+                    <p className="text-[10px] text-purple-700 font-mono">admin@password</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin("khanh_it", "123456")}
                   className="px-3 py-2 bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 rounded-xl text-xs text-left transition-all flex items-center gap-2 group cursor-pointer shadow-xs"
                 >
                   <div className="h-7 w-7 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs">
@@ -251,13 +266,13 @@ export const AuthGateView: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-slate-800 group-hover:text-indigo-600">Học sinh Khánh</p>
-                    <p className="text-[10px] text-slate-500">Lớp 10A1 (280 XP, streak 4 ngày)</p>
+                    <p className="text-[10px] text-slate-500">Lớp 10A1 (280 XP)</p>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => handleQuickLogin("thaynam_tin")}
+                  onClick={() => handleQuickLogin("thaynam_tin", "123456")}
                   className="px-3 py-2 bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 rounded-xl text-xs text-left transition-all flex items-center gap-2 group cursor-pointer shadow-xs"
                 >
                   <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 font-bold text-xs">
@@ -265,7 +280,7 @@ export const AuthGateView: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-slate-800 group-hover:text-amber-700">Thầy Nam (giáo viên)</p>
-                    <p className="text-[10px] text-slate-500">Mở khóa toàn bộ bài giảng</p>
+                    <p className="text-[10px] text-slate-500">Mở toàn bộ bài giảng</p>
                   </div>
                 </button>
               </div>
@@ -371,8 +386,9 @@ export const AuthGateView: React.FC = () => {
                           onChange={(e) => setRole(e.target.value as any)}
                           className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
                         >
-                          <option value="student">Học sinh</option>
-                          <option value="teacher">Giáo viên</option>
+                          <option value="student">🎓 Học sinh</option>
+                          <option value="teacher">👨‍🏫 Giáo viên</option>
+                          <option value="admin">🛡️ Quản trị viên (Admin)</option>
                         </select>
                       </div>
                     </div>

@@ -60,7 +60,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
                   Python v3.12
                 </span>
-                {teacherMode && (
+                {currentUser?.role === "admin" && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 rounded-full flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3 text-purple-600" /> Admin
+                  </span>
+                )}
+                {teacherMode && currentUser?.role !== "admin" && (
                   <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-300 rounded-full flex items-center gap-1">
                     <ShieldCheck className="h-3 w-3" /> Chế độ giáo viên
                   </span>
@@ -148,6 +153,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               <BookOpen className="h-4 w-4 text-purple-500" />
               <span>Sổ tay ngoại tuyến</span>
             </button>
+
+            {currentUser?.role === "admin" && (
+              <button
+                onClick={() => setActiveTab("admin")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer border ${
+                  activeTab === "admin"
+                    ? "bg-purple-700 text-white border-purple-700 shadow-sm shadow-purple-700/30"
+                    : "bg-purple-50/70 text-purple-700 border-purple-200 hover:bg-purple-100"
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4 text-purple-600" />
+                <span>Quản trị viên</span>
+              </button>
+            )}
           </nav>
 
           {/* Right Action Tools: Streak, Progress, AI, Notifications, User Profile */}
@@ -391,6 +410,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
           >
             Hồ Sơ
           </button>
+          {currentUser?.role === "admin" && (
+            <button
+              onClick={() => setActiveTab("admin")}
+              className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
+                activeTab === "admin" ? "bg-purple-700 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"
+              }`}
+            >
+              🛡️ Quản Trị
+            </button>
+          )}
         </div>
       </div>
     </header>

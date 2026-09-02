@@ -28,10 +28,17 @@ import confetti from "canvas-confetti";
 interface AppContextType {
   currentUser: User | null;
   allUsers: User[];
-  login: (usernameOrEmail: string) => Promise<boolean>;
-  register: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher'; school?: string; password?: string }) => Promise<boolean>;
+  login: (usernameOrEmail: string, password?: string) => Promise<boolean>;
+  register: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher' | 'admin'; school?: string; password?: string }) => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
+
+  // Admin Management Actions
+  adminCreateUser: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher' | 'admin'; school?: string; password?: string }) => Promise<boolean>;
+  adminUpdateUser: (userId: string, updates: Partial<User> & { password?: string }) => Promise<boolean>;
+  adminDeleteUser: (userId: string) => Promise<boolean>;
+  adminResetUserProgress: (userId: string) => Promise<boolean>;
+  adminBatchAddXp: (userIds: string[], xpAmount: number) => Promise<void>;
 
   // Curriculum & Progression
   modules: typeof CURRICULUM_MODULES;
@@ -92,8 +99,8 @@ interface AppContextType {
   handbookTopics: typeof OFFLINE_HANDBOOK_TOPICS;
 
   // Active View Tab
-  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile';
-  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile') => void;
+  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin';
+  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -107,7 +114,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [teacherMode, setTeacherMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin'>('learn');
 
   // 2. Selected Lesson State
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(CURRICULUM_MODULES[0].lessons[0]);
@@ -118,7 +125,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 4. Submissions per lesson
   const [lessonSubmissions, setLessonSubmissions] = useState<Record<string, SubmissionResult[]>>({});
 
-  // 4.1 Algorithm Problem Solving Submissions & State
+  // 4. Algorithm Problems & Submissions State
+  const [algorithmProblems, setAlgorithmProblems] = useState<AlgorithmProblem[]>(ALGORITHM_PROBLEMS);
   const [algorithmSubmissions, setAlgorithmSubmissions] = useState<AlgorithmSubmission[]>(() => {
     const saved = localStorage.getItem("pyedu_algo_submissions");
     return saved ? JSON.parse(saved) : [];
@@ -177,18 +185,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (data.notifications) {
         setNotifications(data.notifications);
       }
+
+      // Also load algorithm submissions for user
+      const algoSubs = await ApiService.fetchAlgorithmSubmissions(user.id);
+      if (algoSubs && algoSubs.length > 0) {
+        setAlgorithmSubmissions(algoSubs);
+        try {
+          localStorage.setItem("pyedu_algo_submissions", JSON.stringify(algoSubs));
+        } catch {}
+      }
     } catch (e) {
       console.warn("Notice: loadUserData handled safely:", e);
     }
   };
 
-  // Initial load of users & groups
+  // Initial load of users, problems & groups
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [users, groups] = await Promise.all([
+        const [users, groups, problems] = await Promise.all([
           ApiService.fetchUsers(),
-          ApiService.fetchGroups(currentUser?.id)
+          ApiService.fetchGroups(currentUser?.id),
+          ApiService.fetchAlgorithmProblems()
         ]);
 
         if (users && users.length > 0) {
@@ -197,6 +215,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         if (groups && groups.length > 0) {
           setStudyGroups(groups);
+        }
+
+        if (problems && problems.length > 0) {
+          setAlgorithmProblems(problems);
         }
 
         if (currentUser) {
@@ -325,6 +347,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn("Could not save to localStorage:", e);
     }
 
+    if (currentUser) {
+      ApiService.recordAlgorithmSubmission(currentUser.id, newSub).catch(() => {});
+    }
+
     if (result.passed) {
       try {
         confetti({
@@ -375,6 +401,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...item
     };
     setNotifications(prev => [newNotif, ...prev]);
+
+    if (currentUser) {
+      ApiService.addNotification(currentUser.id, item).catch(() => {});
+    }
   };
 
   const markNotificationAsRead = async (id: string) => {
@@ -401,9 +431,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Login via API / SQLite
-  const login = async (usernameOrEmail: string): Promise<boolean> => {
+  const login = async (usernameOrEmail: string, password?: string): Promise<boolean> => {
     try {
-      const user = await ApiService.login(usernameOrEmail);
+      const user = await ApiService.login(usernameOrEmail, password);
       if (user) {
         setCurrentUser(user);
         await loadUserData(user);
@@ -424,7 +454,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     email: string;
     fullName: string;
     grade: string;
-    role: 'student' | 'teacher';
+    role: 'student' | 'teacher' | 'admin';
     school?: string;
     password?: string;
   }): Promise<boolean> => {
@@ -441,6 +471,105 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err) {
       console.warn("Register notice:", err);
       return false;
+    }
+  };
+
+  // Admin User Management Handlers
+  const adminCreateUser = async (userData: {
+    username: string;
+    email: string;
+    fullName: string;
+    grade: string;
+    role: 'student' | 'teacher' | 'admin';
+    school?: string;
+    password?: string;
+  }): Promise<boolean> => {
+    try {
+      const user = await ApiService.register(userData);
+      if (user) {
+        const users = await ApiService.fetchUsers();
+        setAllUsers(users);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin create user error:", e);
+      return false;
+    }
+  };
+
+  const adminUpdateUser = async (userId: string, updates: Partial<User> & { password?: string }): Promise<boolean> => {
+    try {
+      const updated = await ApiService.adminUpdateUser(userId, updates);
+      if (updated) {
+        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+        if (currentUser && currentUser.id === userId) {
+          setCurrentUser({ ...currentUser, ...updates });
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin update user error:", e);
+      return false;
+    }
+  };
+
+  const adminDeleteUser = async (userId: string): Promise<boolean> => {
+    try {
+      const success = await ApiService.adminDeleteUser(userId);
+      if (success) {
+        setAllUsers(prev => prev.filter(u => u.id !== userId));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin delete user error:", e);
+      return false;
+    }
+  };
+
+  const adminResetUserProgress = async (userId: string): Promise<boolean> => {
+    try {
+      const updated = await ApiService.adminResetUserProgress(userId);
+      if (updated) {
+        setAllUsers(prev => prev.map(u => u.id === userId ? updated : u));
+        if (currentUser && currentUser.id === userId) {
+          setCurrentUser(updated);
+          setUserCodes({});
+          setLessonSubmissions({});
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin reset user progress error:", e);
+      return false;
+    }
+  };
+
+  const adminBatchAddXp = async (userIds: string[], xpAmount: number): Promise<void> => {
+    try {
+      await ApiService.adminBatchAddXp(userIds, xpAmount);
+      setAllUsers(prev => prev.map(u => {
+        if (userIds.includes(u.id)) {
+          return {
+            ...u,
+            totalXp: u.totalXp + xpAmount,
+            weeklyXp: u.weeklyXp + xpAmount
+          };
+        }
+        return u;
+      }));
+      if (currentUser && userIds.includes(currentUser.id)) {
+        setCurrentUser(prev => prev ? {
+          ...prev,
+          totalXp: prev.totalXp + xpAmount,
+          weeklyXp: prev.weeklyXp + xpAmount
+        } : null);
+      }
+    } catch (e) {
+      console.error("Admin batch add XP error:", e);
     }
   };
 
@@ -669,15 +798,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isCurrentUser: true
   } : null;
 
-  // Merge current user with INITIAL_ALGORITHM_LEADERBOARD
-  const rawAlgoList: AlgorithmLeaderboardEntry[] = [...INITIAL_ALGORITHM_LEADERBOARD];
-  if (currentUserAlgoEntry) {
-    const existingIdx = rawAlgoList.findIndex(e => e.userId === currentUserAlgoEntry.userId);
-    if (existingIdx >= 0) {
-      rawAlgoList[existingIdx] = currentUserAlgoEntry;
-    } else {
-      rawAlgoList.push(currentUserAlgoEntry);
+  // Build dynamic algorithm leaderboard including all users from Supabase
+  const rawAlgoList: AlgorithmLeaderboardEntry[] = userListForLeaderboard.map((u) => {
+    if (currentUser && u.id === currentUser.id && currentUserAlgoEntry) {
+      return currentUserAlgoEntry;
     }
+
+    const estimatedScore = Math.round(u.totalXp * 0.8) || 50;
+    const estimatedSolved = Math.max(1, Math.round(u.completedLessons.length * 1.5) || 2);
+    const primarySolved = Math.min(estimatedSolved, Math.ceil(estimatedSolved * 0.6));
+    const secondarySolved = Math.max(0, estimatedSolved - primarySolved);
+
+    return {
+      rank: 0,
+      userId: u.id,
+      fullName: u.fullName,
+      username: u.username,
+      avatar: u.avatar,
+      grade: u.grade,
+      level: 'all' as const,
+      totalScore: estimatedScore,
+      solvedCount: estimatedSolved,
+      primarySolved,
+      secondarySolved,
+      accuracy: 85 + (u.totalXp % 15),
+      isCurrentUser: u.id === currentUser?.id
+    };
+  });
+
+  // Also merge any initial algorithm leaderboard entries if user list is small
+  if (rawAlgoList.length < 5) {
+    INITIAL_ALGORITHM_LEADERBOARD.forEach(initEntry => {
+      if (!rawAlgoList.some(e => e.userId === initEntry.userId || e.username === initEntry.username)) {
+        rawAlgoList.push(initEntry);
+      }
+    });
   }
 
   // Sort by totalScore desc, then solvedCount desc, then accuracy desc
@@ -699,6 +854,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         register,
         logout,
         updateUserProfile,
+
+        // Admin methods
+        adminCreateUser,
+        adminUpdateUser,
+        adminDeleteUser,
+        adminResetUserProgress,
+        adminBatchAddXp,
 
         modules: CURRICULUM_MODULES,
         selectedLesson,

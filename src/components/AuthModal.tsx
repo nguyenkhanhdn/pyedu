@@ -13,9 +13,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("123456");
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState("Lớp 10A1");
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [role, setRole] = useState<'student' | 'teacher' | 'admin'>('student');
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -40,15 +41,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           email: email.trim(),
           fullName: fullName.trim(),
           grade,
-          role
+          role,
+          password: password.trim() || "123456"
         });
         if (success) {
-          setSuccessMessage("Đăng ký tài khoản học sinh thành công! Đang chuyển hướng...");
+          setSuccessMessage("Đăng ký tài khoản thành công! Đang lưu vào Supabase...");
           setTimeout(() => {
             onClose();
           }, 800);
         } else {
-          setErrorMessage("Tên đăng nhập hoặc Email đã tồn tại trong CSDL SQLite.");
+          setErrorMessage("Tên đăng nhập hoặc Email đã tồn tại trong CSDL.");
         }
       } else {
         if (!username.trim()) {
@@ -56,26 +58,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           setIsLoading(false);
           return;
         }
-        const success = await login(username.trim());
+        const success = await login(username.trim(), password.trim() || undefined);
         if (success) {
           setSuccessMessage("Đăng nhập thành công!");
           setTimeout(() => {
             onClose();
           }, 500);
         } else {
-          setErrorMessage("Không tìm thấy tài khoản trong CSDL SQLite. Hãy kiểm tra lại hoặc Đăng ký mới!");
+          setErrorMessage("Không tìm thấy tài khoản hoặc mật khẩu không chính xác. Hãy kiểm tra lại!");
         }
       }
     } catch (err: any) {
-      setErrorMessage("Lỗi kết nối SQLite: " + (err.message || "Thử lại"));
+      setErrorMessage("Lỗi kết nối CSDL: " + (err.message || "Thử lại"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleQuickSwitch = async (uName: string) => {
+  const handleQuickSwitch = async (uName: string, pwd?: string) => {
     setIsLoading(true);
-    await login(uName);
+    await login(uName, pwd);
     setIsLoading(false);
     onClose();
   };
@@ -198,7 +200,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <input
                 type="password"
                 placeholder="••••••••"
-                defaultValue="123456"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition-colors placeholder:text-slate-400"
               />
             </div>
@@ -209,7 +212,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
-                <span>Đang xử lý kết nối SQLite...</span>
+                <span>Đang xử lý kết nối Supabase...</span>
               ) : isRegister ? (
                 <>
                   <UserPlus className="h-4 w-4" />
@@ -242,28 +245,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Tài khoản dùng thử nhanh:
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
-                onClick={() => handleQuickSwitch("khanh_it")}
-                className="p-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-left transition-all flex items-center gap-2 cursor-pointer"
+                onClick={() => handleQuickSwitch("admin", "admin@password")}
+                className="p-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 hover:border-purple-400 rounded-xl text-left transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <GraduationCap className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+                <Shield className="h-4 w-4 text-purple-700 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">Học sinh Khánh</p>
-                  <p className="text-[10px] text-slate-500">Lớp 10A1 (280 XP)</p>
+                  <p className="text-xs font-bold text-purple-900 truncate">Admin Quản trị</p>
+                  <p className="text-[9px] text-purple-600 font-mono truncate">admin@password</p>
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickSwitch("thaynam_tin")}
-                className="p-2 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl text-left transition-all flex items-center gap-2 cursor-pointer"
+                onClick={() => handleQuickSwitch("khanh_it", "123456")}
+                className="p-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-left transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <GraduationCap className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-800 truncate">Học sinh Khánh</p>
+                  <p className="text-[9px] text-slate-500 truncate">Lớp 10A1</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickSwitch("thaynam_tin", "123456")}
+                className="p-2 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl text-left transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Shield className="h-4 w-4 text-amber-600 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">Thầy Nam (giáo viên)</p>
-                  <p className="text-[10px] text-slate-500">Mở toàn bộ bài giảng</p>
+                  <p className="text-xs font-semibold text-slate-800 truncate">Thầy Nam (GV)</p>
+                  <p className="text-[9px] text-slate-500 truncate">Toàn quyền bài</p>
                 </div>
               </button>
             </div>

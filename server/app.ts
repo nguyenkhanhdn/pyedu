@@ -41,7 +41,7 @@ getDatabase().catch(err => console.warn("SQLite init notice:", err));
 // Login endpoint
 app.post("/api/auth/login", async (req, res) => {
   try {
-    const { usernameOrEmail } = req.body;
+    const { usernameOrEmail, password } = req.body;
     if (!usernameOrEmail) {
       return res.status(400).json({ error: "Vui lòng nhập tên đăng nhập hoặc email." });
     }
@@ -49,6 +49,10 @@ app.post("/api/auth/login", async (req, res) => {
     const user = await getUserByCredentials(usernameOrEmail);
     if (!user) {
       return res.status(401).json({ error: "Tài khoản không tồn tại. Hãy đăng ký tài khoản mới!" });
+    }
+
+    if (password && user.password && user.password !== password) {
+      return res.status(401).json({ error: "Mật khẩu không chính xác!" });
     }
 
     res.json({ success: true, user });

@@ -202,8 +202,107 @@ function initTables(db: Database) {
     );
   `);
 
-  // Seed default users if empty
+  // Seed default users and ensure required accounts exist
   seedInitialData(db);
+  ensureDefaultAccounts(db);
+}
+
+function ensureDefaultAccounts(db: Database) {
+  const today = new Date().toISOString().split("T")[0];
+  const now = new Date().toISOString();
+
+  // 1. Ensure Admin Account
+  const checkAdmin = db.prepare(`SELECT id FROM users WHERE LOWER(username) = 'admin' OR LOWER(email) = 'admin@pyedu.edu.vn'`);
+  if (!checkAdmin.step()) {
+    checkAdmin.free();
+    db.run(
+      `INSERT INTO users (id, username, email, password, full_name, avatar, role, grade, school, total_xp, weekly_xp, streak_days, last_active_date, daily_goal, reminder_time, reminder_enabled, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        "usr-admin",
+        "admin",
+        "admin@pyedu.edu.vn",
+        "admin@password",
+        "Quản trị viên Hệ thống (Admin)",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=AdminPyEdu",
+        "admin",
+        "Ban Quản trị PyEdu",
+        "Hệ thống Đào tạo Lập trình PyEdu",
+        9999,
+        1250,
+        60,
+        today,
+        60,
+        "08:00",
+        1,
+        now
+      ]
+    );
+  } else {
+    checkAdmin.free();
+  }
+
+  // 2. Ensure Khanh Student Account
+  const checkKhanh = db.prepare(`SELECT id FROM users WHERE LOWER(username) = 'khanh_it' OR LOWER(email) = 'khanhdsp@gmail.com'`);
+  if (!checkKhanh.step()) {
+    checkKhanh.free();
+    db.run(
+      `INSERT INTO users (id, username, email, password, full_name, avatar, role, grade, school, total_xp, weekly_xp, streak_days, last_active_date, daily_goal, reminder_time, reminder_enabled, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        "student-khanh",
+        "khanh_it",
+        "khanhdsp@gmail.com",
+        "123456",
+        "Đặng Song Phúc Khánh",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=KhanhIT",
+        "student",
+        "Lớp 10A1",
+        "THPT Chuyên Tin",
+        280,
+        180,
+        4,
+        today,
+        20,
+        "19:30",
+        1,
+        now
+      ]
+    );
+  } else {
+    checkKhanh.free();
+  }
+
+  // 3. Ensure Teacher Nam Account
+  const checkTeacher = db.prepare(`SELECT id FROM users WHERE LOWER(username) = 'thaynam_tin' OR LOWER(email) = 'thaynam@pyedu.edu.vn'`);
+  if (!checkTeacher.step()) {
+    checkTeacher.free();
+    db.run(
+      `INSERT INTO users (id, username, email, password, full_name, avatar, role, grade, school, total_xp, weekly_xp, streak_days, last_active_date, daily_goal, reminder_time, reminder_enabled, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        "teacher-nam",
+        "thaynam_tin",
+        "thaynam@pyedu.edu.vn",
+        "123456",
+        "Thầy Trần Văn Nam",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=TeacherNam",
+        "teacher",
+        "Giáo viên Tin học",
+        "Tổ Tin học - Công Nghệ",
+        5200,
+        1200,
+        45,
+        today,
+        60,
+        "20:00",
+        1,
+        now
+      ]
+    );
+  } else {
+    checkTeacher.free();
+  }
 }
 
 function seedInitialData(db: Database) {
@@ -214,6 +313,31 @@ function seedInitialData(db: Database) {
     console.log("Seeding initial PyEdu SQLite records...");
     const today = new Date().toISOString().split("T")[0];
     const now = new Date().toISOString();
+
+    // 0. Seed Admin
+    db.run(
+      `INSERT INTO users (id, username, email, password, full_name, avatar, role, grade, school, total_xp, weekly_xp, streak_days, last_active_date, daily_goal, reminder_time, reminder_enabled, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        "usr-admin",
+        "admin",
+        "admin@pyedu.edu.vn",
+        "admin@password",
+        "Quản trị viên Hệ thống (Admin)",
+        "https://api.dicebear.com/7.x/bottts/svg?seed=AdminPyEdu",
+        "admin",
+        "Ban Quản trị PyEdu",
+        "Hệ thống Đào tạo Lập trình PyEdu",
+        9999,
+        1250,
+        60,
+        today,
+        60,
+        "08:00",
+        1,
+        now
+      ]
+    );
 
     // 1. Seed Student: Đặng Song Phúc Khánh
     db.run(
@@ -399,6 +523,7 @@ function formatUser(db: Database, row: any) {
     id: row.id,
     username: row.username,
     email: row.email,
+    password: row.password,
     fullName: row.full_name,
     avatar: row.avatar,
     role: row.role,
@@ -422,7 +547,7 @@ export async function createUser(userData: {
   password?: string;
   fullName: string;
   grade: string;
-  role: 'student' | 'teacher';
+  role: 'student' | 'teacher' | 'admin';
   school?: string;
 }) {
   const db = await getDatabase();

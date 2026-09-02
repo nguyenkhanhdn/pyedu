@@ -25,14 +25,14 @@ const INITIAL_FALLBACK_USERS: User[] = [
     reminderEnabled: true
   },
   {
-    id: "usr-demo-1",
-    username: "khanh_tin10",
-    email: "khanh.le@thpt-chuyentin.edu.vn",
-    password: "123",
-    fullName: "Lê Minh Khánh",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=KhanhMinh",
-    grade: "Lớp 10 Tin",
-    school: "THPT Chuyên Tin Học",
+    id: "student-khanh",
+    username: "khanh_it",
+    email: "khanhdsp@gmail.com",
+    password: "123456",
+    fullName: "Đặng Song Phúc Khánh",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=KhanhIT",
+    grade: "Lớp 10A1",
+    school: "THPT Chuyên Tin",
     role: "student",
     totalXp: 1450,
     weeklyXp: 420,
@@ -45,37 +45,38 @@ const INITIAL_FALLBACK_USERS: User[] = [
     reminderEnabled: true
   },
   {
-    id: "usr-teacher-1",
-    username: "thaynam_gv",
-    email: "nam.nguyen@thpt-chuyentin.edu.vn",
-    password: "123",
-    fullName: "Thầy Nguyễn Hoàng Nam",
+    id: "teacher-nam",
+    username: "thaynam_tin",
+    email: "thaynam@pyedu.edu.vn",
+    password: "123456",
+    fullName: "Thầy Trần Văn Nam",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TeacherNam",
     grade: "Tổ trưởng Bộ môn Tin",
     school: "THPT Chuyên Tin Học",
     role: "teacher",
-    totalXp: 3500,
-    weeklyXp: 850,
-    streakDays: 30,
+    totalXp: 5200,
+    weeklyXp: 1200,
+    streakDays: 45,
     lastActiveDate: new Date().toISOString().split("T")[0],
     completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1", "lesson-3-2", "lesson-4-1", "lesson-5-1", "lesson-6-1"],
     badges: ["first_step", "streak_3", "streak_7", "perfect_score", "loop_master", "algo_wizard"],
-    dailyGoal: 30,
+    dailyGoal: 60,
     reminderTime: "20:00",
     reminderEnabled: true
   },
   {
     id: "usr-demo-2",
-    username: "lananh_python",
-    email: "lananh@thpt-chuyentin.edu.vn",
-    fullName: "Trần Lan Anh",
+    username: "lananh_coder",
+    email: "lananh@gmail.com",
+    password: "123456",
+    fullName: "Nguyễn Lan Anh",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=LanAnh",
-    grade: "Lớp 10 Tin",
-    school: "THPT Chuyên Tin Học",
+    grade: "Lớp 10A1",
+    school: "THPT Chuyên Tin",
     role: "student",
-    totalXp: 1280,
-    weeklyXp: 390,
-    streakDays: 4,
+    totalXp: 1450,
+    weeklyXp: 480,
+    streakDays: 12,
     lastActiveDate: new Date().toISOString().split("T")[0],
     completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3"],
     badges: ["first_step", "streak_3"],
@@ -87,6 +88,7 @@ const INITIAL_FALLBACK_USERS: User[] = [
     id: "usr-demo-3",
     username: "hoang_coder",
     email: "hoang@thpt-chuyentin.edu.vn",
+    password: "123456",
     fullName: "Vũ Huy Hoàng",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=HuyHoang",
     grade: "Lớp 11 Tin",
@@ -128,15 +130,64 @@ export class LocalDataManager {
   private static STORAGE_KEY_NOTIFS = "pyedu_offline_notifs";
 
   public static getUsers(): User[] {
+    let users: User[] = [];
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_USERS);
       if (data) {
         const parsed = JSON.parse(data);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          users = parsed;
+        }
       }
     } catch {}
-    this.saveUsers(INITIAL_FALLBACK_USERS);
-    return INITIAL_FALLBACK_USERS;
+
+    if (users.length === 0) {
+      users = [...INITIAL_FALLBACK_USERS];
+    } else {
+      // Self-heal: ensure default system accounts exist
+      // 1. Admin account
+      const adminIdx = users.findIndex(u => u.username?.toLowerCase() === "admin" || u.email?.toLowerCase() === "admin@pyedu.edu.vn");
+      const defaultAdmin = INITIAL_FALLBACK_USERS.find(u => u.username === "admin")!;
+      if (adminIdx === -1) {
+        users.unshift(defaultAdmin);
+      } else {
+        users[adminIdx] = {
+          ...defaultAdmin,
+          ...users[adminIdx],
+          role: "admin",
+          password: users[adminIdx].password || "admin@password"
+        };
+      }
+
+      // 2. Khanh student account
+      const khanhIdx = users.findIndex(u => u.username?.toLowerCase() === "khanh_it" || u.username?.toLowerCase() === "khanh_tin10");
+      const defaultKhanh = INITIAL_FALLBACK_USERS.find(u => u.username === "khanh_it")!;
+      if (khanhIdx === -1) {
+        users.push(defaultKhanh);
+      } else {
+        users[khanhIdx] = {
+          ...defaultKhanh,
+          ...users[khanhIdx],
+          password: users[khanhIdx].password || "123456"
+        };
+      }
+
+      // 3. Teacher Nam account
+      const teacherIdx = users.findIndex(u => u.username?.toLowerCase() === "thaynam_tin" || u.username?.toLowerCase() === "thaynam_gv");
+      const defaultTeacher = INITIAL_FALLBACK_USERS.find(u => u.username === "thaynam_tin")!;
+      if (teacherIdx === -1) {
+        users.push(defaultTeacher);
+      } else {
+        users[teacherIdx] = {
+          ...defaultTeacher,
+          ...users[teacherIdx],
+          password: users[teacherIdx].password || "123456"
+        };
+      }
+    }
+
+    this.saveUsers(users);
+    return users;
   }
 
   public static saveUsers(users: User[]) {
@@ -388,37 +439,73 @@ export const ApiService = {
   },
 
   async login(usernameOrEmail: string, password?: string): Promise<User | null> {
+    const rawQuery = (usernameOrEmail || "").trim();
+    const query = rawQuery.toLowerCase();
+    const pwd = (password || "").trim();
+
+    // 1. Try Supabase cloud if connected
     if (SupabaseService.isAvailable()) {
-      const suUser = await SupabaseService.getUserByCredentials(usernameOrEmail, password);
-      if (suUser) {
-        LocalDataManager.updateUser(suUser.id, suUser);
-        return suUser;
+      try {
+        const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined);
+        if (suUser) {
+          LocalDataManager.updateUser(suUser.id, suUser);
+          return suUser;
+        }
+      } catch (err) {
+        console.warn("Supabase auth check notice:", err);
       }
     }
 
-    const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usernameOrEmail, password })
-    });
+    // 2. Try Backend Server API (SQLite Express server)
+    try {
+      const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernameOrEmail: rawQuery, password: pwd })
+      });
 
-    if (data?.user) return data.user;
+      if (data?.user) return data.user;
+    } catch {}
 
-    // Fallback: search in local users
+    // 3. Fallback: search in local users / offline data
     const users = LocalDataManager.getUsers();
-    const query = usernameOrEmail.trim().toLowerCase();
-    const matched = users.find(u => u.username.toLowerCase() === query || u.email.toLowerCase() === query);
+    const matched = users.find(u => 
+      u.username?.toLowerCase() === query || 
+      u.email?.toLowerCase() === query
+    );
     
     if (matched) {
-      if (query === "admin") {
-        if (password && password !== "admin@password") {
+      if (query === "admin" || matched.role === "admin") {
+        if (pwd && pwd !== "admin@password" && matched.password && matched.password !== pwd) {
           return null; // Incorrect password for admin
         }
-      } else if (password && matched.password && matched.password !== password) {
+      } else if (pwd && matched.password && matched.password !== pwd) {
         return null;
       }
       return matched;
     }
+
+    // Emergency fallback for default accounts if not matched
+    if (query === "admin" || query === "admin@pyedu.edu.vn") {
+      if (!pwd || pwd === "admin@password") {
+        const defaultAdmin = INITIAL_FALLBACK_USERS.find(u => u.username === "admin")!;
+        LocalDataManager.updateUser(defaultAdmin.id, defaultAdmin);
+        return defaultAdmin;
+      }
+    } else if (query === "khanh_it" || query === "khanhdsp@gmail.com") {
+      if (!pwd || pwd === "123456" || pwd === "123") {
+        const defaultKhanh = INITIAL_FALLBACK_USERS.find(u => u.username === "khanh_it")!;
+        LocalDataManager.updateUser(defaultKhanh.id, defaultKhanh);
+        return defaultKhanh;
+      }
+    } else if (query === "thaynam_tin" || query === "thaynam@pyedu.edu.vn") {
+      if (!pwd || pwd === "123456" || pwd === "123") {
+        const defaultTeacher = INITIAL_FALLBACK_USERS.find(u => u.username === "thaynam_tin")!;
+        LocalDataManager.updateUser(defaultTeacher.id, defaultTeacher);
+        return defaultTeacher;
+      }
+    }
+
     return null;
   },
 

@@ -12,7 +12,9 @@ import {
   LogOut,
   ShieldCheck,
   Target,
-  Database
+  Database,
+  BarChart3,
+  Layers
 } from "lucide-react";
 import { isSupabaseConfigured } from "../lib/supabase";
 
@@ -29,216 +31,309 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
     logout,
     activeTab,
     setActiveTab,
+    adminSection,
+    setAdminSection,
     notifications,
     markNotificationAsRead,
     clearAllNotifications,
     triggerDailyReminder,
     getLessonProgressPercentage,
     teacherMode,
-    setTeacherMode
   } = useApp();
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const progressPercent = getLessonProgressPercentage();
+  const isAdmin = currentUser?.role === "admin";
+
+  const handleAdminNav = (section: 'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms') => {
+    setActiveTab('admin');
+    setAdminSection(section);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 text-slate-800 shadow-xs select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab("learn")}>
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-blue-500 to-emerald-500 flex items-center justify-center shadow-md shadow-indigo-500/20">
-              <Code className="h-5 w-5 text-white" />
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => {
+              if (isAdmin) {
+                setActiveTab("admin");
+                setAdminSection("users");
+              } else {
+                setActiveTab("learn");
+              }
+            }}
+          >
+            <div
+              className={`h-10 w-10 rounded-xl flex items-center justify-center shadow-md ${
+                isAdmin
+                  ? "bg-gradient-to-tr from-purple-700 via-indigo-600 to-indigo-800 shadow-purple-500/25"
+                  : "bg-gradient-to-tr from-indigo-600 via-blue-500 to-emerald-500 shadow-indigo-500/20"
+              }`}
+            >
+              {isAdmin ? (
+                <ShieldCheck className="h-5 w-5 text-white" />
+              ) : (
+                <Code className="h-5 w-5 text-white" />
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 bg-clip-text text-transparent">
-                  PyEdu
+                <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                  {isAdmin ? "PyEdu Admin Portal" : "PyEdu"}
                 </span>
-                <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
-                  Python v3.12
-                </span>
-                {currentUser?.role === "admin" && (
+                {isAdmin ? (
                   <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 rounded-full flex items-center gap-1">
-                    <ShieldCheck className="h-3 w-3 text-purple-600" /> Admin
+                    <ShieldCheck className="h-3 w-3 text-purple-600" /> Hệ Thống Quản Trị
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                    Python v3.12
                   </span>
                 )}
-                {teacherMode && currentUser?.role !== "admin" && (
+                {!isAdmin && teacherMode && (
                   <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-300 rounded-full flex items-center gap-1">
                     <ShieldCheck className="h-3 w-3" /> Chế độ giáo viên
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block">Học lập trình & chấm điểm tự động</p>
+              <p className="text-xs text-slate-500 hidden sm:block">
+                {isAdmin
+                  ? "Bảng điều khiển quản trị trung tâm & CSDL Supabase Direct"
+                  : "Học lập trình & chấm điểm tự động"}
+              </p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <button
-              onClick={() => setActiveTab("learn")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "learn"
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Code className="h-4 w-4" />
-              <span>Bài học & code</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("algorithms")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "algorithms"
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Target className="h-4 w-4 text-emerald-500" />
-              <span className="flex items-center gap-1.5">
-                Giải đề (Thuật toán)
-                <span className="px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300">
-                  Mới
-                </span>
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("leaderboard")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "leaderboard"
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <span>Bảng xếp hạng</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("groups")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "groups"
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <Users className="h-4 w-4 text-blue-500" />
-              <span>Học nhóm</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("notes")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "notes"
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <FileText className="h-4 w-4 text-emerald-500" />
-              <span>Ghi chú</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("handbook")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                activeTab === "handbook"
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
-            >
-              <BookOpen className="h-4 w-4 text-purple-500" />
-              <span>Sổ tay ngoại tuyến</span>
-            </button>
-
-            {currentUser?.role === "admin" && (
+          {isAdmin ? (
+            /* ADMIN ONLY HORIZONTAL NAVIGATION */
+            <nav className="hidden md:flex items-center space-x-1">
               <button
-                onClick={() => setActiveTab("admin")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer border ${
-                  activeTab === "admin"
-                    ? "bg-purple-700 text-white border-purple-700 shadow-sm shadow-purple-700/30"
-                    : "bg-purple-50/70 text-purple-700 border-purple-200 hover:bg-purple-100"
+                onClick={() => handleAdminNav("users")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                  activeTab === "admin" && adminSection === "users"
+                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
                 }`}
               >
-                <ShieldCheck className="h-4 w-4 text-purple-600" />
-                <span>Quản trị viên</span>
+                <Users className="h-4 w-4" />
+                <span>Người Dùng & Phân Quyền</span>
               </button>
-            )}
-          </nav>
 
-          {/* Right Action Tools: Streak, Progress, AI, Notifications, User Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Streak Counter */}
-            {currentUser && (
-              <div
-                onClick={() => setActiveTab("profile")}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 text-xs font-semibold cursor-pointer hover:bg-orange-100 transition-colors"
-                title={`Chuỗi học tập liên tục: ${currentUser.streakDays} ngày. Mục tiêu hàng ngày: ${currentUser.dailyGoal} phút.`}
+              <button
+                onClick={() => handleAdminNav("supabase")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                  activeTab === "admin" && adminSection === "supabase"
+                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+                }`}
               >
-                <Flame className="h-4 w-4 text-orange-500 fill-orange-500 animate-pulse" />
-                <span>{currentUser.streakDays} ngày</span>
-              </div>
-            )}
+                <Database className="h-4 w-4 text-emerald-500" />
+                <span>CSDL Supabase Cloud</span>
+              </button>
 
-            {/* Curriculum Progress Tooltip */}
-            <div
-              className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs cursor-pointer hover:border-slate-300"
-              onClick={() => setActiveTab("learn")}
-              title={`Tiến độ khóa học: ${progressPercent}%`}
-            >
-              <div className="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-emerald-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <span className="font-semibold text-slate-700">{progressPercent}%</span>
-            </div>
+              <button
+                onClick={() => handleAdminNav("stats")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                  activeTab === "admin" && adminSection === "stats"
+                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+                }`}
+              >
+                <BarChart3 className="h-4 w-4 text-indigo-500" />
+                <span>Thống Kê & Báo Cáo</span>
+              </button>
 
-            {/* Supabase Cloud DB Connection Button */}
+              <button
+                onClick={() => handleAdminNav("curriculum")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                  activeTab === "admin" && adminSection === "curriculum"
+                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+                }`}
+              >
+                <Layers className="h-4 w-4 text-amber-500" />
+                <span>Khóa Học & Bài Học</span>
+              </button>
+
+              <button
+                onClick={() => handleAdminNav("algorithms")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                  activeTab === "admin" && adminSection === "algorithms"
+                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+                }`}
+              >
+                <Target className="h-4 w-4 text-rose-500" />
+                <span>Ngân Hàng Thuật Toán</span>
+              </button>
+            </nav>
+          ) : (
+            /* STUDENT / LEARNER HORIZONTAL NAVIGATION */
+            <nav className="hidden md:flex items-center space-x-1">
+              <button
+                onClick={() => setActiveTab("learn")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "learn"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Code className="h-4 w-4" />
+                <span>Bài học & code</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("algorithms")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "algorithms"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Target className="h-4 w-4 text-emerald-500" />
+                <span className="flex items-center gap-1.5">
+                  Giải đề (Thuật toán)
+                  <span className="px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300">
+                    Mới
+                  </span>
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("leaderboard")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "leaderboard"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Trophy className="h-4 w-4 text-amber-500" />
+                <span>Bảng xếp hạng</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("groups")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "groups"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Users className="h-4 w-4 text-blue-500" />
+                <span>Học nhóm</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("notes")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "notes"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <FileText className="h-4 w-4 text-emerald-500" />
+                <span>Ghi chú</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("handbook")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "handbook"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <BookOpen className="h-4 w-4 text-purple-500" />
+                <span>Sổ tay ngoại tuyến</span>
+              </button>
+            </nav>
+          )}
+
+          {/* Right Action Tools */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Supabase Cloud DB Live Indicator */}
             {onOpenSupabaseSync && (
               <button
                 onClick={onOpenSupabaseSync}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                   isSupabaseConfigured()
-                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-300"
+                    ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border-emerald-300 shadow-xs"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
                 }`}
-                title="Quản lý CSDL Supabase (PostgreSQL Cloud) & Đồng bộ dữ liệu"
+                title="Quản lý CSDL Supabase (Direct Cloud PostgreSQL) & Kiểm tra kết nối"
               >
                 <Database className={`h-4 w-4 ${isSupabaseConfigured() ? "text-emerald-600" : "text-slate-500"}`} />
-                <span className="hidden xl:inline">Supabase</span>
-                <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+                <span className="hidden sm:inline">Supabase Trực Tiếp</span>
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                  }`}
+                />
               </button>
             )}
 
-            {/* 24/7 AI Tutor Toggle Button */}
-            <button
-              onClick={onToggleAi}
-              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                isAiOpen
-                  ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/30"
-                  : "bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200"
-              }`}
-              title="Mở Trợ lý Giáo viên AI 24/7 để giải đáp thắc mắc và gợi ý code"
-            >
-              <Bot className="h-4 w-4 text-violet-600 animate-bounce" />
-              <span className="hidden sm:inline">AI Tutor 24/7</span>
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-            </button>
+            {/* Student-only right tools */}
+            {!isAdmin && (
+              <>
+                {/* Streak Counter */}
+                {currentUser && (
+                  <div
+                    onClick={() => setActiveTab("profile")}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 text-xs font-semibold cursor-pointer hover:bg-orange-100 transition-colors"
+                    title={`Chuỗi học tập liên tục: ${currentUser.streakDays} ngày. Mục tiêu hàng ngày: ${currentUser.dailyGoal} phút.`}
+                  >
+                    <Flame className="h-4 w-4 text-orange-500 fill-orange-500 animate-pulse" />
+                    <span>{currentUser.streakDays} ngày</span>
+                  </div>
+                )}
+
+                {/* Curriculum Progress */}
+                <div
+                  className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs cursor-pointer hover:border-slate-300"
+                  onClick={() => setActiveTab("learn")}
+                  title={`Tiến độ khóa học: ${progressPercent}%`}
+                >
+                  <div className="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <span className="font-semibold text-slate-700">{progressPercent}%</span>
+                </div>
+
+                {/* 24/7 AI Tutor Button */}
+                <button
+                  onClick={onToggleAi}
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    isAiOpen
+                      ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/30"
+                      : "bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200"
+                  }`}
+                  title="Mở Trợ lý Giáo viên AI 24/7 để giải đáp thắc mắc và gợi ý code"
+                >
+                  <Bot className="h-4 w-4 text-violet-600 animate-bounce" />
+                  <span className="hidden sm:inline">AI Tutor 24/7</span>
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                </button>
+              </>
+            )}
 
             {/* Notification Bell */}
             <div className="relative">
               <button
                 onClick={() => setShowNotifMenu(!showNotifMenu)}
-                className="relative p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors"
-                title="Thông báo & Nhắc nhở hàng ngày"
+                className="relative p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors cursor-pointer"
+                title="Thông báo & Cảnh báo hệ thống"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -254,19 +349,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                   <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                     <div className="flex items-center gap-2">
                       <Bell className="h-4 w-4 text-indigo-600" />
-                      <span className="font-semibold text-sm text-slate-800">Thông báo & Nhắc nhở</span>
+                      <span className="font-semibold text-sm text-slate-800">Thông báo hệ thống</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={triggerDailyReminder}
-                        className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
-                        title="Thử kích hoạt thông báo nhắc nhở luyện code"
-                      >
-                        Thử báo giờ ⏰
-                      </button>
+                      {!isAdmin && (
+                        <button
+                          onClick={triggerDailyReminder}
+                          className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                          title="Thử kích hoạt thông báo nhắc nhở luyện code"
+                        >
+                          Thử báo giờ ⏰
+                        </button>
+                      )}
                       <button
                         onClick={clearAllNotifications}
-                        className="text-[11px] text-slate-400 hover:text-slate-600"
+                        className="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         Xóa tất cả
                       </button>
@@ -283,7 +380,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                           key={notif.id}
                           onClick={() => {
                             markNotificationAsRead(notif.id);
-                            if (notif.linkTab) setActiveTab(notif.linkTab as any);
+                            if (notif.linkTab && !isAdmin) setActiveTab(notif.linkTab as any);
                             setShowNotifMenu(false);
                           }}
                           className={`p-3 text-xs hover:bg-slate-50 cursor-pointer transition-colors ${
@@ -306,19 +403,32 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
             {/* User Profile / Auth Button */}
             {currentUser ? (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs shadow-xs">
+                <div
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs shadow-xs ${
+                    isAdmin
+                      ? "bg-purple-50/80 border-purple-200 text-purple-950"
+                      : "bg-slate-100 border-slate-200 text-slate-800"
+                  }`}
+                >
                   <button
-                    onClick={() => setActiveTab("profile")}
-                    className="flex items-center gap-1.5 text-slate-800 hover:text-indigo-600 font-bold transition-colors cursor-pointer"
-                    title="Xem hồ sơ & thành tích cá nhân"
+                    onClick={() => {
+                      if (isAdmin) {
+                        setActiveTab("admin");
+                        setAdminSection("users");
+                      } else {
+                        setActiveTab("profile");
+                      }
+                    }}
+                    className="flex items-center gap-1.5 font-bold transition-colors cursor-pointer hover:text-indigo-600"
+                    title={isAdmin ? "Quản trị viên hệ thống" : "Xem hồ sơ cá nhân"}
                   >
                     <img
                       src={currentUser.avatar}
                       alt={currentUser.fullName}
                       className="h-5 w-5 rounded-full bg-indigo-100"
                     />
-                    <span className="truncate max-w-[120px] sm:max-w-[180px]">
-                      Hi, {currentUser.fullName}
+                    <span className="truncate max-w-[120px] sm:max-w-[160px]">
+                      {isAdmin ? `Admin (${currentUser.username})` : `Hi, ${currentUser.fullName}`}
                     </span>
                   </button>
                   <span className="text-slate-300">|</span>
@@ -354,71 +464,118 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
 
         {/* Mobile Navigation Tabs */}
         <div className="flex md:hidden overflow-x-auto py-2 border-t border-slate-200 space-x-1 scrollbar-none">
-          <button
-            onClick={() => setActiveTab("learn")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "learn" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Bài Học
-          </button>
-          <button
-            onClick={() => setActiveTab("algorithms")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "algorithms" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Giải Đề 🎯
-          </button>
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "leaderboard" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Bảng Xếp Hạng
-          </button>
-          <button
-            onClick={() => setActiveTab("groups")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "groups" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Học Nhóm
-          </button>
-          <button
-            onClick={() => setActiveTab("notes")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "notes" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Ghi Chú
-          </button>
-          <button
-            onClick={() => setActiveTab("handbook")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "handbook" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Sổ Tay
-          </button>
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-              activeTab === "profile" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Hồ Sơ
-          </button>
-          {currentUser?.role === "admin" && (
-            <button
-              onClick={() => setActiveTab("admin")}
-              className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
-                activeTab === "admin" ? "bg-purple-700 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"
-              }`}
-            >
-              🛡️ Quản Trị
-            </button>
+          {isAdmin ? (
+            <>
+              <button
+                onClick={() => handleAdminNav("users")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
+                  activeTab === "admin" && adminSection === "users"
+                    ? "bg-purple-700 text-white"
+                    : "text-slate-600 hover:bg-purple-50"
+                }`}
+              >
+                👥 Người Dùng
+              </button>
+              <button
+                onClick={() => handleAdminNav("supabase")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
+                  activeTab === "admin" && adminSection === "supabase"
+                    ? "bg-purple-700 text-white"
+                    : "text-slate-600 hover:bg-purple-50"
+                }`}
+              >
+                🗄️ CSDL Supabase
+              </button>
+              <button
+                onClick={() => handleAdminNav("stats")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
+                  activeTab === "admin" && adminSection === "stats"
+                    ? "bg-purple-700 text-white"
+                    : "text-slate-600 hover:bg-purple-50"
+                }`}
+              >
+                📊 Thống Kê
+              </button>
+              <button
+                onClick={() => handleAdminNav("curriculum")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
+                  activeTab === "admin" && adminSection === "curriculum"
+                    ? "bg-purple-700 text-white"
+                    : "text-slate-600 hover:bg-purple-50"
+                }`}
+              >
+                📋 Khóa Học
+              </button>
+              <button
+                onClick={() => handleAdminNav("algorithms")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
+                  activeTab === "admin" && adminSection === "algorithms"
+                    ? "bg-purple-700 text-white"
+                    : "text-slate-600 hover:bg-purple-50"
+                }`}
+              >
+                🎯 Thuật Toán
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setActiveTab("learn")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "learn" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Bài Học
+              </button>
+              <button
+                onClick={() => setActiveTab("algorithms")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "algorithms" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Giải Đề 🎯
+              </button>
+              <button
+                onClick={() => setActiveTab("leaderboard")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "leaderboard" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Bảng Xếp Hạng
+              </button>
+              <button
+                onClick={() => setActiveTab("groups")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "groups" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Học Nhóm
+              </button>
+              <button
+                onClick={() => setActiveTab("notes")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "notes" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Ghi Chú
+              </button>
+              <button
+                onClick={() => setActiveTab("handbook")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "handbook" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Sổ Tay
+              </button>
+              <button
+                onClick={() => setActiveTab("profile")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                  activeTab === "profile" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Hồ Sơ
+              </button>
+            </>
           )}
         </div>
       </div>

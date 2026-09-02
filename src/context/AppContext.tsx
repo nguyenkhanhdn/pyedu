@@ -101,6 +101,8 @@ interface AppContextType {
   // Active View Tab
   activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin';
   setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin') => void;
+  adminSection: 'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms';
+  setAdminSection: (sec: 'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -114,7 +116,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [teacherMode, setTeacherMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin'>('learn');
+  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin'>(() => {
+    try {
+      const saved = localStorage.getItem("pyedu_current_user");
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u.role === 'admin') return 'admin';
+      }
+    } catch {}
+    return 'learn';
+  });
+  const [adminSection, setAdminSection] = useState<'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms'>('users');
 
   // 2. Selected Lesson State
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(CURRICULUM_MODULES[0].lessons[0]);
@@ -430,12 +442,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Login via API / SQLite
+  // Login via Supabase Direct / Auth
   const login = async (usernameOrEmail: string, password?: string): Promise<boolean> => {
     try {
       const user = await ApiService.login(usernameOrEmail, password);
       if (user) {
         setCurrentUser(user);
+        if (user.role === 'admin') {
+          setActiveTab('admin');
+          setAdminSection('users');
+        }
         await loadUserData(user);
         const users = await ApiService.fetchUsers();
         setAllUsers(users);
@@ -913,6 +929,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         activeTab,
         setActiveTab,
+        adminSection,
+        setAdminSection,
       }}
     >
       {children}

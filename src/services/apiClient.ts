@@ -402,38 +402,34 @@ export class LocalDataManager {
   }
 }
 
-// API Service with seamless Supabase > Server API > Local Storage resilience
+// API Service with 100% Direct Supabase Connection
 export const ApiService = {
   async fetchUsers(): Promise<User[]> {
     if (SupabaseService.isAvailable()) {
-      const supabaseUsers = await SupabaseService.getAllUsers();
-      if (supabaseUsers && supabaseUsers.length > 0) {
-        LocalDataManager.saveUsers(supabaseUsers);
-        return supabaseUsers;
+      try {
+        const supabaseUsers = await SupabaseService.getAllUsers();
+        if (supabaseUsers && supabaseUsers.length > 0) {
+          LocalDataManager.saveUsers(supabaseUsers);
+          return supabaseUsers;
+        }
+      } catch (err) {
+        console.warn("Supabase fetchUsers notice:", err);
       }
-    }
-
-    const data = await safeFetchJson<{ users: User[] }>("/api/auth/users");
-    if (data?.users && Array.isArray(data.users) && data.users.length > 0) {
-      LocalDataManager.saveUsers(data.users);
-      return data.users;
     }
     return LocalDataManager.getUsers();
   },
 
   async fetchGroups(userId?: string): Promise<StudyGroup[]> {
     if (SupabaseService.isAvailable() && userId) {
-      const supabaseGroups = await SupabaseService.getStudyGroups(userId);
-      if (supabaseGroups && supabaseGroups.length > 0) {
-        LocalDataManager.saveGroups(supabaseGroups);
-        return supabaseGroups;
+      try {
+        const supabaseGroups = await SupabaseService.getStudyGroups(userId);
+        if (supabaseGroups && supabaseGroups.length > 0) {
+          LocalDataManager.saveGroups(supabaseGroups);
+          return supabaseGroups;
+        }
+      } catch (err) {
+        console.warn("Supabase fetchGroups notice:", err);
       }
-    }
-
-    const data = await safeFetchJson<{ groups: StudyGroup[] }>(`/api/groups${userId ? `?userId=${userId}` : ''}`);
-    if (data?.groups && Array.isArray(data.groups) && data.groups.length > 0) {
-      LocalDataManager.saveGroups(data.groups);
-      return data.groups;
     }
     return LocalDataManager.getGroups(userId);
   },
@@ -443,7 +439,7 @@ export const ApiService = {
     const query = rawQuery.toLowerCase();
     const pwd = (password || "").trim();
 
-    // 1. Try Supabase cloud if connected
+    // 1. Direct Supabase Cloud Authentication & User retrieval
     if (SupabaseService.isAvailable()) {
       try {
         const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined);
@@ -452,22 +448,11 @@ export const ApiService = {
           return suUser;
         }
       } catch (err) {
-        console.warn("Supabase auth check notice:", err);
+        console.warn("Supabase login notice:", err);
       }
     }
 
-    // 2. Try Backend Server API (SQLite Express server)
-    try {
-      const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usernameOrEmail: rawQuery, password: pwd })
-      });
-
-      if (data?.user) return data.user;
-    } catch {}
-
-    // 3. Fallback: search in local users / offline data
+    // 2. Direct Fallback: search in local state cache
     const users = LocalDataManager.getUsers();
     const matched = users.find(u => 
       u.username?.toLowerCase() === query || 
@@ -477,7 +462,7 @@ export const ApiService = {
     if (matched) {
       if (query === "admin" || matched.role === "admin") {
         if (pwd && pwd !== "admin@password" && matched.password && matched.password !== pwd) {
-          return null; // Incorrect password for admin
+          return null;
         }
       } else if (pwd && matched.password && matched.password !== pwd) {
         return null;
@@ -485,7 +470,7 @@ export const ApiService = {
       return matched;
     }
 
-    // Emergency fallback for default accounts if not matched
+    // Default account emergency fallback
     if (query === "admin" || query === "admin@pyedu.edu.vn") {
       if (!pwd || pwd === "admin@password") {
         const defaultAdmin = INITIAL_FALLBACK_USERS.find(u => u.username === "admin")!;
@@ -518,25 +503,22 @@ export const ApiService = {
     school?: string;
     password?: string;
   }): Promise<User | null> {
+    // 1. Direct Supabase Creation
     if (SupabaseService.isAvailable()) {
-      const suUser = await SupabaseService.createUser(userData);
-      if (suUser) {
-        const users = LocalDataManager.getUsers();
-        users.push(suUser);
-        LocalDataManager.saveUsers(users);
-        return suUser;
+      try {
+        const suUser = await SupabaseService.createUser(userData);
+        if (suUser) {
+          const users = LocalDataManager.getUsers();
+          users.push(suUser);
+          LocalDataManager.saveUsers(users);
+          return suUser;
+        }
+      } catch (err) {
+        console.warn("Supabase direct createUser notice:", err);
       }
     }
 
-    const data = await safeFetchJson<{ success: boolean; user: User }>("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData)
-    });
-
-    if (data?.user) return data.user;
-
-    // Fallback: register locally
+    // 2. Direct Local Fallback
     const users = LocalDataManager.getUsers();
     const newUser: User = {
       id: `usr-${Date.now()}`,
@@ -568,7 +550,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.deleteUser(userId);
     }
-    await safeFetchJson(`/api/admin/users/${userId}`, { method: "DELETE" });
     return LocalDataManager.deleteUser(userId);
   },
 
@@ -576,7 +557,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.resetUserProgress(userId);
     }
-    await safeFetchJson(`/api/admin/users/${userId}/reset`, { method: "POST" });
     return LocalDataManager.resetUserProgress(userId);
   },
 
@@ -584,11 +564,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.updateUserProfile(userId, updates);
     }
-    await safeFetchJson(`/api/admin/users/${userId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates)
-    });
     return LocalDataManager.updateUser(userId, updates);
   },
 
@@ -606,23 +581,14 @@ export const ApiService = {
 
   async loadUserData(userId: string) {
     if (SupabaseService.isAvailable()) {
-      const suData = await SupabaseService.loadUserData(userId);
-      if (suData && suData.user) {
-        return suData;
+      try {
+        const suData = await SupabaseService.loadUserData(userId);
+        if (suData && suData.user) {
+          return suData;
+        }
+      } catch (err) {
+        console.warn("Supabase direct loadUserData notice:", err);
       }
-    }
-
-    const data = await safeFetchJson<{
-      user?: User;
-      codes?: Record<string, string>;
-      submissions?: SubmissionResult[];
-      notes?: PersonalNote[];
-      groups?: StudyGroup[];
-      notifications?: NotificationItem[];
-    }>(`/api/user/${userId}/data`);
-
-    if (data?.user) {
-      return data;
     }
 
     // Fallback: assemble from local manager
@@ -645,16 +611,9 @@ export const ApiService = {
 
   async saveCode(userId: string, lessonId: string, code: string) {
     LocalDataManager.saveCode(userId, lessonId, code);
-
     if (SupabaseService.isAvailable()) {
       await SupabaseService.saveUserCode(userId, lessonId, code);
     }
-
-    await safeFetchJson(`/api/user/${userId}/code`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lessonId, code })
-    });
   },
 
   async recordSubmission(userId: string, payload: {
@@ -678,17 +637,11 @@ export const ApiService = {
         testResults: payload.testResults,
         timestamp: new Date().toISOString(),
       });
-    }
-
-    const data = await safeFetchJson<{ success: boolean; user: User }>(`/api/user/${userId}/submit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (data?.user) {
-      LocalDataManager.updateUser(userId, data.user);
-      return data.user;
+      const user = await SupabaseService.getUserById(userId);
+      if (user) {
+        LocalDataManager.updateUser(userId, user);
+        return user;
+      }
     }
 
     return LocalDataManager.recordSubmission(userId, {
@@ -706,17 +659,18 @@ export const ApiService = {
 
   async fetchAlgorithmProblems(): Promise<AlgorithmProblem[]> {
     if (SupabaseService.isAvailable()) {
-      const suProblems = await SupabaseService.getAlgorithmProblems();
-      if (suProblems && suProblems.length > 0) {
-        return suProblems;
-      }
+      try {
+        const suProblems = await SupabaseService.getAlgorithmProblems();
+        if (suProblems && suProblems.length > 0) {
+          return suProblems;
+        }
+      } catch {}
     }
     return ALGORITHM_PROBLEMS;
   },
 
   async recordAlgorithmSubmission(userId: string, submission: AlgorithmSubmission): Promise<void> {
     LocalDataManager.saveAlgorithmSubmission(submission);
-
     if (SupabaseService.isAvailable()) {
       await SupabaseService.saveAlgorithmSubmission(userId, submission);
     }
@@ -724,17 +678,11 @@ export const ApiService = {
 
   async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     LocalDataManager.updateUser(userId, updates);
-
     if (SupabaseService.isAvailable()) {
       await SupabaseService.updateUserProfile(userId, updates);
+      return await SupabaseService.getUserById(userId);
     }
-
-    const data = await safeFetchJson<{ success: boolean; user: User }>(`/api/user/${userId}/profile`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates)
-    });
-    return data?.user || LocalDataManager.getUserById(userId);
+    return LocalDataManager.getUserById(userId);
   },
 
   async joinGroup(groupId: string, userId: string) {
@@ -749,12 +697,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.joinGroup(groupId, userId);
     }
-
-    await safeFetchJson(`/api/groups/${groupId}/join`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId })
-    });
   },
 
   async leaveGroup(groupId: string, userId: string) {
@@ -769,12 +711,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.leaveGroup(groupId, userId);
     }
-
-    await safeFetchJson(`/api/groups/${groupId}/leave`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId })
-    });
   },
 
   async sendGroupMessage(groupId: string, payload: any) {
@@ -802,15 +738,10 @@ export const ApiService = {
       if (suMsg) return suMsg;
     }
 
-    const data = await safeFetchJson<{ success: boolean; message: any }>(`/api/groups/${groupId}/message`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    return data?.message || msg;
+    return msg;
   },
 
-  async likeGroupMessage(groupId: string, messageId: string, userId: string) {
+  async likeGroupMessage(groupId: string, messageId: string, _userId: string) {
     const groups = LocalDataManager.getGroups();
     const target = groups.find(g => g.id === groupId);
     if (target) {
@@ -825,12 +756,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.likeGroupMessage(messageId);
     }
-
-    await safeFetchJson(`/api/groups/${groupId}/message/${messageId}/like`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId })
-    });
   },
 
   async addNote(payload: any): Promise<PersonalNote> {
@@ -849,12 +774,7 @@ export const ApiService = {
       if (suNote) return suNote;
     }
 
-    const data = await safeFetchJson<{ success: boolean; note: PersonalNote }>("/api/notes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    return data?.note || newNote;
+    return newNote;
   },
 
   async updateNote(userId: string, id: string, updates: Partial<PersonalNote>) {
@@ -868,12 +788,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.updateNote(id, updates);
     }
-
-    await safeFetchJson(`/api/notes/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates)
-    });
   },
 
   async deleteNote(userId: string, id: string) {
@@ -883,8 +797,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.deleteNote(id);
     }
-
-    await safeFetchJson(`/api/notes/${id}`, { method: "DELETE" });
   },
 
   async addNotification(userId: string, item: Omit<NotificationItem, "id" | "timestamp" | "read">): Promise<NotificationItem> {
@@ -917,8 +829,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.markNotificationRead(id);
     }
-
-    await safeFetchJson(`/api/notifications/${id}/read`, { method: "PUT" });
   },
 
   async clearNotifications(userId: string) {
@@ -927,8 +837,6 @@ export const ApiService = {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.clearNotifications(userId);
     }
-
-    await safeFetchJson(`/api/notifications/${userId}`, { method: "DELETE" });
   },
 
   async fetchAlgorithmSubmissions(userId: string): Promise<AlgorithmSubmission[]> {

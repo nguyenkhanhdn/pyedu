@@ -29,9 +29,16 @@ import {
   CheckSquare,
   Square,
   RefreshCw,
-  Plus
+  Plus,
+  BarChart3,
+  Layers,
+  Target
 } from "lucide-react";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { AdminSupabaseView } from "./admin/AdminSupabaseView";
+import { AdminStatsView } from "./admin/AdminStatsView";
+import { AdminCurriculumView } from "./admin/AdminCurriculumView";
+import { AdminAlgorithmsView } from "./admin/AdminAlgorithmsView";
 
 interface AdminDashboardProps {
   onOpenSupabaseSync?: () => void;
@@ -46,6 +53,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
     adminDeleteUser,
     adminResetUserProgress,
     adminBatchAddXp,
+    adminSection,
+    setAdminSection,
     login
   } = useApp();
 
@@ -395,63 +404,143 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
           </div>
         )}
 
-        {/* 4 Stat Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng người dùng</p>
-              <h3 className="text-2xl font-black text-slate-800">{stats.total}</h3>
-              <p className="text-[11px] text-slate-400">
-                {stats.students} học sinh • {stats.teachers} GV • {stats.admins} admin
-              </p>
-            </div>
-          </div>
+        {/* In-page Admin Sub-section Navigation Bar */}
+        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-xs mb-6 flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => setAdminSection("users")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+              adminSection === "users"
+                ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>Người Dùng ({allUsers.length})</span>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
-              <Award className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng XP toàn hệ thống</p>
-              <h3 className="text-2xl font-black text-slate-800">{stats.totalXp.toLocaleString()} XP</h3>
-              <p className="text-[11px] text-amber-600 font-medium">Trung bình {stats.total ? Math.round(stats.totalXp / stats.total) : 0} XP/học sinh</p>
-            </div>
-          </div>
+          <button
+            onClick={() => setAdminSection("supabase")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+              adminSection === "supabase"
+                ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+            }`}
+          >
+            <Database className="h-4 w-4 text-emerald-500" />
+            <span>CSDL Supabase Cloud Direct</span>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bài học đã hoàn thành</p>
-              <h3 className="text-2xl font-black text-slate-800">{stats.totalCompletedLessons}</h3>
-              <p className="text-[11px] text-emerald-600 font-medium">Chấm điểm tự động</p>
-            </div>
-          </div>
+          <button
+            onClick={() => setAdminSection("stats")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+              adminSection === "stats"
+                ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+            }`}
+          >
+            <BarChart3 className="h-4 w-4 text-indigo-500" />
+            <span>Thống Kê & Báo Cáo</span>
+          </button>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
-              <Database className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái CSDL</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
-                  }`}
-                />
-                <span className="font-bold text-slate-800 text-sm">
-                  {isSupabaseConfigured() ? "Supabase Cloud" : "Local Database"}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">Đồng bộ tức thời 2 chiều</p>
-            </div>
-          </div>
+          <button
+            onClick={() => setAdminSection("curriculum")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+              adminSection === "curriculum"
+                ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+            }`}
+          >
+            <Layers className="h-4 w-4 text-amber-500" />
+            <span>Khóa Học & Bài Giảng</span>
+          </button>
+
+          <button
+            onClick={() => setAdminSection("algorithms")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+              adminSection === "algorithms"
+                ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+            }`}
+          >
+            <Target className="h-4 w-4 text-rose-500" />
+            <span>Ngân Hàng Thuật Toán</span>
+          </button>
         </div>
+
+        {/* VIEW 1: SUPABASE DIRECT CLOUD */}
+        {adminSection === "supabase" && (
+          <AdminSupabaseView onOpenSyncModal={onOpenSupabaseSync} />
+        )}
+
+        {/* VIEW 2: STATS & ANALYTICS */}
+        {adminSection === "stats" && <AdminStatsView />}
+
+        {/* VIEW 3: CURRICULUM */}
+        {adminSection === "curriculum" && <AdminCurriculumView />}
+
+        {/* VIEW 4: ALGORITHMS BANK */}
+        {adminSection === "algorithms" && <AdminAlgorithmsView />}
+
+        {/* VIEW 5: USER MANAGEMENT (DEFAULT) */}
+        {adminSection === "users" && (
+          <>
+            {/* 4 Stat Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng người dùng</p>
+                  <h3 className="text-2xl font-black text-slate-800">{stats.total}</h3>
+                  <p className="text-[11px] text-slate-400">
+                    {stats.students} học sinh • {stats.teachers} GV • {stats.admins} admin
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
+                  <Award className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng XP toàn hệ thống</p>
+                  <h3 className="text-2xl font-black text-slate-800">{stats.totalXp.toLocaleString()} XP</h3>
+                  <p className="text-[11px] text-amber-600 font-medium">Trung bình {stats.total ? Math.round(stats.totalXp / stats.total) : 0} XP/học sinh</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Bài học đã hoàn thành</p>
+                  <h3 className="text-2xl font-black text-slate-800">{stats.totalCompletedLessons}</h3>
+                  <p className="text-[11px] text-emerald-600 font-medium">Chấm điểm tự động</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
+                  <Database className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Trạng thái CSDL</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                      }`}
+                    />
+                    <span className="font-bold text-slate-800 text-sm">
+                      {isSupabaseConfigured() ? "Supabase Cloud" : "Local Database"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Đồng bộ tức thời 2 chiều</p>
+                </div>
+              </div>
+            </div>
 
         {/* Search, Filter & Bulk Actions Bar */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs mb-6">
@@ -743,6 +832,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
             </table>
           </div>
         </div>
+          </>
+        )}
       </div>
 
       {/* MODAL: Thêm người dùng mới */}

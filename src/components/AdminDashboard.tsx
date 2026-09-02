@@ -35,7 +35,6 @@ import {
   Target
 } from "lucide-react";
 import { isSupabaseConfigured } from "../lib/supabase";
-import { AdminSupabaseView } from "./admin/AdminSupabaseView";
 import { AdminStatsView } from "./admin/AdminStatsView";
 import { AdminCurriculumView } from "./admin/AdminCurriculumView";
 import { AdminAlgorithmsView } from "./admin/AdminAlgorithmsView";
@@ -419,18 +418,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
           </button>
 
           <button
-            onClick={() => setAdminSection("supabase")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
-              adminSection === "supabase"
-                ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
-                : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
-            }`}
-          >
-            <Database className="h-4 w-4 text-emerald-500" />
-            <span>CSDL Supabase Cloud Direct</span>
-          </button>
-
-          <button
             onClick={() => setAdminSection("stats")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
               adminSection === "stats"
@@ -467,21 +454,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
           </button>
         </div>
 
-        {/* VIEW 1: SUPABASE DIRECT CLOUD */}
-        {adminSection === "supabase" && (
-          <AdminSupabaseView onOpenSyncModal={onOpenSupabaseSync} />
-        )}
-
-        {/* VIEW 2: STATS & ANALYTICS */}
+        {/* VIEW 1: STATS & ANALYTICS */}
         {adminSection === "stats" && <AdminStatsView />}
 
-        {/* VIEW 3: CURRICULUM */}
+        {/* VIEW 2: CURRICULUM */}
         {adminSection === "curriculum" && <AdminCurriculumView />}
 
-        {/* VIEW 4: ALGORITHMS BANK */}
+        {/* VIEW 3: ALGORITHMS BANK */}
         {adminSection === "algorithms" && <AdminAlgorithmsView />}
 
-        {/* VIEW 5: USER MANAGEMENT (DEFAULT) */}
+        {/* VIEW 4: USER MANAGEMENT (DEFAULT) */}
         {adminSection === "users" && (
           <>
             {/* 4 Stat Cards */}

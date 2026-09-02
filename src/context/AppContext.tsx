@@ -101,8 +101,8 @@ interface AppContextType {
   // Active View Tab
   activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin';
   setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin') => void;
-  adminSection: 'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms';
-  setAdminSection: (sec: 'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms') => void;
+  adminSection: 'users' | 'stats' | 'curriculum' | 'algorithms';
+  setAdminSection: (sec: 'users' | 'stats' | 'curriculum' | 'algorithms') => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -126,7 +126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {}
     return 'learn';
   });
-  const [adminSection, setAdminSection] = useState<'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms'>('users');
+  const [adminSection, setAdminSection] = useState<'users' | 'stats' | 'curriculum' | 'algorithms'>('users');
 
   // 2. Selected Lesson State
   const [selectedLesson, setSelectedLesson] = useState<Lesson>(CURRICULUM_MODULES[0].lessons[0]);

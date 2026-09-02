@@ -12,11 +12,9 @@ import {
   LogOut,
   ShieldCheck,
   Target,
-  Database,
   BarChart3,
   Layers
 } from "lucide-react";
-import { isSupabaseConfigured } from "../lib/supabase";
 
 interface NavbarProps {
   onOpenAuth: () => void;
@@ -47,7 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
   const progressPercent = getLessonProgressPercentage();
   const isAdmin = currentUser?.role === "admin";
 
-  const handleAdminNav = (section: 'users' | 'supabase' | 'stats' | 'curriculum' | 'algorithms') => {
+  const handleAdminNav = (section: 'users' | 'stats' | 'curriculum' | 'algorithms') => {
     setActiveTab('admin');
     setAdminSection(section);
   };
@@ -122,19 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 }`}
               >
                 <Users className="h-4 w-4" />
-                <span>Người Dùng & Phân Quyền</span>
-              </button>
-
-              <button
-                onClick={() => handleAdminNav("supabase")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                  activeTab === "admin" && adminSection === "supabase"
-                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
-                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
-                }`}
-              >
-                <Database className="h-4 w-4 text-emerald-500" />
-                <span>CSDL Supabase Cloud</span>
+                <span>Người Dùng</span>
               </button>
 
               <button
@@ -257,27 +243,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
 
           {/* Right Action Tools */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Supabase Cloud DB Live Indicator */}
-            {onOpenSupabaseSync && (
-              <button
-                onClick={onOpenSupabaseSync}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                  isSupabaseConfigured()
-                    ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border-emerald-300 shadow-xs"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200"
-                }`}
-                title="Quản lý CSDL Supabase (Direct Cloud PostgreSQL) & Kiểm tra kết nối"
-              >
-                <Database className={`h-4 w-4 ${isSupabaseConfigured() ? "text-emerald-600" : "text-slate-500"}`} />
-                <span className="hidden sm:inline">Supabase Trực Tiếp</span>
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isSupabaseConfigured() ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
-                  }`}
-                />
-              </button>
-            )}
-
             {/* Student-only right tools */}
             {!isAdmin && (
               <>
@@ -475,16 +440,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 }`}
               >
                 👥 Người Dùng
-              </button>
-              <button
-                onClick={() => handleAdminNav("supabase")}
-                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${
-                  activeTab === "admin" && adminSection === "supabase"
-                    ? "bg-purple-700 text-white"
-                    : "text-slate-600 hover:bg-purple-50"
-                }`}
-              >
-                🗄️ CSDL Supabase
               </button>
               <button
                 onClick={() => handleAdminNav("stats")}

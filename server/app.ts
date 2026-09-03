@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+import path from "path";
+import fs from "fs";
 import { GoogleGenAI } from "@google/genai";
 import {
   getUserByCredentials,
@@ -32,6 +34,19 @@ dotenv.config();
 export const app = express();
 
 app.use(express.json());
+
+// Serve Sotay.html reference document
+app.get(["/Sotay.html", "/sotay.html"], (_req, res) => {
+  const rootPath = path.join(process.cwd(), "Sotay.html");
+  if (fs.existsSync(rootPath)) {
+    return res.sendFile(rootPath);
+  }
+  const publicPath = path.join(process.cwd(), "public", "Sotay.html");
+  if (fs.existsSync(publicPath)) {
+    return res.sendFile(publicPath);
+  }
+  res.status(404).send("Tài liệu Sotay.html không tìm thấy.");
+});
 
 // Initialize SQLite database eagerly
 getDatabase().catch(err => console.warn("SQLite init notice:", err));

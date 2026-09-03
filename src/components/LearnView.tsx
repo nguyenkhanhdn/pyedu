@@ -26,7 +26,8 @@ import {
   Layers,
   ArrowRight,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  ExternalLink
 } from "lucide-react";
 
 interface LearnViewProps {
@@ -849,7 +850,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           <p className="text-slate-700 font-mono text-[11px]">{hint}</p>
                         </div>
                       ))}
-                      <div className="pt-1">
+                      <div className="pt-1 space-y-1.5">
                         <button
                           onClick={handleAskAiAboutError}
                           className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
@@ -857,6 +858,17 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           <Bot className="h-3.5 w-3.5 text-indigo-600" />
                           <span>Hỏi AI Tutor giải thích thêm về gợi ý này</span>
                         </button>
+                        <a
+                          href="/Sotay.html"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          title="Mở Sổ tay tra cứu Python (Sotay.html) trong tab mới"
+                        >
+                          <BookOpen className="h-3.5 w-3.5 text-purple-600" />
+                          <span>Tra cứu Sổ tay Cú pháp & Thuật toán (Sotay.html)</span>
+                          <ExternalLink className="h-3 w-3 text-purple-500" />
+                        </a>
                       </div>
                     </div>
                   )}
@@ -873,6 +885,18 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <a
+                      href="/Sotay.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 rounded-lg bg-purple-950/60 border border-purple-700/50 text-purple-300 hover:text-white hover:bg-purple-900/80 transition-colors cursor-pointer flex items-center gap-1 text-xs"
+                      title="Mở Sổ tay tra cứu (Sotay.html) trong tab mới"
+                    >
+                      <BookOpen className="h-3.5 w-3.5 text-purple-400" />
+                      <span className="hidden sm:inline text-[11px] font-medium">Sổ tay</span>
+                      <ExternalLink className="h-3 w-3 text-purple-400" />
+                    </a>
+
                     <button
                       onClick={() => setShowCustomInput(!showCustomInput)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${

@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   Target,
   BarChart3,
-  Layers
+  Layers,
+  ExternalLink
 } from "lucide-react";
 
 interface NavbarProps {
@@ -227,17 +228,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 <span>Ghi chú</span>
               </button>
 
-              <button
-                onClick={() => setActiveTab("handbook")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                  activeTab === "handbook"
-                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
+              <a
+                href="/Sotay.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
+                title="Mở Sổ tay tra cứu lập trình Python (Sotay.html) trong tab mới"
               >
-                <BookOpen className="h-4 w-4 text-purple-500" />
-                <span>Sổ tay ngoại tuyến</span>
-              </button>
+                <BookOpen className="h-4 w-4 text-purple-600" />
+                <span>Sổ tay</span>
+                <ExternalLink className="h-3.5 w-3.5 text-slate-400 ml-0.5" />
+              </a>
             </nav>
           )}
 
@@ -514,14 +515,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 Ghi Chú
               </button>
-              <button
-                onClick={() => setActiveTab("handbook")}
-                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
-                  activeTab === "handbook" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
-                }`}
+              <a
+                href="/Sotay.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium text-slate-600 hover:bg-slate-100 flex items-center gap-1"
+                title="Mở Sổ tay tra cứu lập trình Python (Sotay.html) trong tab mới"
               >
-                Sổ Tay
-              </button>
+                <BookOpen className="h-3 w-3 text-purple-600" />
+                <span>Sổ Tay</span>
+                <ExternalLink className="h-3 w-3 text-slate-400" />
+              </a>
               <button
                 onClick={() => setActiveTab("profile")}
                 className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${

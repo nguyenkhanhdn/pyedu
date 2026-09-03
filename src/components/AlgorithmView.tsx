@@ -612,15 +612,29 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                     </button>
                   </div>
 
-                  {/* Ask AI button */}
-                  <button
-                    onClick={handleAskAiForProblem}
-                    className="flex items-center gap-1.5 text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                    title="Nhờ AI Gia sư giải thích hoặc gợi ý hướng đi"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-violet-600" />
-                    <span className="hidden sm:inline">Hỏi AI Tutor</span>
-                  </button>
+                  {/* Sổ tay & Ask AI button */}
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href="/Sotay.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      title="Mở Sổ tay tra cứu Python (Sotay.html) trong tab mới"
+                    >
+                      <BookOpen className="h-3.5 w-3.5 text-purple-600" />
+                      <span className="hidden sm:inline">Sổ tay tra cứu</span>
+                      <ExternalLink className="h-3 w-3 text-purple-500" />
+                    </a>
+
+                    <button
+                      onClick={handleAskAiForProblem}
+                      className="flex items-center gap-1.5 text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      title="Nhờ AI Gia sư giải thích hoặc gợi ý hướng đi"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-violet-600" />
+                      <span className="hidden sm:inline">Hỏi AI Tutor</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Scrollable Problem Statement Content */}
@@ -828,6 +842,18 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   </div>
 
                   <div className="flex items-center gap-1.5">
+                    <a
+                      href="/Sotay.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-700/50 text-xs font-medium transition-colors cursor-pointer"
+                      title="Mở Sổ tay tra cứu (Sotay.html) trong tab mới"
+                    >
+                      <BookOpen className="h-3 w-3 text-purple-400" />
+                      <span>Sổ tay</span>
+                      <ExternalLink className="h-3 w-3 text-purple-400" />
+                    </a>
+
                     <button
                       onClick={() => handleCopyCode(userCode)}
                       className="p-1.5 rounded-md hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"

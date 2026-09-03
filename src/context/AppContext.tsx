@@ -95,7 +95,7 @@ interface AppContextType {
   sendAiMessage: (text: string, context?: any) => Promise<string>;
   isAiThinking: boolean;
 
-  // Offline Docs
+  // Offline Docs & Handbook
   handbookTopics: typeof OFFLINE_HANDBOOK_TOPICS;
 
   // Active View Tab

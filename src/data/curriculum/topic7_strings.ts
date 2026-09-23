@@ -366,7 +366,7 @@ s = input()
           {
             id: "t7-4-tc2",
             input: "AIStudio",
-            expectedOutput: "AI\nio\noidutSIA\nAIui",
+            expectedOutput: "AI\nio\noidutSIA\nASui",
             isHidden: false,
             explanation: "Kiểm tra với AIStudio."
           }

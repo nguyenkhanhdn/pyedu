@@ -1,6 +1,8 @@
 import { AlgorithmProblem } from "../../types";
+import { LOOPS_EXTRA_PROBLEMS } from "./loops_extra";
 
 export const TOPIC_5_PROBLEMS: AlgorithmProblem[] = [
+  ...LOOPS_EXTRA_PROBLEMS,
   {
     id: "cd5-bai-1",
     title: "Bài 1. In Các Số Nguyên Từ 1 Đến 20 Bằng Vòng Lặp For",

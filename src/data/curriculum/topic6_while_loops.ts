@@ -1,4 +1,20 @@
-import { Module } from "../../types";
+import { Module, LessonPractice } from "../../types";
+import { LOOPS_EXTRA_PROBLEMS } from "../problems/loops_extra";
+
+const toPractice = (p: any): LessonPractice => ({
+  id: p.id,
+  title: p.title,
+  difficulty: p.difficulty === 'Dễ' ? 'Cơ bản' : p.difficulty === 'Trung bình' ? 'Trung bình' : 'Nâng cao',
+  problemStatement: p.problemStatement,
+  inputFormat: p.inputFormat,
+  outputFormat: p.outputFormat,
+  constraints: p.constraints,
+  sampleCases: p.sampleCases,
+  starterCode: p.starterCode,
+  hints: p.hints,
+  solutionExplanation: p.solutionExplanation,
+  testCases: p.testCases
+});
 
 export const TOPIC_6_WHILE_LOOPS: Module = {
   id: "topic-6",
@@ -109,7 +125,63 @@ export const TOPIC_6_WHILE_LOOPS: Module = {
           "`if 1 <= x <= 20: print(f\"Du lieu hop le: {x}\"); break`"
         ],
         solutionExplanation: "while True:\n    x = int(input())\n    if 1 <= x <= 20:\n        print(f'Du lieu hop le: {x}')\n        break"
-      }
+      },
+      practices: [
+        {
+          id: "t6-p1",
+          title: "Bài 1: Nhập Dữ Liệu Hợp Lệ",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình đọc liên tiếp các số nguyên từ đầu vào cho đến khi gặp một số nằm trong đoạn $[1, 20]$ (tức là $1 \\le x \\le 20$). In ra dòng thông báo:\n`Du lieu hop le: <so_hop_le>`",
+          inputFormat: "Gồm một hoặc nhiều dòng, mỗi dòng chứa một số nguyên cho đến khi gặp số trong đoạn [1, 20].",
+          outputFormat: "Một dòng duy nhất: `Du lieu hop le: <so_hop_le>`",
+          constraints: "Dữ liệu đảm bảo luôn có ít nhất một số hợp lệ ở cuối.",
+          sampleCases: [
+            {
+              input: "25\n-5\n0\n15",
+              output: "Du lieu hop le: 15",
+              explanation: "Các số 25, -5, 0 đều ngoài khoảng [1, 20]. Số 15 hợp lệ đầu tiên."
+            },
+            {
+              input: "8",
+              output: "Du lieu hop le: 8",
+              explanation: "Số 8 hợp lệ ngay lần nhập đầu tiên."
+            }
+          ],
+          starterCode: `# Đọc dữ liệu liên tục dùng while
+# TODO: Lặp đọc số cho đến khi 1 <= x <= 20
+`,
+          testCases: [
+            {
+              id: "t6-1-tc1",
+              input: "25\n-5\n0\n15",
+              expectedOutput: "Du lieu hop le: 15",
+              isHidden: false,
+              explanation: "Kiểm tra dãy có 3 số sai trước số 15."
+            },
+            {
+              id: "t6-1-tc2",
+              input: "8",
+              expectedOutput: "Du lieu hop le: 8",
+              isHidden: false,
+              explanation: "Kiểm tra hợp lệ ngay."
+            },
+            {
+              id: "t6-1-tc3",
+              input: "100\n200\n-1\n20",
+              expectedOutput: "Du lieu hop le: 20",
+              isHidden: true,
+              explanation: "Kiểm tra biên 20."
+            }
+          ],
+          hints: [
+            "Dùng `while True:`",
+            "`x = int(input())`",
+            "`if 1 <= x <= 20: print(f\"Du lieu hop le: {x}\"); break`"
+          ],
+          solutionExplanation: "while True:\n    x = int(input())\n    if 1 <= x <= 20:\n        print(f'Du lieu hop le: {x}')\n        break"
+        },
+        ...LOOPS_EXTRA_PROBLEMS.slice(23, 31).map(toPractice)
+      ]
     },
     {
       id: "t6-l2",
@@ -309,7 +381,63 @@ target = int(input())
           "In ra: `print(f\"Tong cac uoc cua {n} la: {tong}\")`"
         ],
         solutionExplanation: "while True:\n    n = int(input())\n    if n > 0:\n        break\ntong = 0\nfor i in range(1, n + 1):\n    if n % i == 0:\n        tong += i\nprint(f'Tong cac uoc cua {n} la: {tong}')"
-      }
+      },
+      practices: [
+        {
+          id: "t6-p3",
+          title: "Bài 3: Nhập Số Cho Đến Khi Hợp Lệ",
+          difficulty: "Trung bình",
+          problemStatement: "Viết chương trình đọc liên tiếp các số nguyên từ đầu vào cho đến khi nhận được một số nguyên dương $n > 0$. Sau đó tính tổng tất cả các ước số nguyên dương của $n$ và in ra theo định dạng:\n`Tong cac uoc cua <n> la: <tong_uoc>`",
+          inputFormat: "Gồm một hoặc nhiều dòng chứa số nguyên, kết thúc bằng một số nguyên dương n > 0.",
+          outputFormat: "Một dòng duy nhất: `Tong cac uoc cua <n> la: <tong_uoc>`",
+          constraints: "1 <= n <= 10^5.",
+          sampleCases: [
+            {
+              input: "-5\n0\n-12\n6",
+              output: "Tong cac uoc cua 6 la: 12",
+              explanation: "Các số âm và 0 bị bỏ qua. Số 6 có các ước 1, 2, 3, 6 -> Tổng = 12."
+            },
+            {
+              input: "10",
+              output: "Tong cac uoc cua 10 la: 18",
+              explanation: "1 + 2 + 5 + 10 = 18."
+            }
+          ],
+          starterCode: `# Nhập liên tục cho đến khi n > 0
+# TODO: Tính tổng ước và in ra
+`,
+          testCases: [
+            {
+              id: "t6-3-tc1",
+              input: "-5\n0\n-12\n6",
+              expectedOutput: "Tong cac uoc cua 6 la: 12",
+              isHidden: false,
+              explanation: "Kiểm tra với 6 sau vài số âm."
+            },
+            {
+              id: "t6-3-tc2",
+              input: "10",
+              expectedOutput: "Tong cac uoc cua 10 la: 18",
+              isHidden: false,
+              explanation: "Kiểm tra với 10."
+            },
+            {
+              id: "t6-3-tc3",
+              input: "-100\n13",
+              expectedOutput: "Tong cac uoc cua 13 la: 14",
+              isHidden: true,
+              explanation: "Kiểm tra số nguyên tố 13 (ước 1, 13 -> 14)."
+            }
+          ],
+          hints: [
+            "Dùng `while True:` để đọc `n = int(input())`, nếu `n > 0: break`",
+            "Sau đó tính `tong = sum(i for i in range(1, n + 1) if n % i == 0)`",
+            "In ra: `print(f\"Tong cac uoc cua {n} la: {tong}\")`"
+          ],
+          solutionExplanation: "while True:\n    n = int(input())\n    if n > 0:\n        break\ntong = 0\nfor i in range(1, n + 1):\n    if n % i == 0:\n        tong += i\nprint(f'Tong cac uoc cua {n} la: {tong}')"
+        },
+        ...LOOPS_EXTRA_PROBLEMS.slice(31, 36).map(toPractice)
+      ]
     }
   ]
 };

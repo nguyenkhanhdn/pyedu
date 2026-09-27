@@ -734,6 +734,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           <button
                             key={prac.id || pIdx}
                             onClick={() => setActivePracticeIndex(pIdx)}
+                            title={prac.title}
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                               isPActive
                                 ? "bg-white text-indigo-700 shadow-xs border border-indigo-200"
@@ -741,7 +742,11 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                             }`}
                           >
                             {isSubPassed && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />}
-                            <span>{prac.title.split(":")[0] || `Bài ${pIdx + 1}`}</span>
+                            <span>
+                              {prac.title.includes(":")
+                                ? prac.title.split(":")[0]
+                                : (prac.title.match(/^(?:Câu|Bài)\s*\d+/i)?.[0] || prac.title.split(".")[0] || `Bài ${pIdx + 1}`)}
+                            </span>
                             <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
                               prac.difficulty === 'Cơ bản' ? 'bg-emerald-100 text-emerald-800' : prac.difficulty === 'Trung bình' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
                             }`}>

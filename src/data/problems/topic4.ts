@@ -1,6 +1,8 @@
 import { AlgorithmProblem } from "../../types";
+import { BRANCHING_EXTRA_PROBLEMS } from "./branching_extra";
 
 export const TOPIC_4_PROBLEMS: AlgorithmProblem[] = [
+  ...BRANCHING_EXTRA_PROBLEMS,
   {
     id: "cd4-bai-1",
     title: "Bài 1. Kiểm Tra Số Chẵn Hay Số Lẻ",

@@ -1,4 +1,20 @@
-import { Module } from "../../types";
+import { Module, LessonPractice } from "../../types";
+import { BRANCHING_EXTRA_PROBLEMS } from "../problems/branching_extra";
+
+const toPractice = (p: any): LessonPractice => ({
+  id: p.id,
+  title: p.title,
+  difficulty: p.difficulty === 'Dễ' ? 'Cơ bản' : p.difficulty === 'Trung bình' ? 'Trung bình' : 'Nâng cao',
+  problemStatement: p.problemStatement,
+  inputFormat: p.inputFormat,
+  outputFormat: p.outputFormat,
+  constraints: p.constraints,
+  sampleCases: p.sampleCases,
+  starterCode: p.starterCode,
+  hints: p.hints,
+  solutionExplanation: p.solutionExplanation,
+  testCases: p.testCases
+});
 
 export const TOPIC_4_BRANCHING: Module = {
   id: "topic-4",
@@ -106,7 +122,60 @@ height = float(input())
           "Dùng `if bmi < 18.5: ... elif bmi < 25: ... elif bmi < 30: ... else: ...`"
         ],
         solutionExplanation: "weight = float(input())\nheight = float(input())\nbmi = weight / (height ** 2)\nif bmi < 18.5:\n    print('Thieu can')\nelif bmi < 25:\n    print('Binh thuong')\nelif bmi < 30:\n    print('Thua can')\nelse:\n    print('Beo phi')"
-      }
+      },
+      practices: [
+        {
+          id: "t4-p1",
+          title: "Bài 1: Phân Loại BMI",
+          difficulty: "Trung bình",
+          problemStatement: "Viết chương trình nhập vào cân nặng `weight` (kg) và chiều cao `height` (mét, số thực) của một người. Hãy tính chỉ số `BMI = weight / (height * height)` và in ra phân loại tương ứng:\n- `BMI < 18.5`: in `Thieu can`\n- `18.5 <= BMI < 25`: in `Binh thuong`\n- `25 <= BMI < 30`: in `Thua can`\n- `BMI >= 30`: in `Beo phi`",
+          inputFormat: "Gồm 2 dòng:\n- Dòng 1: Cân nặng weight (kg, số thực)\n- Dòng 2: Chiều cao height (m, số thực)",
+          outputFormat: "Một dòng in tên phân loại: `Thieu can`, `Binh thuong`, `Thua can`, hoặc `Beo phi`.",
+          constraints: "20 <= weight <= 250; 0.5 <= height <= 2.5.",
+          sampleCases: [
+            {
+              input: "60.0\n1.70",
+              output: "Binh thuong",
+              explanation: "BMI = 60 / (1.7^2) = 20.76 nằm trong [18.5, 25) -> Binh thuong."
+            },
+            {
+              input: "85.0\n1.70",
+              output: "Thua can",
+              explanation: "BMI = 85 / 2.89 = 29.41 -> Thua can."
+            }
+          ],
+          starterCode: `# Nhập cân nặng và chiều cao\nweight = float(input())\nheight = float(input())\n\n# TODO: Tính BMI và phân loại dùng if - elif - else\n`,
+          testCases: [
+            {
+              id: "t4-1-tc1",
+              input: "60.0\n1.70",
+              expectedOutput: "Binh thuong",
+              isHidden: false,
+              explanation: "Kiểm tra bình thường."
+            },
+            {
+              id: "t4-1-tc2",
+              input: "45.0\n1.65",
+              expectedOutput: "Thieu can",
+              isHidden: false,
+              explanation: "BMI = 16.53 -> Thieu can."
+            },
+            {
+              id: "t4-1-tc3",
+              input: "95.0\n1.70",
+              expectedOutput: "Beo phi",
+              isHidden: true,
+              explanation: "BMI = 32.87 -> Beo phi."
+            }
+          ],
+          hints: [
+            "`bmi = weight / (height ** 2)`",
+            "Dùng `if bmi < 18.5: ... elif bmi < 25: ... elif bmi < 30: ... else: ...`"
+          ],
+          solutionExplanation: "weight = float(input())\nheight = float(input())\nbmi = weight / (height ** 2)\nif bmi < 18.5:\n    print('Thieu can')\nelif bmi < 25:\n    print('Binh thuong')\nelif bmi < 30:\n    print('Thua can')\nelse:\n    print('Beo phi')"
+        },
+        ...BRANCHING_EXTRA_PROBLEMS.slice(0, 7).map(toPractice)
+      ]
     },
     {
       id: "t4-l2",
@@ -218,7 +287,70 @@ d = float(input())
           "In ra `int(round(tien))`"
         ],
         solutionExplanation: "d = float(input())\nif d <= 2:\n    tien = d * 12000\nelif d <= 10:\n    tien = 2 * 12000 + (d - 2) * 9500\nelif d <= 20:\n    tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500\nelse:\n    tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000\nprint(int(round(tien)))"
-      }
+      },
+      practices: [
+        {
+          id: "t4-p2",
+          title: "Bài 2: Tính Tiền Taxi Lũy Tiến",
+          difficulty: "Trung bình",
+          problemStatement: "Viết chương trình nhập vào số km đã đi `d` (số thực không âm). Hãy tính cước taxi phải trả (đồng) theo bảng giá:\n- 2 km đầu: 12.000 đ/km\n- Từ km 3 đến km 10: 9.500 đ/km\n- Từ km 11 đến km 20: 8.500 đ/km\n- Trên 20 km: 7.000 đ/km cho quãng đường vượt quá 20 km.\n\nIn ra số tiền nguyên (làm tròn số nguyên).",
+          inputFormat: "Một dòng chứa số thực d (km, 0 <= d <= 500).",
+          outputFormat: "Số tiền nguyên (VND) phải thanh toán.",
+          constraints: "0 <= d <= 500.",
+          sampleCases: [
+            {
+              input: "1.5",
+              output: "18000",
+              explanation: "Đi 1.5 km: 1.5 * 12000 = 18.000đ."
+            },
+            {
+              input: "5.0",
+              output: "52500",
+              explanation: "2 km đầu (24.000) + 3 km tiếp (3 * 9500 = 28.500) = 52.500đ."
+            }
+          ],
+          starterCode: `# Nhập quãng đường d (km)\nd = float(input())\n\n# TODO: Tính cước taxi theo các bậc lũy tiến\n`,
+          testCases: [
+            {
+              id: "t4-2-tc1",
+              input: "1.5",
+              expectedOutput: "18000",
+              isHidden: false,
+              explanation: "Kiểm tra đoạn 1."
+            },
+            {
+              id: "t4-2-tc2",
+              input: "5.0",
+              expectedOutput: "52500",
+              isHidden: false,
+              explanation: "Kiểm tra đoạn 2."
+            },
+            {
+              id: "t4-2-tc3",
+              input: "15.0",
+              expectedOutput: "142500",
+              isHidden: false,
+              explanation: "Kiểm tra đoạn 3."
+            },
+            {
+              id: "t4-2-tc4",
+              input: "25.0",
+              expectedOutput: "220000",
+              isHidden: true,
+              explanation: "Kiểm tra đoạn 4 (>20km): 2*12k + 8*9.5k + 10*8.5k + 5*7k = 24k + 76k + 85k + 35k = 220.000."
+            }
+          ],
+          hints: [
+            "Nếu `d <= 2`: `tien = d * 12000`",
+            "Nếu `d <= 10`: `tien = 2 * 12000 + (d - 2) * 9500`",
+            "Nếu `d <= 20`: `tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500`",
+            "Nếu `d > 20`: `tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000`",
+            "In ra `int(round(tien))`"
+          ],
+          solutionExplanation: "d = float(input())\nif d <= 2:\n    tien = d * 12000\nelif d <= 10:\n    tien = 2 * 12000 + (d - 2) * 9500\nelif d <= 20:\n    tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500\nelse:\n    tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000\nprint(int(round(tien)))"
+        },
+        ...BRANCHING_EXTRA_PROBLEMS.slice(7, 15).map(toPractice)
+      ]
     },
     {
       id: "t4-l3",
@@ -317,7 +449,62 @@ kwh = int(input())
           "`else: tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536`"
         ],
         solutionExplanation: "kwh = int(input())\nif kwh <= 50:\n    tien = kwh * 1678\nelif kwh <= 100:\n    tien = 50 * 1678 + (kwh - 50) * 1734\nelif kwh <= 200:\n    tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014\nelse:\n    tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536\nprint(tien)"
-      }
+      },
+      practices: [
+        {
+          id: "t4-p3",
+          title: "Bài 3: Tính Tiền Điện Sinh Hoạt",
+          difficulty: "Nâng cao",
+          problemStatement: "Viết chương trình nhập vào số điện năng tiêu thụ `kwh` (số nguyên không âm trong tháng). Tính tổng tiền điện theo biểu giá:\n- Bậc 1 (cho kWh từ 0 đến 50): 1.678 đ/kWh\n- Bậc 2 (cho kWh từ 51 đến 100): 1.734 đ/kWh\n- Bậc 3 (cho kWh từ 101 đến 200): 2.014 đ/kWh\n- Bậc 4 (cho kWh từ 201 trở lên): 2.536 đ/kWh\n\nIn ra tổng số tiền điện phải trả (đồng, số nguyên).",
+          inputFormat: "Một số nguyên kwh (0 <= kwh <= 10000).",
+          outputFormat: "Một số nguyên duy nhất là số tiền điện.",
+          constraints: "0 <= kwh <= 10000.",
+          sampleCases: [
+            {
+              input: "45",
+              output: "75510",
+              explanation: "45 kWh thuộc Bậc 1: 45 * 1678 = 75.510 VND."
+            },
+            {
+              input: "80",
+              output: "135920",
+              explanation: "50 kWh bậc 1 (83.900) + 30 kWh bậc 2 (30 * 1734 = 52.020) = 135.920 VND."
+            }
+          ],
+          starterCode: `# Nhập số kWh điện tiêu thụ\nkwh = int(input())\n\n# TODO: Tính tiền điện theo 4 bậc lũy tiến\n`,
+          testCases: [
+            {
+              id: "t4-3-tc1",
+              input: "45",
+              expectedOutput: "75510",
+              isHidden: false,
+              explanation: "Kiểm tra bậc 1."
+            },
+            {
+              id: "t4-3-tc2",
+              input: "80",
+              expectedOutput: "135920",
+              isHidden: false,
+              explanation: "Kiểm tra bậc 2."
+            },
+            {
+              id: "t4-3-tc3",
+              input: "250",
+              expectedOutput: "498800",
+              isHidden: true,
+              explanation: "Kiểm tra 250 kWh (>200): 50*1678 + 50*1734 + 100*2014 + 50*2536 = 83900 + 86700 + 201400 + 126800 = 498800."
+            }
+          ],
+          hints: [
+            "Dùng `if kwh <= 50: ...`",
+            "`elif kwh <= 100: tien = 50 * 1678 + (kwh - 50) * 1734`",
+            "`elif kwh <= 200: tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014`",
+            "`else: tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536`"
+          ],
+          solutionExplanation: "kwh = int(input())\nif kwh <= 50:\n    tien = kwh * 1678\nelif kwh <= 100:\n    tien = 50 * 1678 + (kwh - 50) * 1734\nelif kwh <= 200:\n    tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014\nelse:\n    tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536\nprint(tien)"
+        },
+        ...BRANCHING_EXTRA_PROBLEMS.slice(15, 24).map(toPractice)
+      ]
     },
     {
       id: "t4-l4",

@@ -1,4 +1,20 @@
-import { Module } from "../../types";
+import { Module, LessonPractice } from "../../types";
+import { LOOPS_EXTRA_PROBLEMS } from "../problems/loops_extra";
+
+const toPractice = (p: any): LessonPractice => ({
+  id: p.id,
+  title: p.title,
+  difficulty: p.difficulty === 'Dễ' ? 'Cơ bản' : p.difficulty === 'Trung bình' ? 'Trung bình' : 'Nâng cao',
+  problemStatement: p.problemStatement,
+  inputFormat: p.inputFormat,
+  outputFormat: p.outputFormat,
+  constraints: p.constraints,
+  sampleCases: p.sampleCases,
+  starterCode: p.starterCode,
+  hints: p.hints,
+  solutionExplanation: p.solutionExplanation,
+  testCases: p.testCases
+});
 
 export const TOPIC_5_FOR_LOOPS: Module = {
   id: "topic-5",
@@ -203,7 +219,48 @@ k = int(input())
           "`print(f\"{k} x {i} = {k * i}\")`"
         ],
         solutionExplanation: "k = int(input())\nfor i in range(1, 11):\n    print(f'{k} x {i} = {k * i}')"
-      }
+      },
+      practices: [
+        {
+          id: "t5-p2",
+          title: "Bài 2: Bảng Cửu Chương",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên `k` (1 <= k <= 10). Sử dụng vòng lặp `for` để in ra bảng cửu chương của số `k` từ 1 đến 10.",
+          inputFormat: "Một dòng chứa số nguyên k (1 <= k <= 10).",
+          outputFormat: "Gồm 10 dòng theo định dạng `<k> x <i> = <k*i>` với i chạy từ 1 đến 10.",
+          constraints: "1 <= k <= 10.",
+          sampleCases: [
+            {
+              input: "5",
+              output: "5 x 1 = 5\n5 x 2 = 10\n5 x 3 = 15\n5 x 4 = 20\n5 x 5 = 25\n5 x 6 = 30\n5 x 7 = 35\n5 x 8 = 40\n5 x 9 = 45\n5 x 10 = 50",
+              explanation: "Bảng cửu chương 5."
+            }
+          ],
+          starterCode: `# Nhập số k\nk = int(input())\n\n# TODO: Dùng vòng lặp for in bảng cửu chương k\n`,
+          testCases: [
+            {
+              id: "t5-2-tc1",
+              input: "5",
+              expectedOutput: "5 x 1 = 5\n5 x 2 = 10\n5 x 3 = 15\n5 x 4 = 20\n5 x 5 = 25\n5 x 6 = 30\n5 x 7 = 35\n5 x 8 = 40\n5 x 9 = 45\n5 x 10 = 50",
+              isHidden: false,
+              explanation: "Kiểm tra bảng 5."
+            },
+            {
+              id: "t5-2-tc2",
+              input: "9",
+              expectedOutput: "9 x 1 = 9\n9 x 2 = 18\n9 x 3 = 27\n9 x 4 = 36\n9 x 5 = 45\n9 x 6 = 54\n9 x 7 = 63\n9 x 8 = 72\n9 x 9 = 81\n9 x 10 = 90",
+              isHidden: false,
+              explanation: "Kiểm tra bảng 9."
+            }
+          ],
+          hints: [
+            "Dùng `for i in range(1, 11):`",
+            "`print(f\"{k} x {i} = {k * i}\")`"
+          ],
+          solutionExplanation: "k = int(input())\nfor i in range(1, 11):\n    print(f'{k} x {i} = {k * i}')"
+        },
+        ...LOOPS_EXTRA_PROBLEMS.slice(0, 14).map(toPractice)
+      ]
     },
     {
       id: "t5-l3",
@@ -304,7 +361,61 @@ n = int(input())
           "`print(tong)`"
         ],
         solutionExplanation: "n = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)"
-      }
+      },
+      practices: [
+        {
+          id: "t5-p3",
+          title: "Bài 3: Tính Tổng Các Số Từ 1 Đến n",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Hãy sử dụng vòng lặp `for` để tính tổng S = 1 + 2 + 3 + ... + n và in kết quả ra màn hình.",
+          inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 10^5).",
+          outputFormat: "Một số nguyên duy nhất là giá trị của tổng S.",
+          constraints: "1 <= n <= 10^5.",
+          sampleCases: [
+            {
+              input: "5",
+              output: "15",
+              explanation: "1 + 2 + 3 + 4 + 5 = 15."
+            },
+            {
+              input: "10",
+              output: "55",
+              explanation: "Tổng từ 1 đến 10 là 55."
+            }
+          ],
+          starterCode: `# Nhập n\nn = int(input())\n\n# TODO: Dùng vòng lặp for tính tổng 1 đến n\n`,
+          testCases: [
+            {
+              id: "t5-3-tc1",
+              input: "5",
+              expectedOutput: "15",
+              isHidden: false,
+              explanation: "Kiểm tra n = 5."
+            },
+            {
+              id: "t5-3-tc2",
+              input: "100",
+              expectedOutput: "5050",
+              isHidden: false,
+              explanation: "Kiểm tra n = 100."
+            },
+            {
+              id: "t5-3-tc3",
+              input: "1",
+              expectedOutput: "1",
+              isHidden: true,
+              explanation: "Kiểm tra n = 1."
+            }
+          ],
+          hints: [
+            "Khởi tạo `tong = 0`",
+            "`for i in range(1, n + 1): tong += i`",
+            "`print(tong)`"
+          ],
+          solutionExplanation: "n = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)"
+        },
+        ...LOOPS_EXTRA_PROBLEMS.slice(14, 23).map(toPractice)
+      ]
     },
     {
       id: "t5-l4",

@@ -234,7 +234,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                 <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                   Luyện Giải Đề Thuật Toán Python
                 </h1>
-                <span className="px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
                   {userSolvedCount}/{totalProblemsCount} bài đã giải
                 </span>
               </div>
@@ -321,7 +321,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-900 text-base">Cấp Độ Tiểu Học</span>
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full">
                           Khối 3 - 5
                         </span>
                       </div>
@@ -364,7 +364,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-slate-900 text-base">Cấp Độ THCS</span>
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-800 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full">
                           Khối 6 - 9
                         </span>
                       </div>
@@ -477,7 +477,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                       {/* Badges row */}
                       <div className="flex items-center justify-between gap-2">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                             isPrimary
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-indigo-50 text-indigo-700 border-indigo-200'
@@ -488,7 +488,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            className={`px-2 py-0.5 rounded-md text-xs font-bold ${
                               problem.difficulty === 'Dễ'
                                 ? 'bg-green-100 text-green-800'
                                 : problem.difficulty === 'Trung bình'
@@ -518,11 +518,11 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
                       {/* Topic & Tags */}
                       <div className="flex flex-wrap gap-1">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium">
                           {problem.topic}
                         </span>
                         {(problem.tags || []).slice(0, 2).map((t, idx) => (
-                          <span key={idx} className="px-1.5 py-0.5 bg-slate-50 text-slate-500 border border-slate-200 rounded text-[10px]">
+                          <span key={idx} className="px-2 py-0.5 bg-slate-50 text-slate-500 border border-slate-200 rounded text-xs">
                             #{t}
                           </span>
                         ))}
@@ -652,7 +652,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         {selectedProblem.level === 'primary' ? 'Tiểu học' : 'THCS'}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-md text-xs font-bold ${
                           selectedProblem.difficulty === 'Dễ'
                             ? 'bg-green-100 text-green-800'
                             : selectedProblem.difficulty === 'Trung bình'
@@ -670,7 +670,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         <Clock className="h-3 w-3" /> {selectedProblem.timeLimit || "1.0s"}
                       </span>
                       {selectedProblem.source && (
-                        <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
                           {selectedProblem.source}
                         </span>
                       )}
@@ -734,19 +734,19 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                             <div className="bg-slate-100 px-3 py-1.5 font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
                               <span>Ví dụ {idx + 1}</span>
                               {sample.explanation && (
-                                <span className="text-[11px] font-normal text-slate-500 italic">
+                                <span className="text-xs font-normal text-slate-500 italic">
                                   {sample.explanation}
                                 </span>
                               )}
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 bg-white">
                               <div className="p-3">
-                                <span className="font-bold text-[10px] text-slate-400 block uppercase mb-1">Input</span>
-                                <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-slate-800 whitespace-pre-wrap">{sample.input || "(rỗng)"}</pre>
+                                <span className="font-bold text-xs text-slate-500 block uppercase mb-1">Input</span>
+                                <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-slate-800 whitespace-pre-wrap text-xs">{sample.input || "(rỗng)"}</pre>
                               </div>
                               <div className="p-3">
-                                <span className="font-bold text-[10px] text-slate-400 block uppercase mb-1">Output mong đợi</span>
-                                <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-emerald-700 font-semibold whitespace-pre-wrap">{sample.output}</pre>
+                                <span className="font-bold text-xs text-slate-500 block uppercase mb-1">Output mong đợi</span>
+                                <pre className="font-mono bg-slate-50 p-2 rounded border border-slate-200 text-emerald-700 font-semibold whitespace-pre-wrap text-xs">{sample.output}</pre>
                               </div>
                             </div>
                           </div>
@@ -776,12 +776,12 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                           </div>
                           <div className="grid grid-cols-2 gap-2 font-mono">
                             <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                              <span className="text-[10px] font-sans font-bold text-slate-400 block">Input</span>
-                              <span className="whitespace-pre-wrap">{sample.input || "(không có)"}</span>
+                              <span className="text-xs font-sans font-bold text-slate-500 block">Input</span>
+                              <span className="whitespace-pre-wrap text-xs">{sample.input || "(không có)"}</span>
                             </div>
                             <div className="p-2 bg-slate-50 rounded border border-slate-200">
-                              <span className="text-[10px] font-sans font-bold text-slate-400 block">Expected Output</span>
-                              <span className="text-emerald-700 font-bold whitespace-pre-wrap">{sample.output}</span>
+                              <span className="text-xs font-sans font-bold text-slate-500 block">Expected Output</span>
+                              <span className="text-emerald-700 font-bold whitespace-pre-wrap text-xs">{sample.output}</span>
                             </div>
                           </div>
                           {sample.explanation && (
@@ -940,7 +940,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                       <div className="space-y-2">
                         <div className="flex items-center justify-between font-sans">
                           <span className="font-bold text-slate-300">Kết quả chạy thử:</span>
-                          <span className="text-[10px] text-slate-400">{runResult.executionTimeMs}ms</span>
+                          <span className="text-xs text-slate-400">{runResult.executionTimeMs}ms</span>
                         </div>
 
                         {runResult.error ? (
@@ -983,7 +983,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                             <span className="text-lg font-black text-amber-400">
                               {submissionOutcome.score}/100
                             </span>
-                            <span className="text-[10px] block text-slate-400 font-mono">
+                            <span className="text-xs block text-slate-400 font-mono">
                               {submissionOutcome.runtimeMs}ms
                             </span>
                           </div>
@@ -1052,11 +1052,11 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
               <div className="flex items-center gap-3">
                 <div className="text-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl">
                   <span className="text-xl font-black text-emerald-600 block">{userSolvedCount}</span>
-                  <span className="text-[11px] font-semibold text-slate-500">Bài đã giải</span>
+                  <span className="text-xs font-semibold text-slate-500">Bài đã giải</span>
                 </div>
                 <div className="text-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-2xl">
                   <span className="text-xl font-black text-indigo-600 block">{algorithmSubmissions.length}</span>
-                  <span className="text-[11px] font-semibold text-slate-500">Lần nộp bài</span>
+                  <span className="text-xs font-semibold text-slate-500">Lần nộp bài</span>
                 </div>
               </div>
             </div>
@@ -1083,7 +1083,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
                             sub.level === 'primary'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-indigo-50 text-indigo-700 border-indigo-200'
@@ -1229,18 +1229,18 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                       <p className="text-xs text-slate-500">@{entry.username} • {entry.grade}</p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 p-2.5 rounded-2xl bg-white border border-slate-100 text-center text-[11px]">
+                    <div className="grid grid-cols-3 gap-2 p-2.5 rounded-2xl bg-white border border-slate-100 text-center text-xs">
                       <div>
-                        <span className="font-black text-slate-800 block">{entry.solvedCount}</span>
-                        <span className="text-slate-400 text-[10px]">Đã giải</span>
+                        <span className="font-black text-slate-800 block text-sm">{entry.solvedCount}</span>
+                        <span className="text-slate-500 text-xs">Đã giải</span>
                       </div>
                       <div>
-                        <span className="font-black text-emerald-600 block">{entry.primarySolved}</span>
-                        <span className="text-slate-400 text-[10px]">Tiểu học</span>
+                        <span className="font-black text-emerald-600 block text-sm">{entry.primarySolved}</span>
+                        <span className="text-slate-500 text-xs">Tiểu học</span>
                       </div>
                       <div>
-                        <span className="font-black text-indigo-600 block">{entry.secondarySolved}</span>
-                        <span className="text-slate-400 text-[10px]">THCS</span>
+                        <span className="font-black text-indigo-600 block text-sm">{entry.secondarySolved}</span>
+                        <span className="text-slate-500 text-xs">THCS</span>
                       </div>
                     </div>
                   </div>
@@ -1252,7 +1252,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
             <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-400 uppercase font-semibold text-[10px] border-b border-slate-200">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-xs border-b border-slate-200">
                     <tr>
                       <th className="py-3 px-4 text-center">Hạng</th>
                       <th className="py-3 px-4">Thí sinh</th>
@@ -1297,12 +1297,12 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                               <div className="font-bold text-slate-900 flex items-center gap-1.5">
                                 <span>{entry.fullName}</span>
                                 {entry.isCurrentUser && (
-                                  <span className="px-1.5 py-0.2 text-[9px] font-bold bg-indigo-600 text-white rounded">
+                                  <span className="px-1.5 py-0.5 text-xs font-bold bg-indigo-600 text-white rounded">
                                     Bạn
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[11px] text-slate-400">@{entry.username} • {entry.grade}</span>
+                              <span className="text-xs text-slate-500">@{entry.username} • {entry.grade}</span>
                             </div>
                           </div>
                         </td>

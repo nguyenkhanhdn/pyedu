@@ -328,7 +328,7 @@ export const NotesView: React.FC = () => {
                 </div>
 
                 {note.lessonTitle && (
-                  <p className="text-[10px] text-indigo-600 font-semibold">
+                  <p className="text-xs text-indigo-600 font-semibold">
                     📌 {note.lessonTitle}
                   </p>
                 )}
@@ -349,13 +349,13 @@ export const NotesView: React.FC = () => {
                   {note.tags.map((tag, idx) => (
                     <span
                       key={idx}
-                      className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100"
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100"
                     >
                       #{tag}
                     </span>
                   ))}
                 </div>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-xs text-slate-400">
                   {new Date(note.createdAt).toLocaleDateString("vi-VN")}
                 </span>
               </div>

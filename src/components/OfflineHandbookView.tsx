@@ -49,7 +49,7 @@ export const OfflineHandbookView: React.FC = () => {
             <h2 className="text-sm font-bold text-slate-900 leading-tight">
               Sổ Tay Tra Cứu Lập Trình Python
             </h2>
-            <p className="text-[11px] text-slate-500 hidden sm:block">
+            <p className="text-xs text-slate-500 hidden sm:block">
               Tài liệu mở tự do — Tham khảo không giới hạn tiến trình bài học
             </p>
           </div>
@@ -117,7 +117,7 @@ export const OfflineHandbookView: React.FC = () => {
                   <BookOpen className="h-4 w-4 text-purple-600" />
                   <h2 className="font-bold text-sm text-slate-900">Danh Mục Cú Pháp</h2>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                   <WifiOff className="h-3 w-3" /> Sẵn sàng
                 </span>
               </div>
@@ -148,7 +148,7 @@ export const OfflineHandbookView: React.FC = () => {
                     }`}
                   >
                     <div className="min-w-0 pr-2">
-                      <span className="text-[10px] uppercase font-bold text-purple-600">
+                      <span className="text-xs uppercase font-bold text-purple-600">
                         {topic.category}
                       </span>
                       <p className="text-xs font-semibold text-slate-900 truncate mt-0.5">

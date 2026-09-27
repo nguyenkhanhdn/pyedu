@@ -86,17 +86,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                   {isAdmin ? "PyEdu Admin Portal" : "PyEdu"}
                 </span>
                 {isAdmin ? (
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 rounded-full flex items-center gap-1">
-                    <ShieldCheck className="h-3 w-3 text-purple-600" /> Hệ Thống Quản Trị
+                  <span className="px-2 py-0.5 text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300 rounded-full flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-purple-600" /> Hệ Thống Quản Trị
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
                     Python v3.12
                   </span>
                 )}
                 {!isAdmin && teacherMode && (
-                  <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-300 rounded-full flex items-center gap-1">
-                    <ShieldCheck className="h-3 w-3" /> Chế độ giáo viên
+                  <span className="px-2 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-300 rounded-full flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5" /> Chế độ giáo viên
                   </span>
                 )}
               </div>
@@ -186,7 +186,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 <Target className="h-4 w-4 text-emerald-500" />
                 <span className="flex items-center gap-1.5">
                   Giải đề (Thuật toán)
-                  <span className="px-1.5 py-0.2 text-[9px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300">
+                  <span className="px-1.5 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300">
                     Mới
                   </span>
                 </span>
@@ -303,7 +303,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -321,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                       {!isAdmin && (
                         <button
                           onClick={triggerDailyReminder}
-                          className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                          className="text-xs font-medium text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
                           title="Thử kích hoạt thông báo nhắc nhở luyện code"
                         >
                           Thử báo giờ ⏰
@@ -329,7 +329,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                       )}
                       <button
                         onClick={clearAllNotifications}
-                        className="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
+                        className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         Xóa tất cả
                       </button>
@@ -355,7 +355,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                         >
                           <div className="flex items-center justify-between font-medium text-slate-800">
                             <span>{notif.title}</span>
-                            <span className="text-[10px] text-slate-400">{notif.timestamp}</span>
+                            <span className="text-xs text-slate-400">{notif.timestamp}</span>
                           </div>
                           <p className="text-slate-600 mt-1 line-clamp-2">{notif.message}</p>
                         </div>

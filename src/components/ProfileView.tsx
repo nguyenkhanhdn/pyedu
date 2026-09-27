@@ -105,26 +105,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSupabaseSync }) 
             {/* Quick Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">Tổng Kinh Nghiệm</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Tổng Kinh Nghiệm</p>
                 <p className="text-lg font-black text-amber-600 font-mono">{currentUser.totalXp} XP</p>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">Chuỗi Ngày Streak</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Chuỗi Ngày Streak</p>
                 <p className="text-lg font-black text-orange-600 flex items-center gap-1">
                   <Flame className="h-5 w-5 fill-orange-500 text-orange-500" /> {currentUser.streakDays} ngày
                 </p>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">Bài Học Đã Xong</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Bài Học Đã Xong</p>
                 <p className="text-lg font-black text-emerald-600">
                   {currentUser.completedLessons.length} / {totalLessons}
                 </p>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-[10px] text-slate-500 uppercase font-semibold">Tỷ Lệ Chính Xác</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold">Tỷ Lệ Chính Xác</p>
                 <p className="text-lg font-black text-indigo-600">{accuracyRate}%</p>
               </div>
             </div>
@@ -244,10 +244,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSupabaseSync }) 
                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                      <p className="text-xs text-slate-600 mt-0.5 leading-snug">
                         {badge.description}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-1 italic">
+                      <p className="text-xs text-slate-400 mt-1 italic">
                         Yêu cầu: {badge.requirement}
                       </p>
                     </div>
@@ -283,7 +283,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSupabaseSync }) 
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
               <div>
                 <p className="text-xs font-bold text-slate-900">Bật nhắc nhở hàng ngày</p>
-                <p className="text-[10px] text-slate-500">Thông báo vào khung giờ học</p>
+                <p className="text-xs text-slate-500">Thông báo vào khung giờ học</p>
               </div>
               <input
                 type="checkbox"
@@ -354,7 +354,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSupabaseSync }) 
                   <h2>CSDL Supabase (PostgreSQL)</h2>
                 </div>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                     isSupabaseConfigured()
                       ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                       : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
@@ -369,13 +369,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onOpenSupabaseSync }) 
               </p>
 
               <div className="p-3 bg-slate-950/60 rounded-2xl border border-slate-800 text-xs space-y-1.5 font-mono text-slate-300">
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400">Trạng thái:</span>
                   <span className={isSupabaseConfigured() ? "text-emerald-400 font-semibold" : "text-amber-400 font-semibold"}>
                     {isSupabaseConfigured() ? "Sẵn sàng ghi/đọc" : "Chưa cấu hình API Key"}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400">Đồng bộ:</span>
                   <span className="text-slate-200">Profiles, Codes, 120+ Đề, Subs</span>
                 </div>

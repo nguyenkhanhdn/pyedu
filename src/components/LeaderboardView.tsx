@@ -133,7 +133,7 @@ export const LeaderboardView: React.FC = () => {
             <div className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800">
               {boardType === 'weekly' ? top3[1].weeklyXp : top3[1].totalXp} XP
             </div>
-            <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
+            <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
               <span className="flex items-center gap-1 text-orange-600 font-semibold">
                 <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500" /> {top3[1].streakDays} ngày
               </span>
@@ -184,7 +184,7 @@ export const LeaderboardView: React.FC = () => {
             <div className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-800">
               {boardType === 'weekly' ? top3[2].weeklyXp : top3[2].totalXp} XP
             </div>
-            <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
+            <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
               <span className="flex items-center gap-1 text-orange-600 font-semibold">
                 <Flame className="h-3.5 w-3.5 fill-orange-500 text-orange-500" /> {top3[2].streakDays} ngày
               </span>
@@ -244,12 +244,12 @@ export const LeaderboardView: React.FC = () => {
                         {entry.fullName}
                       </p>
                       {isMe && (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">
+                        <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">
                           Bạn
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
                       <span>{entry.grade}</span>
                       <span>•</span>
                       <span className="flex items-center gap-0.5 text-orange-600 font-semibold">
@@ -265,7 +265,7 @@ export const LeaderboardView: React.FC = () => {
                   <p className="font-mono font-bold text-sm sm:text-base text-amber-600">
                     {boardType === 'weekly' ? entry.weeklyXp : entry.totalXp} XP
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     {boardType === 'weekly' ? 'Tuần này' : 'Tổng tích lũy'}
                   </p>
                 </div>

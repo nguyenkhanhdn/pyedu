@@ -253,12 +253,12 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
               <span>Lộ trình Python ({modules.flatMap(m => m.lessons).length} bài)</span>
             </h2>
             {teacherMode && (
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200">
+              <span className="text-xs font-bold px-2 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200">
                 Unlocked All
               </span>
             )}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Hoàn thành bài tập để mở khóa bài tiếp theo</p>
+          <p className="text-xs text-slate-500 mt-1">Hoàn thành bài tập để mở khóa bài tiếp theo</p>
         </div>
 
         <div className="p-2 space-y-2 flex-1">
@@ -313,9 +313,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           )}
                           <div className="min-w-0">
                             <p className="text-xs font-medium truncate">{lesson.title}</p>
-                            <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                               <span className="flex items-center gap-0.5">
-                                <Clock className="h-2.5 w-2.5" /> {lesson.durationMin}p
+                                <Clock className="h-3 w-3" /> {lesson.durationMin}p
                               </span>
                               <span className="text-amber-600 font-semibold">+{lesson.xpReward} XP</span>
                             </div>
@@ -345,8 +345,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 {selectedLesson.moduleTitle}
               </span>
               {isCompleted && (
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> Đã hoàn thành
+                <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Đã hoàn thành
                 </span>
               )}
             </div>
@@ -414,7 +414,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <Layers className="h-4 w-4" />
                     <span>Minh họa trực quan: {selectedLesson.theory.conceptIllustration.title}</span>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
+                  <span className="text-xs px-2.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
                     Sơ đồ trực quan
                   </span>
                 </div>
@@ -428,9 +428,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {selectedLesson.theory.conceptIllustration.visualData.variables.map((item: any, idx: number) => (
                         <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl text-center shadow-xs">
-                          <p className="text-[10px] text-slate-500 uppercase">{item.name}</p>
+                          <p className="text-xs text-slate-500 uppercase">{item.name}</p>
                           <p className="font-mono text-emerald-700 font-bold text-sm my-1">{String(item.value)}</p>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">{item.type}</span>
+                          <span className="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">{item.type}</span>
                         </div>
                       ))}
                     </div>
@@ -442,13 +442,13 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                         {selectedLesson.theory.conceptIllustration.visualData.codeSnippet}
                       </div>
                       {selectedLesson.theory.conceptIllustration.visualData.outputPreview && (
-                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 font-mono text-[11px] text-slate-700 whitespace-pre">
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200 font-mono text-xs text-slate-700 whitespace-pre">
                           <span className="text-slate-400 mr-1.5 font-sans font-semibold">Kết quả:</span>
                           {selectedLesson.theory.conceptIllustration.visualData.outputPreview}
                         </div>
                       )}
                       {selectedLesson.theory.conceptIllustration.visualData.explanation && (
-                        <p className="text-[11px] text-slate-600 italic">
+                        <p className="text-xs text-slate-600 italic">
                           💡 {selectedLesson.theory.conceptIllustration.visualData.explanation}
                         </p>
                       )}
@@ -462,11 +462,11 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                         <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
-                          <span className="font-bold text-[10px] uppercase text-emerald-700 block mb-0.5">Nếu Đúng (True):</span>
+                          <span className="font-bold text-xs uppercase text-emerald-700 block mb-0.5">Nếu Đúng (True):</span>
                           {selectedLesson.theory.conceptIllustration.visualData.ifTrue}
                         </div>
                         <div className="p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-700">
-                          <span className="font-bold text-[10px] uppercase text-slate-500 block mb-0.5">Nếu Sai (False):</span>
+                          <span className="font-bold text-xs uppercase text-slate-500 block mb-0.5">Nếu Sai (False):</span>
                           {selectedLesson.theory.conceptIllustration.visualData.ifFalse}
                         </div>
                       </div>
@@ -477,9 +477,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {selectedLesson.theory.conceptIllustration.visualData.items.map((item: any, idx: number) => (
                         <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl text-center shadow-xs">
-                          <p className="text-[10px] text-slate-500 uppercase">{item.name || `Index ${item.index}`}</p>
+                          <p className="text-xs text-slate-500 uppercase">{item.name || `Index ${item.index}`}</p>
                           <p className="font-mono text-emerald-700 font-bold text-sm my-1">{item.value || item.val}</p>
-                          {item.type && <span className="text-[10px] px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">{item.type}</span>}
+                          {item.type && <span className="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-mono">{item.type}</span>}
                         </div>
                       ))}
                     </div>
@@ -489,7 +489,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-slate-200">
                         <thead>
-                          <tr className="border-b border-slate-200 bg-slate-50 text-[11px] text-slate-500">
+                          <tr className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
                             <th className="p-2.5">Phép toán</th>
                             <th className="p-2.5">Ý nghĩa</th>
                             <th className="p-2.5">Kết quả</th>
@@ -512,7 +512,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <div className="space-y-2">
                       {selectedLesson.theory.conceptIllustration.visualData.steps.map((step: string, idx: number) => (
                         <div key={idx} className="flex items-center gap-3 p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs">
-                          <span className="h-5 w-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+                          <span className="h-5 w-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
                             {idx + 1}
                           </span>
                           <span className="text-slate-700 font-medium">{step}</span>
@@ -538,7 +538,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           setEditorCode(ex.code);
                           setActivePane("practice");
                         }}
-                        className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer"
                       >
                         <span>Thử chạy code này</span>
                         <ArrowRight className="h-3 w-3" />
@@ -549,7 +549,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       <pre>{ex.code}</pre>
                     </div>
                     {ex.output && (
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700">
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700">
                         <span className="text-slate-400 mr-2">Output:</span>
                         <span>{ex.output}</span>
                       </div>
@@ -566,7 +566,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       <HelpCircle className="h-4 w-4 text-amber-600" />
                       <span>Câu Hỏi Trắc Nghiệm Củng Cố</span>
                     </div>
-                    <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold">
+                    <span className="text-xs px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold">
                       Kiểm tra nhanh
                     </span>
                   </div>
@@ -599,7 +599,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           className={`w-full p-3 rounded-2xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer ${btnStyle}`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                            <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
                               {String.fromCharCode(65 + idx)}
                             </span>
                             <span>{opt}</span>
@@ -648,7 +648,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           ? "🎉 Chính xác! Bạn đã hiểu đúng bản chất vấn đề."
                           : "❌ Chưa chính xác. Hãy xem giải thích bên dưới:"}
                       </p>
-                      <p className="text-[11px] leading-relaxed">
+                      <p className="text-xs leading-relaxed">
                         {selectedLesson.theory.multipleChoice.explanation}
                       </p>
                     </div>
@@ -676,7 +676,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-[11px] text-slate-600 italic">
+                      <p className="text-xs text-slate-600 italic">
                         💡 Gợi ý: {selectedLesson.theory.interactiveChallenge.hint}
                       </p>
                       <button
@@ -720,7 +720,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   <div className="space-y-1.5 pb-2 border-b border-slate-200">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-slate-700">Danh sách bài tập ôn tập:</span>
-                      <span className="text-[11px] text-indigo-600 font-semibold">
+                      <span className="text-xs text-indigo-600 font-semibold">
                         Bài {activePracticeIndex + 1} / {availablePractices.length}
                       </span>
                     </div>
@@ -742,7 +742,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           >
                             {isSubPassed && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />}
                             <span>{prac.title.split(":")[0] || `Bài ${pIdx + 1}`}</span>
-                            <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
+                            <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
                               prac.difficulty === 'Cơ bản' ? 'bg-emerald-100 text-emerald-800' : prac.difficulty === 'Trung bình' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
                             }`}>
                               {prac.difficulty}
@@ -756,7 +756,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
                       currentPractice.difficulty === 'Cơ bản'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                         : currentPractice.difficulty === 'Trung bình'
@@ -770,7 +770,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     </span>
                   </div>
 
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
+                  <span className="text-xs px-2.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
                     Bài tập không lời giải
                   </span>
                 </div>
@@ -807,20 +807,20 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     <div key={idx} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                       <div className="grid grid-cols-2 gap-2 font-mono">
                         <div>
-                          <p className="text-[10px] text-slate-500 mb-0.5">Input Mẫu:</p>
-                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-slate-800 whitespace-pre-line">
+                          <p className="text-xs text-slate-500 mb-0.5 font-sans font-medium">Input Mẫu:</p>
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-slate-800 whitespace-pre-line text-xs font-mono">
                             {sample.input || "(Trống)"}
                           </div>
                         </div>
                         <div>
-                          <p className="text-[10px] text-slate-500 mb-0.5">Output Mẫu:</p>
-                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-emerald-700 whitespace-pre-line font-bold">
+                          <p className="text-xs text-slate-500 mb-0.5 font-sans font-medium">Output Mẫu:</p>
+                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-emerald-700 whitespace-pre-line font-bold text-xs font-mono">
                             {sample.output}
                           </div>
                         </div>
                       </div>
                       {sample.explanation && (
-                        <p className="text-[11px] text-slate-500 italic">Giải thích: {sample.explanation}</p>
+                        <p className="text-xs text-slate-600 italic">Giải thích: {sample.explanation}</p>
                       )}
                     </div>
                   ))}
@@ -841,13 +841,13 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                   {showHints && (
                     <div className="mt-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs animate-in fade-in">
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-xs text-slate-600">
                         PyEdu cung cấp các bước gợi ý tư duy dần dần để rèn luyện kỹ năng tự lập trình:
                       </p>
                       {currentPractice.hints.map((hint, idx) => (
                         <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
-                          <p className="text-indigo-700 font-semibold text-[11px] mb-1">Gợi ý bước {idx + 1}:</p>
-                          <p className="text-slate-700 font-mono text-[11px]">{hint}</p>
+                          <p className="text-indigo-700 font-semibold text-xs mb-1">Gợi ý bước {idx + 1}:</p>
+                          <p className="text-slate-700 font-mono text-xs">{hint}</p>
                         </div>
                       ))}
                       <div className="pt-1 space-y-1.5">
@@ -893,7 +893,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       title="Mở Sổ tay tra cứu (Sotay.html) trong tab mới"
                     >
                       <BookOpen className="h-3.5 w-3.5 text-purple-400" />
-                      <span className="hidden sm:inline text-[11px] font-medium">Sổ tay</span>
+                      <span className="hidden sm:inline text-xs font-medium">Sổ tay</span>
                       <ExternalLink className="h-3 w-3 text-purple-400" />
                     </a>
 
@@ -928,7 +928,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 {/* Optional Custom Stdin Input Box */}
                 {showCustomInput && (
                   <div className="p-3 bg-slate-850 border-b border-slate-800 animate-in fade-in">
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
                       Dữ liệu đầu vào tiêu chuẩn (Custom Stdin cho lệnh input()):
                     </label>
                     <textarea
@@ -975,7 +975,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     {executionTime !== null && (
-                      <span className="text-[11px] text-slate-400 font-mono">
+                      <span className="text-xs text-slate-400 font-mono">
                         ⏱️ {executionTime}ms
                       </span>
                     )}
@@ -1043,7 +1043,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                               </span>
                             )}
                           </span>
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-xs text-slate-400">
                             Thời gian chạy: {latestSubmission.runtimeMs}ms
                           </span>
                         </div>
@@ -1068,17 +1068,17 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                                   )}
                                   <span>Test #{idx + 1} {t.isHidden ? "(Test ẩn)" : "(Công khai)"}</span>
                                 </span>
-                                <span className="text-[10px] opacity-75">{t.executionTimeMs}ms</span>
+                                <span className="text-xs opacity-75">{t.executionTimeMs}ms</span>
                               </div>
 
                               {!t.isHidden ? (
-                                <div className="space-y-0.5 text-[11px] text-slate-400 font-mono">
-                                  <p>Input: <span className="text-slate-200">{t.input || "(Trống)"}</span></p>
-                                  <p>Dự kiến: <span className="text-emerald-400">{t.expectedOutput}</span></p>
-                                  <p>Thực tế: <span className={t.passed ? "text-emerald-400" : "text-rose-400 font-bold"}>{t.actualOutput || "(Không có output)"}</span></p>
+                                <div className="space-y-1 text-xs text-slate-300 font-mono">
+                                  <p>Input: <span className="text-white font-medium">{t.input || "(Trống)"}</span></p>
+                                  <p>Dự kiến: <span className="text-emerald-400 font-semibold">{t.expectedOutput}</span></p>
+                                  <p>Thực tế: <span className={t.passed ? "text-emerald-400 font-semibold" : "text-rose-400 font-bold"}>{t.actualOutput || "(Không có output)"}</span></p>
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-slate-400 italic">
+                                <p className="text-xs text-slate-400 italic">
                                   {t.passed ? "Vượt qua test case bí mật" : "Sai kết quả trên dữ liệu bí mật"}
                                 </p>
                               )}

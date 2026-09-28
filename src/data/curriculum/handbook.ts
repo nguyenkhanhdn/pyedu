@@ -38,17 +38,52 @@ print(f"Chia dư: {a % b}")`,
     id: "topic-2",
     title: "2. Cấu trúc rẽ nhánh (if, if-else, if-elif-else, nested if)",
     category: "Điều kiện",
-    summary: "Quy tắc điều kiện logic, toán tử so sánh (==, !=, >, <, >=, <=) và toán tử logic (and, or, not).",
-    content: `### 1. Cấu trúc if đơn & if...else
+    summary: "Quy tắc cấu trúc rẽ nhánh if đơn, if-else, chuỗi if-elif-else, toán tử so sánh (==, !=, >, <, >=, <=) và toán tử logic (and, or, not).",
+    content: `### 1. Cấu trúc if đơn (Một nhánh duy nhất)
+Thực hiện khối lệnh con chỉ khi điều kiện là \`True\`. Nếu \`False\`, bỏ qua và tiếp tục.
 \`\`\`python
+# Cú pháp chuẩn
 if dieu_kien:
-    # Thực hiện khi điều kiện là True
-else:
-    # Thực hiện khi điều kiện là False
+    # Khối lệnh thụt vào 4 dấu cách
+    thuc_hien_khi_dung()
+
+# Ví dụ: Kiểm tra số dương
+n = int(input())
+if n > 0:
+    print("So duong")
 \`\`\`
 
-### 2. Cấu trúc nhiều nhánh if...elif...else
+### 2. Cấu trúc if ... else (Chọn một trong hai nhánh)
+Chọn thực hiện chính xác một trong hai nhánh đối lập nhau:
 \`\`\`python
+# Cú pháp chuẩn
+if dieu_kien:
+    thuc_hien_khi_dung()
+else:
+    thuc_hien_khi_sai()
+
+# Ví dụ: Kiểm tra số chẵn hay số lẻ
+n = int(input())
+if n % 2 == 0:
+    print("So chan")
+else:
+    print("So le")
+\`\`\`
+
+### 3. Cấu trúc nhiều nhánh if ... elif ... else (Từ 3 trường hợp trở lên)
+Kiểm tra lần lượt từng điều kiện từ trên xuống dưới, chỉ thực hiện nhánh đầu tiên thỏa mãn:
+\`\`\`python
+# Ví dụ: Phân loại số dương, âm hay bằng 0
+n = int(input())
+if n > 0:
+    print("So duong")
+elif n < 0:
+    print("So am")
+else:
+    print("So khong")
+
+# Ví dụ: Xếp loại điểm học sinh
+diem = float(input())
 if diem >= 8.0:
     print("Gioi")
 elif diem >= 6.5:
@@ -59,9 +94,11 @@ else:
     print("Yeu")
 \`\`\`
 
-### 3. Cấu trúc rẽ nhánh lồng nhau (Nested If)
-Lồng câu lệnh if bên trong một khối if hoặc else khác để xử lý các phân cấp quyết định nhiều bước.`,
-    codeSnippet: `# Kiểm tra số lớn nhất và xét điều kiện lồng nhau
+### 4. Rẽ nhánh lồng nhau (Nested if) & Toán tử logic (and, or, not)
+- \`and\`: Tất cả điều kiện cùng \`True\`.
+- \`or\`: Ít nhất một điều kiện \`True\`.
+- \`not\`: Đảo ngược giá trị chân lý.`,
+    codeSnippet: `# Kiểm tra số nguyên dương chẵn hay lẻ
 x = int(input())
 if x > 0:
     if x % 2 == 0:
@@ -74,37 +111,66 @@ else:
     print("So khong")`,
     tips: [
       "Nhớ luôn có dấu hai chấm ':' ở cuối mỗi dòng if, elif, else.",
-      "Tất cả các dòng lệnh thuộc cùng một khối phải thụt lề (indent) thẳng hàng, chuẩn là 4 dấu cách."
+      "Tất cả các dòng lệnh thuộc cùng một khối con bắt buộc phải thụt lề 4 dấu cách thẳng hàng.",
+      "Phân biệt rõ: '=' là phép gán biến, còn '==' là toán tử so sánh bằng."
     ]
   },
   {
     id: "topic-3",
     title: "3. range(), Vòng lặp for, while, break, continue & lồng nhau",
     category: "Vòng lặp",
-    summary: "Duyệt range(), điều khiển vòng lặp while, lệnh break, continue và kỹ thuật vòng lặp lồng nhau.",
-    content: `### 1. Hàm range()
-- \`range(n)\`: Sinh dãy từ \`0\` đến \`n - 1\`.
-- \`range(start, stop)\`: Sinh dãy từ \`start\` đến \`stop - 1\`.
-- \`range(start, stop, step)\`: Sinh dãy với bước nhảy \`step\` (có thể nhận step âm để đếm lùi).
+    summary: "Thành thạo 3 dạng của range(), in dãy số 1..n, n..1, số chẵn/lẻ, tính tổng tích lũy, for kết hợp if, lệnh break, continue và vẽ hình học.",
+    content: `### 1. 3 Dạng Của Hàm range()
+- **\`range(stop)\`**: Sinh dãy từ \`0\` đến \`stop - 1\` (ví dụ: \`range(5)\` $\\rightarrow$ 0, 1, 2, 3, 4).
+- **\`range(start, stop)\`**: Sinh dãy từ \`start\` đến \`stop - 1\`:
+  - In từ 1 đến n: \`for i in range(1, n + 1):\`.
+- **\`range(start, stop, step)\`**: Sinh dãy với bước nhảy:
+  - In số chẵn từ 2 đến n: \`for i in range(2, n + 1, 2):\`.
+  - In số lẻ từ 1 đến n: \`for i in range(1, n + 1, 2):\`.
+  - Đếm ngược từ n về 1: \`for i in range(n, 0, -1):\`.
 
-### 2. Vòng lặp for & while
-- \`for i in range(1, n + 1):\`: Lặp với số lần biết trước.
-- \`while dieu_kien:\`: Lặp khi điều kiện còn đúng.
+### 2. Kỹ Thuật Cộng Dồn Tích Lũy Với for
+Mẫu hình thuật toán kinh điển để tính tổng $S = 1 + 2 + \\dots + n$:
+\`\`\`python
+n = int(input())
+tong = 0                       # 1. Khởi tạo biến trước vòng lặp
+for i in range(1, n + 1):      # 2. Vòng lặp duyệt qua từng số
+    tong += i                  # 3. Cộng dồn vào biến tích lũy
+print(tong)                    # 4. Xuất kết quả sau khi lặp xong
+\`\`\`
 
-### 3. Lệnh break & continue
-- \`break\`: Lập tức thoát hoàn toàn khỏi vòng lặp gần nhất.
-- \`continue\`: Bỏ qua các lệnh còn lại của lượt lặp hiện tại, chuyển sang lượt tiếp theo.
+### 3. Vòng Lặp for Kết Hợp if (Lọc dữ liệu)
+\`\`\`python
+# In các số chẵn trong phạm vi 1 đến 50
+for i in range(1, 51):
+    if i % 2 == 0:
+        print(i, end=" ")
+\`\`\`
 
-### 4. Vòng lặp lồng nhau (Nested Loops)
-Dùng vòng lặp for/while bên trong vòng lặp khác để vẽ hình sao, in bảng cửu chương, ma trận 2 chiều.`,
-    codeSnippet: `# In hình tam giác vuông sao kích thước N dòng
+### 4. Lệnh break, continue & Vòng lặp lồng nhau
+- \`break\`: Lập tức thoát khỏi vòng lặp đang chạy (ví dụ dừng sớm khi tìm thấy ước trong kiểm tra số nguyên tố).
+- \`continue\`: Bỏ qua các lệnh còn lại của lượt lặp hiện tại, chuyển ngay sang lượt kế tiếp.
+- Vòng lặp lồng nhau: Duyệt hàng và cột để in hình sao, ma trận.`,
+    codeSnippet: `# 1. In dãy số từ 1 đến n
 n = int(input())
 for i in range(1, n + 1):
-    for j in range(i):
-        print("*", end="")
-    print() # Xuống dòng`,
+    print(i, end=" ")
+print()
+
+# 2. Đếm ngược từ n về 1
+for i in range(n, 0, -1):
+    print(i, end=" ")
+print()
+
+# 3. Tính tổng từ 1 đến n
+s = 0
+for i in range(1, n + 1):
+    s += i
+print(f"Tong 1..{n} = {s}")`,
     tips: [
-      "Trong vòng lặp while, luôn đảm bảo biến điều kiện được cập nhật (ví dụ: i += 1 hoặc n //= 10) để tránh rơi vào vòng lặp vô tận (Infinite Loop)."
+      "range(1, n + 1) chỉ chạy đến n, không chạy đến n + 1.",
+      "Biến tích lũy (tong = 0, count = 0) luôn phải được khởi tạo TRƯỚC vòng lặp, nếu khởi tạo bên trong thì biến sẽ bị gán lại về 0 ở mỗi vòng lặp.",
+      "Dùng print(..., end=' ') để in các giá trị trên cùng một dòng cách nhau bởi dấu cách."
     ]
   },
   {

@@ -129,7 +129,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [adminSection, setAdminSection] = useState<'users' | 'stats' | 'curriculum' | 'algorithms'>('users');
 
   // 2. Selected Lesson State
-  const [selectedLesson, setSelectedLesson] = useState<Lesson>(CURRICULUM_MODULES[0].lessons[0]);
+  const [selectedLesson, setSelectedLessonState] = useState<Lesson>(() => {
+    try {
+      const savedLessonId = localStorage.getItem("pyedu_selected_lesson_id");
+      if (savedLessonId) {
+        const allLessons = CURRICULUM_MODULES.flatMap(m => m.lessons);
+        const found = allLessons.find(l => l.id === savedLessonId);
+        if (found) return found;
+      }
+    } catch {}
+    return CURRICULUM_MODULES[0].lessons[0];
+  });
+
+  const setSelectedLesson = (lesson: Lesson) => {
+    setSelectedLessonState(lesson);
+    try {
+      localStorage.setItem("pyedu_selected_lesson_id", lesson.id);
+    } catch {}
+  };
 
   // 3. User code per lesson
   const [userCodes, setUserCodes] = useState<Record<string, string>>({});
@@ -253,16 +270,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentUser]);
 
-  // Unlock check logic:
-  const isLessonUnlocked = (lessonId: string): boolean => {
-    if (teacherMode || currentUser?.role === 'teacher') return true;
-
-    const allLessons = CURRICULUM_MODULES.flatMap(m => m.lessons);
-    const index = allLessons.findIndex(l => l.id === lessonId);
-    if (index <= 0) return true; // Lesson 1 is always unlocked
-
-    const previousLesson = allLessons[index - 1];
-    return currentUser?.completedLessons.includes(previousLesson.id) ?? false;
+  // Unlock check logic: Luôn mở khóa để học sinh & giáo viên có thể học và tham khảo mọi chủ đề
+  const isLessonUnlocked = (_lessonId: string): boolean => {
+    return true;
   };
 
   const isLessonCompleted = (lessonId: string): boolean => {

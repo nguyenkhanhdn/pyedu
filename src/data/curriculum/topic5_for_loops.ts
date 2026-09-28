@@ -19,57 +19,630 @@ const toPractice = (p: any): LessonPractice => ({
 export const TOPIC_5_FOR_LOOPS: Module = {
   id: "topic-5",
   title: "Chủ đề 5: Vòng Lặp for",
-  description: "Làm chủ cấu trúc vòng lặp for, hàm range(start, stop, step), câu lệnh break, continue và kỹ thuật vẽ hình học với vòng lặp lồng nhau.",
+  description: "Làm chủ vòng lặp for và hàm range() từ in dãy số 1..n, đếm ngược n..1, số chẵn/lẻ đến tính tổng tích lũy, kết hợp if lọc dữ liệu, lệnh break/continue và vẽ hình học.",
   iconName: "Repeat",
   order: 5,
   color: "from-cyan-500 to-blue-700",
   lessons: [
+    // ----------------------------------------------------
+    // BÀI 1: VÒNG LẶP FOR CƠ BẢN & HÀM RANGE()
+    // ----------------------------------------------------
     {
       id: "t5-l1",
       moduleId: "topic-5",
       moduleTitle: "Chủ đề 5: Vòng Lặp for",
       order: 1,
-      title: "Bài 1: Kiểm Tra Số Nguyên Tố",
-      description: "Nhập số nguyên n. Sử dụng vòng lặp for để kiểm tra n có phải số nguyên tố hay không và dùng break sớm.",
-      durationMin: 20,
-      xpReward: 60,
+      title: "Bài 1: Vòng Lặp for Cơ Bản & Hàm range()",
+      description: "Làm quen với vòng lặp for, hiểu 3 dạng của hàm range() để in dãy số xuôi 1..n, đếm ngược n..1 và in các số chẵn, lẻ.",
+      durationMin: 15,
+      xpReward: 50,
       theory: {
-        summary: "Số nguyên tố là số nguyên lớn hơn 1 và chỉ có đúng 2 ước dương là 1 và chính nó. Dùng vòng lặp for từ 2 đến căn bậc hai của n để kiểm tra.",
+        summary: "Vòng lặp for được dùng để lặp lại một khối lệnh với số lần xác định trước. Hàm range() là công cụ chủ lực để sinh ra một dãy số nguyên tuần tự.",
         keyPoints: [
-          "Nếu `n < 2` -> Không phải số nguyên tố.",
-          "Duyệt `i` từ 2 đến `int(n**0.5)` (hoặc `n - 1`). Nếu `n % i == 0` -> Có ước số khác -> Không phải số nguyên tố, dùng `break` dừng sớm.",
-          "Nếu duyệt hết mà không chia hết cho số nào -> Là số nguyên tố."
+          "**3 dạng của hàm range()**:",
+          "  1. `range(stop)`: Sinh dãy từ `0` đến `stop - 1` (ví dụ `range(5)` -> 0, 1, 2, 3, 4).",
+          "  2. `range(start, stop)`: Sinh dãy từ `start` đến `stop - 1` (ví dụ `range(1, n + 1)` để chạy từ 1 đến n).",
+          "  3. `range(start, stop, step)`: Sinh dãy với bước nhảy `step`:",
+          "     - `range(2, n + 1, 2)`: Duyệt các số chẵn 2, 4, 6, ...",
+          "     - `range(1, n + 1, 2)`: Duyệt các số lẻ 1, 3, 5, ...",
+          "     - `range(n, 0, -1)`: Đếm ngược từ n về 1 với bước nhảy âm (-1).",
+          "Tham số `end=' '` trong lệnh `print()` giúp in các giá trị trên cùng một dòng cách nhau bởi dấu cách."
         ],
         conceptIllustration: {
           type: "loops",
-          title: "Kiểm Tra Số Nguyên Tố",
-          description: "n = 7: duyệt i = 2, 7 % 2 != 0 -> Là số nguyên tố (YES).",
+          title: "3 Dạng Của Hàm range() Trong Python",
+          description: "range(1, n + 1) in xuôi 1..n | range(n, 0, -1) đếm ngược n..1 | range(2, n + 1, 2) số chẵn",
           visualData: {
-            loopType: "for i in range(2, int(n**0.5) + 1)",
+            loopType: "for i in range(start, stop, step)",
             iterations: [
-              { index: 1, state: "i = 2: 7 % 2 != 0" },
-              { index: 2, state: "Kết luận: YES" }
+              { index: 1, state: "range(1, 5) -> 1, 2, 3, 4" },
+              { index: 2, state: "range(5, 0, -1) -> 5, 4, 3, 2, 1" },
+              { index: 3, state: "range(2, 7, 2) -> 2, 4, 6" }
             ]
           }
         },
         examples: [
           {
-            title: "Ví dụ: Kiểm tra 11",
-            explanation: "11 chỉ chia hết cho 1 và 11 -> YES.",
-            code: "n = 11\nis_prime = True\nif n < 2:\n    is_prime = False\nelse:\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            is_prime = False\n            break\nprint('YES' if is_prime else 'NO')",
-            output: "YES"
+            title: "Ví dụ: In từ 1 đến n",
+            explanation: "Dùng range(1, n + 1) để duyệt từ 1 đến n.",
+            code: "n = 5\nfor i in range(1, n + 1):\n    print(i, end=' ')\nprint()",
+            output: "1 2 3 4 5 "
           }
         ],
         multipleChoice: {
-          question: "Để dừng ngay lập tức vòng lặp khi phát hiện một ước số của n, ta sử dụng từ khóa nào?",
-          options: ["continue", "break", "exit", "return"],
+          question: "Để in dãy số đếm ngược từ 5 về 1 (5 4 3 2 1), ta dùng hàm range nào sau đây?",
+          options: [
+            "range(5, 1, -1)",
+            "range(5, 0, -1)",
+            "range(5, 0, 1)",
+            "range(1, 6, -1)"
+          ],
           correctIndex: 1,
-          explanation: "Từ khóa `break` dùng để thoát ngay lập tức khỏi vòng lặp đang chạy."
+          explanation: "range(5, 0, -1) bắt đầu từ 5, giảm mỗi lần 1 đơn vị và dừng trước 0, nghĩa là nhận các giá trị 5, 4, 3, 2, 1."
         }
       },
       practice: {
         id: "t5-p1",
-        title: "Bài 1: Kiểm Tra Số Nguyên Tố",
+        title: "Bài 1: In Dãy Số Từ 1 Đến n",
+        difficulty: "Cơ bản",
+        problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Sử dụng vòng lặp `for` và hàm `range()` để in ra các số nguyên từ 1 đến `n` trên cùng một dòng, cách nhau bởi một dấu cách.",
+        inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 1000).",
+        outputFormat: "Các số từ 1 đến n cách nhau bởi một khoảng trắng.",
+        constraints: "1 <= n <= 1000.",
+        sampleCases: [
+          {
+            input: "5",
+            output: "1 2 3 4 5",
+            explanation: "In lần lượt các số từ 1 đến 5."
+          },
+          {
+            input: "1",
+            output: "1",
+            explanation: "n = 1 chỉ có 1 số."
+          }
+        ],
+        starterCode: `# Nhập số nguyên dương n
+n = int(input())
+
+# TODO: Dùng for và range để in dãy số từ 1 đến n
+`,
+        testCases: [
+          {
+            id: "t5-1-tc1",
+            input: "5",
+            expectedOutput: "1 2 3 4 5",
+            isHidden: false,
+            explanation: "Kiểm tra n = 5."
+          },
+          {
+            id: "t5-1-tc2",
+            input: "1",
+            expectedOutput: "1",
+            isHidden: false,
+            explanation: "Kiểm tra n = 1."
+          },
+          {
+            id: "t5-1-tc3",
+            input: "10",
+            expectedOutput: "1 2 3 4 5 6 7 8 9 10",
+            isHidden: false,
+            explanation: "Kiểm tra n = 10."
+          },
+          {
+            id: "t5-1-tc4",
+            input: "20",
+            expectedOutput: "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20",
+            isHidden: true,
+            explanation: "Kiểm tra n = 20."
+          }
+        ],
+        hints: [
+          "Dùng cú pháp: `for i in range(1, n + 1):`",
+          "In trên một dòng: `print(i, end=' ')` hoặc dùng `print(*range(1, n + 1))`"
+        ],
+        solutionExplanation: "n = int(input())\nfor i in range(1, n + 1):\n    print(i, end=' ' if i < n else '\\n')"
+      },
+      practices: [
+        {
+          id: "t5-p1",
+          title: "Bài 1: In Dãy Số Từ 1 Đến n",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Sử dụng vòng lặp `for` và hàm `range()` để in ra các số nguyên từ 1 đến `n` trên cùng một dòng, cách nhau bởi một dấu cách.",
+          inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 1000).",
+          outputFormat: "Các số từ 1 đến n cách nhau bởi một khoảng trắng.",
+          constraints: "1 <= n <= 1000.",
+          sampleCases: [
+            {
+              input: "5",
+              output: "1 2 3 4 5",
+              explanation: "In lần lượt các số từ 1 đến 5."
+            },
+            {
+              input: "1",
+              output: "1",
+              explanation: "n = 1 chỉ có 1 số."
+            }
+          ],
+          starterCode: `# Nhập số nguyên dương n\nn = int(input())\n\n# TODO: Dùng for và range để in dãy số từ 1 đến n\n`,
+          testCases: [
+            {
+              id: "t5-1-tc1",
+              input: "5",
+              expectedOutput: "1 2 3 4 5",
+              isHidden: false,
+              explanation: "Kiểm tra n = 5."
+            },
+            {
+              id: "t5-1-tc2",
+              input: "1",
+              expectedOutput: "1",
+              isHidden: false,
+              explanation: "Kiểm tra n = 1."
+            },
+            {
+              id: "t5-1-tc3",
+              input: "10",
+              expectedOutput: "1 2 3 4 5 6 7 8 9 10",
+              isHidden: false,
+              explanation: "Kiểm tra n = 10."
+            },
+            {
+              id: "t5-1-tc4",
+              input: "20",
+              expectedOutput: "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20",
+              isHidden: true,
+              explanation: "Kiểm tra n = 20."
+            }
+          ],
+          hints: [
+            "Dùng cú pháp: `for i in range(1, n + 1):`",
+            "In trên một dòng: `print(i, end=' ')` hoặc dùng `print(*range(1, n + 1))`"
+          ],
+          solutionExplanation: "n = int(input())\nfor i in range(1, n + 1):\n    print(i, end=' ' if i < n else '\\n')"
+        },
+        {
+          id: "t5-p-reverse",
+          title: "Đếm Ngược Từ n Về 1",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Sử dụng vòng lặp `for` với bước nhảy âm trong hàm `range()` để in ra các số từ `n` giảm dần về `1` trên cùng một dòng, cách nhau bởi một dấu cách.",
+          inputFormat: "Một số nguyên dương n (1 <= n <= 1000).",
+          outputFormat: "Các số từ n giảm dần về 1 cách nhau bởi dấu cách: n n-1 ... 1.",
+          constraints: "1 <= n <= 1000.",
+          sampleCases: [
+            { input: "5", output: "5 4 3 2 1", explanation: "Đếm ngược từ 5 về 1." }
+          ],
+          starterCode: `n = int(input())\n\n# TODO: Dùng range(n, 0, -1) để in đếm ngược\n`,
+          testCases: [
+            { id: "t5-rev-tc1", input: "5", expectedOutput: "5 4 3 2 1", isHidden: false },
+            { id: "t5-rev-tc2", input: "1", expectedOutput: "1", isHidden: false },
+            { id: "t5-rev-tc3", input: "8", expectedOutput: "8 7 6 5 4 3 2 1", isHidden: true }
+          ],
+          hints: ["Dùng `for i in range(n, 0, -1): print(i, end=' ')`"],
+          solutionExplanation: "n = int(input())\nfor i in range(n, 0, -1):\n    print(i, end=' ' if i > 1 else '\\n')"
+        },
+        {
+          id: "t5-p-even-n",
+          title: "In Các Số Chẵn Từ 1 Đến n",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Sử dụng vòng lặp `for` và `range(2, n + 1, 2)` để in ra tất cả các số chẵn trong phạm vi từ 1 đến `n` trên cùng một dòng, cách nhau bởi một dấu cách.",
+          inputFormat: "Một số nguyên dương n (2 <= n <= 1000).",
+          outputFormat: "Dãy số chẵn cách nhau bởi dấu cách.",
+          constraints: "2 <= n <= 1000.",
+          sampleCases: [
+            { input: "10", output: "2 4 6 8 10", explanation: "Các số chẵn từ 1 đến 10." },
+            { input: "11", output: "2 4 6 8 10", explanation: "Số chẵn cuối cùng <= 11 là 10." }
+          ],
+          starterCode: `n = int(input())\n\n# TODO: Dùng range(2, n + 1, 2) in các số chẵn\n`,
+          testCases: [
+            { id: "t5-ev-tc1", input: "10", expectedOutput: "2 4 6 8 10", isHidden: false },
+            { id: "t5-ev-tc2", input: "11", expectedOutput: "2 4 6 8 10", isHidden: false },
+            { id: "t5-ev-tc3", input: "6", expectedOutput: "2 4 6", isHidden: true }
+          ],
+          hints: ["Bắt đầu từ 2, kết thúc ở n + 1, bước nhảy 2: `range(2, n + 1, 2)`."],
+          solutionExplanation: "n = int(input())\nres = [str(x) for x in range(2, n + 1, 2)]\nprint(' '.join(res))"
+        },
+        {
+          id: "t5-p-odd-n",
+          title: "In Các Số Lẻ Từ 1 Đến n",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Sử dụng vòng lặp `for` và `range(1, n + 1, 2)` để in ra tất cả các số lẻ trong phạm vi từ 1 đến `n` trên cùng một dòng, cách nhau bởi một dấu cách.",
+          inputFormat: "Một số nguyên dương n (1 <= n <= 1000).",
+          outputFormat: "Dãy số lẻ cách nhau bởi dấu cách.",
+          constraints: "1 <= n <= 1000.",
+          sampleCases: [
+            { input: "10", output: "1 3 5 7 9", explanation: "Các số lẻ từ 1 đến 10." },
+            { input: "7", output: "1 3 5 7", explanation: "Các số lẻ từ 1 đến 7." }
+          ],
+          starterCode: `n = int(input())\n\n# TODO: Dùng range(1, n + 1, 2) in các số lẻ\n`,
+          testCases: [
+            { id: "t5-od-tc1", input: "10", expectedOutput: "1 3 5 7 9", isHidden: false },
+            { id: "t5-od-tc2", input: "7", expectedOutput: "1 3 5 7", isHidden: false },
+            { id: "t5-od-tc3", input: "1", expectedOutput: "1", isHidden: true }
+          ],
+          hints: ["Bắt đầu từ 1, bước nhảy 2: `range(1, n + 1, 2)`."],
+          solutionExplanation: "n = int(input())\nres = [str(x) for x in range(1, n + 1, 2)]\nprint(' '.join(res))"
+        },
+        // Câu 25: In số từ 1 đến 10
+        toPractice(LOOPS_EXTRA_PROBLEMS[0]),
+        // Câu 26: In số từ 1 đến 100
+        toPractice(LOOPS_EXTRA_PROBLEMS[1]),
+        // Câu 27: In các số chẵn từ 1 đến 20
+        toPractice(LOOPS_EXTRA_PROBLEMS[2]),
+        // Câu 28: In các số lẻ từ 1 đến 20
+        toPractice(LOOPS_EXTRA_PROBLEMS[3]),
+        // Câu 36: Đếm/in từng chữ cái của từ
+        toPractice(LOOPS_EXTRA_PROBLEMS[11])
+      ]
+    },
+
+    // ----------------------------------------------------
+    // BÀI 2: TÍNH TỔNG & TÍCH LŨY VỚI FOR
+    // ----------------------------------------------------
+    {
+      id: "t5-l2",
+      moduleId: "topic-5",
+      moduleTitle: "Chủ đề 5: Vòng Lặp for",
+      order: 2,
+      title: "Bài 2: Tính Tổng, Đếm & Kỹ Thuật Tích Lũy",
+      description: "Thành thạo kỹ thuật cộng dồn biến tích lũy: tính tổng từ 1 đến n, tính tổng số chẵn, in bảng cửu chương và tìm giá trị lớn nhất.",
+      durationMin: 20,
+      xpReward: 60,
+      theory: {
+        summary: "Kỹ thuật tích lũy là mẫu hình thuật toán cốt lõi: khởi tạo biến tích lũy (ví dụ total = 0 hoặc count = 0) trước vòng lặp, cập nhật giá trị sau mỗi bước lặp và in kết quả ở cuối chương trình.",
+        keyPoints: [
+          "**Các bước của kỹ thuật tích lũy**:",
+          "  1. Khởi tạo: `tong = 0` (hoặc `tich = 1` nếu tính tích, `dem = 0` nếu đếm).",
+          "  2. Lặp: `for i in range(1, n + 1):`",
+          "  3. Cập nhật: `tong += i` (tương đương `tong = tong + i`).",
+          "  4. Xuất kết quả sau vòng lặp: `print(tong)` (lưu ý không thụt lề lệnh print).",
+          "In bảng cửu chương: Dùng vòng lặp `for i in range(1, 11): print(f'{k} x {i} = {k * i}')`."
+        ],
+        conceptIllustration: {
+          type: "loops",
+          title: "Sơ Đồ Kỹ Thuật Cộng Dồn Tích Lũy",
+          description: "n = 4 -> tong = 0 + 1 = 1 -> 1 + 2 = 3 -> 3 + 3 = 6 -> 6 + 4 = 10",
+          visualData: {
+            loopType: "for i in range(1, n + 1): tong += i",
+            iterations: [
+              { index: 1, state: "i = 1: tong = 1" },
+              { index: 2, state: "i = 2: tong = 3" },
+              { index: 3, state: "i = 3: tong = 6" },
+              { index: 4, state: "i = 4: tong = 10" }
+            ]
+          }
+        },
+        examples: [
+          {
+            title: "Ví dụ: Tính tổng 1 đến 5",
+            explanation: "1 + 2 + 3 + 4 + 5 = 15.",
+            code: "n = 5\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)",
+            output: "15"
+          }
+        ],
+        multipleChoice: {
+          question: "Để tính tổng S = 1 + 2 + ... + n, biến tổng cần được khởi tạo với giá trị ban đầu là bao nhiêu và ở vị trí nào?",
+          options: [
+            "Khởi tạo tong = 0 bên trong vòng lặp",
+            "Khởi tạo tong = 0 trước khi bắt đầu vòng lặp",
+            "Khởi tạo tong = 1 trước khi bắt đầu vòng lặp",
+            "Không cần khởi tạo, Python tự gán mặc định"
+          ],
+          correctIndex: 1,
+          explanation: "tong = 0 phải đặt TRƯỚC vòng lặp để giá trị không bị đặt lại về 0 ở mỗi lần lặp."
+        }
+      },
+      practice: {
+        id: "t5-p2",
+        title: "Bài 2: Tính Tổng Các Số Từ 1 Đến n",
+        difficulty: "Cơ bản",
+        problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Hãy sử dụng vòng lặp `for` để tính tổng $S = 1 + 2 + 3 + \\dots + n$ và in kết quả ra màn hình.",
+        inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 10^5).",
+        outputFormat: "Một số nguyên duy nhất là giá trị của tổng S.",
+        constraints: "1 <= n <= 10^5.",
+        sampleCases: [
+          {
+            input: "5",
+            output: "15",
+            explanation: "1 + 2 + 3 + 4 + 5 = 15."
+          },
+          {
+            input: "10",
+            output: "55",
+            explanation: "Tổng từ 1 đến 10 là 55."
+          }
+        ],
+        starterCode: `# Nhập số nguyên dương n
+n = int(input())
+
+# TODO: Dùng vòng lặp for và biến tích lũy để tính tổng từ 1 đến n
+`,
+        testCases: [
+          {
+            id: "t5-2-tc1",
+            input: "5",
+            expectedOutput: "15",
+            isHidden: false,
+            explanation: "Kiểm tra n = 5."
+          },
+          {
+            id: "t5-2-tc2",
+            input: "10",
+            expectedOutput: "55",
+            isHidden: false,
+            explanation: "Kiểm tra n = 10."
+          },
+          {
+            id: "t5-2-tc3",
+            input: "100",
+            expectedOutput: "5050",
+            isHidden: false,
+            explanation: "Kiểm tra n = 100."
+          },
+          {
+            id: "t5-2-tc4",
+            input: "1",
+            expectedOutput: "1",
+            isHidden: true,
+            explanation: "Kiểm tra n = 1."
+          }
+        ],
+        hints: [
+          "Khởi tạo `tong = 0` trước vòng lặp.",
+          "Vòng lặp: `for i in range(1, n + 1): tong += i`",
+          "In ra: `print(tong)`"
+        ],
+        solutionExplanation: "n = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)"
+      },
+      practices: [
+        {
+          id: "t5-p2",
+          title: "Bài 2: Tính Tổng Các Số Từ 1 Đến n",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Hãy sử dụng vòng lặp `for` để tính tổng $S = 1 + 2 + 3 + \\dots + n$ và in kết quả ra màn hình.",
+          inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 10^5).",
+          outputFormat: "Một số nguyên duy nhất là giá trị của tổng S.",
+          constraints: "1 <= n <= 10^5.",
+          sampleCases: [
+            {
+              input: "5",
+              output: "15",
+              explanation: "1 + 2 + 3 + 4 + 5 = 15."
+            },
+            {
+              input: "10",
+              output: "55",
+              explanation: "Tổng từ 1 đến 10 là 55."
+            }
+          ],
+          starterCode: `# Nhập số nguyên dương n\nn = int(input())\n\n# TODO: Dùng vòng lặp for và biến tích lũy để tính tổng từ 1 đến n\n`,
+          testCases: [
+            {
+              id: "t5-2-tc1",
+              input: "5",
+              expectedOutput: "15",
+              isHidden: false,
+              explanation: "Kiểm tra n = 5."
+            },
+            {
+              id: "t5-2-tc2",
+              input: "10",
+              expectedOutput: "55",
+              isHidden: false,
+              explanation: "Kiểm tra n = 10."
+            },
+            {
+              id: "t5-2-tc3",
+              input: "100",
+              expectedOutput: "5050",
+              isHidden: false,
+              explanation: "Kiểm tra n = 100."
+            },
+            {
+              id: "t5-2-tc4",
+              input: "1",
+              expectedOutput: "1",
+              isHidden: true,
+              explanation: "Kiểm tra n = 1."
+            }
+          ],
+          hints: [
+            "Khởi tạo `tong = 0` trước vòng lặp.",
+            "Vòng lặp: `for i in range(1, n + 1): tong += i`",
+            "In ra: `print(tong)`"
+          ],
+          solutionExplanation: "n = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)"
+        },
+        // Câu 29: In bảng cửu chương 5
+        toPractice(LOOPS_EXTRA_PROBLEMS[4]),
+        // Câu 30: Tính tổng từ 1 đến 10
+        toPractice(LOOPS_EXTRA_PROBLEMS[5]),
+        // Câu 31: Tính tổng từ 1 đến 100
+        toPractice(LOOPS_EXTRA_PROBLEMS[6]),
+        // Câu 32: Tính tổng các số chẵn từ 1 đến 100
+        toPractice(LOOPS_EXTRA_PROBLEMS[7]),
+        // Câu 33: Đếm số chia hết cho 3 trong khoảng 1 đến 100
+        toPractice(LOOPS_EXTRA_PROBLEMS[8]),
+        // Câu 37: Đếm chữ a
+        toPractice(LOOPS_EXTRA_PROBLEMS[12]),
+        // Câu 38: Tìm số lớn nhất
+        toPractice(LOOPS_EXTRA_PROBLEMS[13])
+      ]
+    },
+
+    // ----------------------------------------------------
+    // BÀI 3: VÒNG LẶP FOR KẾT HỢP IF
+    // ----------------------------------------------------
+    {
+      id: "t5-l3",
+      moduleId: "topic-5",
+      moduleTitle: "Chủ đề 5: Vòng Lặp for",
+      order: 3,
+      title: "Bài 3: Vòng Lặp for Kết Hợp if (Lọc & Phân Loại)",
+      description: "Kết hợp câu lệnh if bên trong vòng lặp for để chọn lọc phần tử thỏa mãn điều kiện: in số chia hết, đếm số chẵn, tính tổng có điều kiện, FizzBuzz.",
+      durationMin: 20,
+      xpReward: 60,
+      theory: {
+        summary: "Đặt câu lệnh if bên trong thân vòng lặp for cho phép kiểm tra từng phần tử khi duyệt qua, từ đó lọc ra các giá trị thỏa mãn điều kiện xác định.",
+        keyPoints: [
+          "Cấu trúc cơ bản:",
+          "  ```python",
+          "  for i in range(1, n + 1):",
+          "      if i % 2 == 0:     # Kiểm tra điều kiện",
+          "          print(i)       # Chỉ xử lý khi điều kiện True",
+          "  ```",
+          "Đếm số thỏa điều kiện: `if dieu_kien: count += 1`.",
+          "Cộng dồn có điều kiện: `if dieu_kien: tong += i`.",
+          "Bài toán FizzBuzz kinh điển: Kiểm tra chia hết cho cả 3 và 5 (`i % 15 == 0`), rồi mới đến chia hết cho 3, chia hết cho 5."
+        ],
+        conceptIllustration: {
+          type: "loops",
+          title: "Sơ Đồ for Kết Hợp if Để Lọc Dữ Liệu",
+          description: "Duyệt từng phần tử -> Kiểm tra điều kiện if -> Nếu True thì xử lý / đếm / cộng dồn",
+          visualData: {
+            loopType: "for i in range(1, 51): if i % 2 == 0",
+            iterations: [
+              { index: 1, state: "i = 1: 1 % 2 != 0 -> Bỏ qua" },
+              { index: 2, state: "i = 2: 2 % 2 == 0 -> In 2" },
+              { index: 3, state: "i = 3: 3 % 2 != 0 -> Bỏ qua" },
+              { index: 4, state: "i = 4: 4 % 2 == 0 -> In 4" }
+            ]
+          }
+        },
+        examples: [
+          {
+            title: "Ví dụ: In số chẵn từ 1 đến 10",
+            explanation: "Chỉ in ra các số chia hết cho 2.",
+            code: "for i in range(1, 11):\n    if i % 2 == 0:\n        print(i, end=' ')\nprint()",
+            output: "2 4 6 8 10 "
+          }
+        ],
+        multipleChoice: {
+          question: "Để kiểm tra số i vừa chia hết cho 3 vừa chia hết cho 5, điều kiện nào chuẩn xác nhất?",
+          options: [
+            "i % 3 == 0 and i % 5 == 0",
+            "i % 3 == 0 or i % 5 == 0",
+            "i % 8 == 0",
+            "i / 15 == 0"
+          ],
+          correctIndex: 0,
+          explanation: "Dùng toán tử logic `and` hoặc `i % 15 == 0` để đảm bảo chia hết cho cả 3 và 5 cùng lúc."
+        }
+      },
+      practice: {
+        id: "t5-p3",
+        title: "Bài 3: In Số Chẵn Từ 1 Đến 50",
+        difficulty: "Cơ bản",
+        problemStatement: "Sử dụng vòng lặp `for` duyệt các số từ 1 đến 50 và kết hợp câu lệnh `if` để chỉ in ra các số chẵn trên cùng một dòng, cách nhau bởi một dấu cách.",
+        inputFormat: "Không có dữ liệu đầu vào.",
+        outputFormat: "Các số chẵn từ 1 đến 50 cách nhau bởi một dấu cách: 2 4 6 ... 50.",
+        constraints: "Không có.",
+        sampleCases: [
+          {
+            input: "",
+            output: Array.from({ length: 25 }, (_, i) => (i + 1) * 2).join(" "),
+            explanation: "In các số chẵn trong phạm vi 1 đến 50."
+          }
+        ],
+        starterCode: `# Dùng for từ 1 đến 50 và if i % 2 == 0 để in các số chẵn
+for i in range(1, 51):
+    if i % 2 == 0:
+        print(i, end=" " if i < 50 else "\\n")
+`,
+        testCases: [
+          {
+            id: "t5-3-tc1",
+            input: "",
+            expectedOutput: Array.from({ length: 25 }, (_, i) => (i + 1) * 2).join(" "),
+            isHidden: false,
+            explanation: "Kiểm tra dãy số chẵn 1..50."
+          }
+        ],
+        hints: [
+          "`for i in range(1, 51):`",
+          "`if i % 2 == 0: print(i, end=' ')`"
+        ],
+        solutionExplanation: "for i in range(1, 51):\n    if i % 2 == 0:\n        print(i, end=' ' if i < 50 else '\\n')"
+      },
+      practices: [
+        // Câu 39: In số chẵn (1-50)
+        toPractice(LOOPS_EXTRA_PROBLEMS[14]),
+        // Câu 40: In số chia hết cho 5
+        toPractice(LOOPS_EXTRA_PROBLEMS[15]),
+        // Câu 41: Đếm số chẵn từ 1 đến 100
+        toPractice(LOOPS_EXTRA_PROBLEMS[16]),
+        // Câu 42: Tính tổng số lẻ từ 1 đến 100
+        toPractice(LOOPS_EXTRA_PROBLEMS[17]),
+        // Câu 43: Đếm số lớn hơn 50
+        toPractice(LOOPS_EXTRA_PROBLEMS[18]),
+        // Câu 44: Tìm số chẵn lớn nhất
+        toPractice(LOOPS_EXTRA_PROBLEMS[19]),
+        // Câu 45: Đếm điểm đạt
+        toPractice(LOOPS_EXTRA_PROBLEMS[20]),
+        // Câu 46: In các số vừa chẵn vừa lớn hơn 20
+        toPractice(LOOPS_EXTRA_PROBLEMS[21]),
+        // Câu 47: FizzBuzz đơn giản
+        toPractice(LOOPS_EXTRA_PROBLEMS[22])
+      ]
+    },
+
+    // ----------------------------------------------------
+    // BÀI 4: BREAK, CONTINUE & VÒNG LẶP LỒNG NHAU
+    // ----------------------------------------------------
+    {
+      id: "t5-l4",
+      moduleId: "topic-5",
+      moduleTitle: "Chủ đề 5: Vòng Lặp for",
+      order: 4,
+      title: "Bài 4: Lệnh break, continue & Vòng Lặp Lồng Nhau",
+      description: "Điều khiển luồng lặp thông minh với break (ngắt sớm), continue (bỏ qua), thuật toán kiểm tra số nguyên tố và vẽ hình học với vòng lặp lồng nhau.",
+      durationMin: 25,
+      xpReward: 70,
+      theory: {
+        summary: "Câu lệnh break dùng để thoát ngay lập tức khỏi vòng lặp khi điều kiện thỏa mãn. Câu lệnh continue dùng để bỏ qua phần còn lại của lượt lặp hiện tại và nhảy sang lượt kế tiếp. Vòng lặp lồng nhau giúp xử lý dữ liệu ma trận và vẽ hình.",
+        keyPoints: [
+          "`break`: Dừng vòng lặp ngay tại thời điểm gọi. Rất hữu ích khi tìm kiếm hoặc kiểm tra tính chất (ví dụ kiểm tra số nguyên tố).",
+          "`continue`: Bỏ qua các lệnh phía sau và tiếp tục với giá trị kế tiếp của vòng lặp.",
+          "**Kiểm tra số nguyên tố**:",
+          "  - Nếu `n < 2` -> Không phải số nguyên tố.",
+          "  - Duyệt `i` từ 2 đến `int(n**0.5)`: Nếu `n % i == 0` -> Có ước số -> Không nguyên tố, dùng `break` dừng sớm.",
+          "  - Nếu không gặp ước số nào -> Là số nguyên tố (YES).",
+          "Vòng lặp lồng nhau (2 tầng): Vòng ngoài duyệt hàng, vòng trong duyệt cột/kí tự để in hình sao, hình vuông, kim cương."
+        ],
+        conceptIllustration: {
+          type: "loops",
+          title: "Sơ Đồ Hoạt Động Của break & continue",
+          description: "break -> Thoát khỏi vòng lặp ngay | continue -> Bỏ qua lệnh sau, nhảy sang bước kế tiếp",
+          visualData: {
+            loopType: "break & continue trong for",
+            iterations: [
+              { index: 1, state: "if n % i == 0: is_prime = False; break" },
+              { index: 2, state: "for r in range(n): for c in range(r + 1): in '*'" }
+            ]
+          }
+        },
+        examples: [
+          {
+            title: "Ví dụ: Kiểm tra số nguyên tố với break",
+            explanation: "Số 7 chỉ chia hết cho 1 và 7 -> YES.",
+            code: "n = 7\nis_prime = True\nif n < 2:\n    is_prime = False\nelse:\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            is_prime = False\n            break\nprint('YES' if is_prime else 'NO')",
+            output: "YES"
+          }
+        ],
+        multipleChoice: {
+          question: "Khi gặp lệnh break bên trong một vòng lặp for, điều gì sẽ xảy ra?",
+          options: [
+            "Vòng lặp dừng lại hoàn toàn và chương trình chạy tiếp dòng lệnh sau vòng lặp",
+            "Bỏ qua lần lặp hiện tại và chuyển sang lần lặp tiếp theo",
+            "Chương trình dừng hẳn và thoát ứng dụng",
+            "Vòng lặp quay lại giá trị ban đầu"
+          ],
+          correctIndex: 0,
+          explanation: "break thoát ngay lập tức khỏi vòng lặp chứa nó và tiếp tục thực hiện câu lệnh kế tiếp bên ngoài vòng lặp."
+        }
+      },
+      practice: {
+        id: "t5-p4",
+        title: "Bài 4: Kiểm Tra Số Nguyên Tố",
         difficulty: "Trung bình",
         problemStatement: "Viết chương trình nhập vào một số nguyên `n`. Sử dụng vòng lặp `for` để kiểm tra xem `n` có phải là số nguyên tố hay không. Sử dụng lệnh `break` để thoát vòng lặp ngay khi phát hiện có ước số.\n- In ra `YES` nếu n là số nguyên tố.\n- In ra `NO` nếu n không phải số nguyên tố.",
         inputFormat: "Một dòng chứa số nguyên n (-10^6 <= n <= 10^6).",
@@ -99,28 +672,35 @@ n = int(input())
 `,
         testCases: [
           {
-            id: "t5-1-tc1",
+            id: "t5-4-tc1",
             input: "7",
             expectedOutput: "YES",
             isHidden: false,
             explanation: "Kiểm tra 7."
           },
           {
-            id: "t5-1-tc2",
+            id: "t5-4-tc2",
             input: "9",
             expectedOutput: "NO",
             isHidden: false,
             explanation: "Kiểm tra 9."
           },
           {
-            id: "t5-1-tc3",
+            id: "t5-4-tc3",
             input: "1",
             expectedOutput: "NO",
             isHidden: false,
             explanation: "Kiểm tra 1."
           },
           {
-            id: "t5-1-tc4",
+            id: "t5-4-tc4",
+            input: "2",
+            expectedOutput: "YES",
+            isHidden: false,
+            explanation: "Kiểm tra 2."
+          },
+          {
+            id: "t5-4-tc5",
             input: "97",
             expectedOutput: "YES",
             isHidden: true,
@@ -128,396 +708,125 @@ n = int(input())
           }
         ],
         hints: [
-          "Nếu `n < 2` -> in `NO`.",
+          "Nếu `n < 2`: in `NO`.",
           "Duyệt `for i in range(2, int(n**0.5) + 1):`",
-          "Nếu `n % i == 0` -> gán `is_prime = False` và `break`."
+          "Nếu `n % i == 0`: đặt `is_prime = False` và gọi `break`."
         ],
         solutionExplanation: "n = int(input())\nif n < 2:\n    print('NO')\nelse:\n    is_prime = True\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            is_prime = False\n            break\n    print('YES' if is_prime else 'NO')"
-      }
-    },
-    {
-      id: "t5-l2",
-      moduleId: "topic-5",
-      moduleTitle: "Chủ đề 5: Vòng Lặp for",
-      order: 2,
-      title: "Bài 2: Bảng Cửu Chương",
-      description: "Nhập một số nguyên k (1 <= k <= 10). Sử dụng vòng lặp for để in bảng cửu chương nhân của số k từ 1 đến 10.",
-      durationMin: 15,
-      xpReward: 50,
-      theory: {
-        summary: "Vòng lặp `for i in range(1, 11):` lặp qua 10 giá trị từ 1 đến 10, rất phù hợp để in bảng nhân cửu chương.",
-        keyPoints: [
-          "`range(1, 11)` sinh dãy số: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.",
-          "Mỗi dòng in theo mẫu: `k x i = k*i` (ví dụ `5 x 1 = 5`)."
-        ],
-        conceptIllustration: {
-          type: "loops",
-          title: "In Bảng Cửu Chương Bằng for",
-          description: "Lặp i từ 1 đến 10 và in k x i = k*i",
-          visualData: {
-            loopType: "for i in range(1, 11)",
-            iterations: [
-              { index: 1, state: "5 x 1 = 5" },
-              { index: 2, state: "5 x 2 = 10" },
-              { index: 10, state: "5 x 10 = 50" }
-            ]
-          }
-        },
-        examples: [
-          {
-            title: "Ví dụ: Bảng nhân 3",
-            explanation: "In 3 x 1 = 3 đến 3 x 10 = 30.",
-            code: "k = 3\nfor i in range(1, 11):\n    print(f'{k} x {i} = {k * i}')",
-            output: "3 x 1 = 3\n...\n3 x 10 = 30"
-          }
-        ],
-        multipleChoice: {
-          question: "Để tạo vòng lặp chạy với biến i lần lượt nhận giá trị từ 1 đến 10, hàm range() nào đúng?",
-          options: ["range(1, 10)", "range(1, 11)", "range(10)", "range(0, 10)"],
-          correctIndex: 1,
-          explanation: "range(start, stop) sẽ dừng trước stop, nên range(1, 11) sẽ sinh các số từ 1 đến 10."
-        }
-      },
-      practice: {
-        id: "t5-p2",
-        title: "Bài 2: Bảng Cửu Chương",
-        difficulty: "Cơ bản",
-        problemStatement: "Viết chương trình nhập vào một số nguyên `k` (1 <= k <= 10). Sử dụng vòng lặp `for` để in bảng cửu chương của `k` từ 1 đến 10 theo mẫu:\n`<k> x <i> = <k*i>`",
-        inputFormat: "Một dòng chứa số nguyên k (1 <= k <= 10).",
-        outputFormat: "Gồm 10 dòng theo định dạng `<k> x <i> = <k*i>` với i chạy từ 1 đến 10.",
-        constraints: "1 <= k <= 10.",
-        sampleCases: [
-          {
-            input: "5",
-            output: "5 x 1 = 5\n5 x 2 = 10\n5 x 3 = 15\n5 x 4 = 20\n5 x 5 = 25\n5 x 6 = 30\n5 x 7 = 35\n5 x 8 = 40\n5 x 9 = 45\n5 x 10 = 50",
-            explanation: "Bảng cửu chương 5."
-          }
-        ],
-        starterCode: `# Nhập số k
-k = int(input())
-
-# TODO: Dùng vòng lặp for in bảng cửu chương k
-`,
-        testCases: [
-          {
-            id: "t5-2-tc1",
-            input: "5",
-            expectedOutput: "5 x 1 = 5\n5 x 2 = 10\n5 x 3 = 15\n5 x 4 = 20\n5 x 5 = 25\n5 x 6 = 30\n5 x 7 = 35\n5 x 8 = 40\n5 x 9 = 45\n5 x 10 = 50",
-            isHidden: false,
-            explanation: "Kiểm tra bảng 5."
-          },
-          {
-            id: "t5-2-tc2",
-            input: "9",
-            expectedOutput: "9 x 1 = 9\n9 x 2 = 18\n9 x 3 = 27\n9 x 4 = 36\n9 x 5 = 45\n9 x 6 = 54\n9 x 7 = 63\n9 x 8 = 72\n9 x 9 = 81\n9 x 10 = 90",
-            isHidden: false,
-            explanation: "Kiểm tra bảng 9."
-          }
-        ],
-        hints: [
-          "Dùng `for i in range(1, 11):`",
-          "`print(f\"{k} x {i} = {k * i}\")`"
-        ],
-        solutionExplanation: "k = int(input())\nfor i in range(1, 11):\n    print(f'{k} x {i} = {k * i}')"
       },
       practices: [
         {
-          id: "t5-p2",
-          title: "Bài 2: Bảng Cửu Chương",
-          difficulty: "Cơ bản",
-          problemStatement: "Viết chương trình nhập vào một số nguyên `k` (1 <= k <= 10). Sử dụng vòng lặp `for` để in ra bảng cửu chương của số `k` từ 1 đến 10.",
-          inputFormat: "Một dòng chứa số nguyên k (1 <= k <= 10).",
-          outputFormat: "Gồm 10 dòng theo định dạng `<k> x <i> = <k*i>` với i chạy từ 1 đến 10.",
-          constraints: "1 <= k <= 10.",
+          id: "t5-p4",
+          title: "Bài 4: Kiểm Tra Số Nguyên Tố",
+          difficulty: "Trung bình",
+          problemStatement: "Viết chương trình nhập vào một số nguyên `n`. Sử dụng vòng lặp `for` để kiểm tra xem `n` có phải là số nguyên tố hay không. Sử dụng lệnh `break` để thoát vòng lặp ngay khi phát hiện có ước số.\n- In ra `YES` nếu n là số nguyên tố.\n- In ra `NO` nếu n không phải số nguyên tố.",
+          inputFormat: "Một dòng chứa số nguyên n (-10^6 <= n <= 10^6).",
+          outputFormat: "In `YES` hoặc `NO`.",
+          constraints: "-10^6 <= n <= 10^6.",
           sampleCases: [
             {
-              input: "5",
-              output: "5 x 1 = 5\n5 x 2 = 10\n5 x 3 = 15\n5 x 4 = 20\n5 x 5 = 25\n5 x 6 = 30\n5 x 7 = 35\n5 x 8 = 40\n5 x 9 = 45\n5 x 10 = 50",
-              explanation: "Bảng cửu chương 5."
-            }
-          ],
-          starterCode: `# Nhập số k\nk = int(input())\n\n# TODO: Dùng vòng lặp for in bảng cửu chương k\n`,
-          testCases: [
-            {
-              id: "t5-2-tc1",
-              input: "5",
-              expectedOutput: "5 x 1 = 5\n5 x 2 = 10\n5 x 3 = 15\n5 x 4 = 20\n5 x 5 = 25\n5 x 6 = 30\n5 x 7 = 35\n5 x 8 = 40\n5 x 9 = 45\n5 x 10 = 50",
-              isHidden: false,
-              explanation: "Kiểm tra bảng 5."
+              input: "7",
+              output: "YES",
+              explanation: "7 là số nguyên tố."
             },
             {
-              id: "t5-2-tc2",
               input: "9",
-              expectedOutput: "9 x 1 = 9\n9 x 2 = 18\n9 x 3 = 27\n9 x 4 = 36\n9 x 5 = 45\n9 x 6 = 54\n9 x 7 = 63\n9 x 8 = 72\n9 x 9 = 81\n9 x 10 = 90",
+              output: "NO",
+              explanation: "9 chia hết cho 3 nên không phải số nguyên tố."
+            },
+            {
+              input: "1",
+              output: "NO",
+              explanation: "1 không phải số nguyên tố."
+            }
+          ],
+          starterCode: `# Nhập số nguyên n\nn = int(input())\n\n# TODO: Dùng vòng lặp for và break để kiểm tra số nguyên tố\n`,
+          testCases: [
+            {
+              id: "t5-4-tc1",
+              input: "7",
+              expectedOutput: "YES",
               isHidden: false,
-              explanation: "Kiểm tra bảng 9."
+              explanation: "Kiểm tra 7."
+            },
+            {
+              id: "t5-4-tc2",
+              input: "9",
+              expectedOutput: "NO",
+              isHidden: false,
+              explanation: "Kiểm tra 9."
+            },
+            {
+              id: "t5-4-tc3",
+              input: "1",
+              expectedOutput: "NO",
+              isHidden: false,
+              explanation: "Kiểm tra 1."
+            },
+            {
+              id: "t5-4-tc4",
+              input: "2",
+              expectedOutput: "YES",
+              isHidden: false,
+              explanation: "Kiểm tra 2."
+            },
+            {
+              id: "t5-4-tc5",
+              input: "97",
+              expectedOutput: "YES",
+              isHidden: true,
+              explanation: "Kiểm tra 97 là số nguyên tố."
             }
           ],
           hints: [
-            "Dùng `for i in range(1, 11):`",
-            "`print(f\"{k} x {i} = {k * i}\")`"
+            "Nếu `n < 2`: in `NO`.",
+            "Duyệt `for i in range(2, int(n**0.5) + 1):`",
+            "Nếu `n % i == 0`: đặt `is_prime = False` và gọi `break`."
           ],
-          solutionExplanation: "k = int(input())\nfor i in range(1, 11):\n    print(f'{k} x {i} = {k * i}')"
+          solutionExplanation: "n = int(input())\nif n < 2:\n    print('NO')\nelse:\n    is_prime = True\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            is_prime = False\n            break\n    print('YES' if is_prime else 'NO')"
         },
-        ...LOOPS_EXTRA_PROBLEMS.slice(0, 14).map(toPractice)
-      ]
-    },
-    {
-      id: "t5-l3",
-      moduleId: "topic-5",
-      moduleTitle: "Chủ đề 5: Vòng Lặp for",
-      order: 3,
-      title: "Bài 3: Tính Tổng Các Số Từ 1 Đến n",
-      description: "Nhập số nguyên dương n. Sử dụng vòng lặp for để tính tổng các số từ 1 đến n.",
-      durationMin: 15,
-      xpReward: 50,
-      theory: {
-        summary: "Kỹ thuật cộng dồn sử dụng biến tích lũy `total = 0` và vòng lặp `for i in range(1, n + 1): total += i`.",
-        keyPoints: [
-          "Khởi tạo `total = 0` trước vòng lặp.",
-          "Trong vòng lặp, mỗi bước cộng thêm giá trị `i`: `total += i`.",
-          "Sau khi kết thúc vòng lặp, in ra `total`."
-        ],
-        conceptIllustration: {
-          type: "loops",
-          title: "Kỹ Thuật Cộng Dồn Tích Lũy",
-          description: "n = 4 -> total = 0 + 1 + 2 + 3 + 4 = 10",
-          visualData: {
-            loopType: "for i in range(1, n + 1)",
-            iterations: [
-              { index: 1, state: "total = 1" },
-              { index: 2, state: "total = 3" },
-              { index: 3, state: "total = 6" },
-              { index: 4, state: "total = 10" }
-            ]
-          }
-        },
-        examples: [
-          {
-            title: "Ví dụ: n = 5",
-            explanation: "1 + 2 + 3 + 4 + 5 = 15.",
-            code: "n = 5\ns = 0\nfor i in range(1, n + 1):\n    s += i\nprint(s)",
-            output: "15"
-          }
-        ],
-        multipleChoice: {
-          question: "Để tính tổng S = 1 + 2 + ... + n, vòng lặp for cần duyệt i trong phạm vi nào?",
-          options: ["range(n)", "range(1, n)", "range(1, n + 1)", "range(0, n)"],
-          correctIndex: 2,
-          explanation: "range(1, n + 1) đảm bảo i nhận giá trị từ 1 đến đúng n."
-        }
-      },
-      practice: {
-        id: "t5-p3",
-        title: "Bài 3: Tổng Các Số",
-        difficulty: "Cơ bản",
-        problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Sử dụng vòng lặp `for` để tính tổng các số nguyên từ 1 đến `n` ($S = 1 + 2 + \\dots + n$) và in ra kết quả.",
-        inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 10^5).",
-        outputFormat: "Một dòng in ra giá trị tổng S.",
-        constraints: "1 <= n <= 10^5.",
-        sampleCases: [
-          {
-            input: "5",
-            output: "15",
-            explanation: "1 + 2 + 3 + 4 + 5 = 15."
-          },
-          {
-            input: "100",
-            output: "5050",
-            explanation: "Tổng từ 1 đến 100 bằng 5050."
-          }
-        ],
-        starterCode: `# Nhập số nguyên dương n
-n = int(input())
-
-# TODO: Dùng vòng lặp for tính tổng 1 + ... + n
-`,
-        testCases: [
-          {
-            id: "t5-3-tc1",
-            input: "5",
-            expectedOutput: "15",
-            isHidden: false,
-            explanation: "Kiểm tra n = 5."
-          },
-          {
-            id: "t5-3-tc2",
-            input: "100",
-            expectedOutput: "5050",
-            isHidden: false,
-            explanation: "Kiểm tra n = 100."
-          },
-          {
-            id: "t5-3-tc3",
-            input: "1",
-            expectedOutput: "1",
-            isHidden: true,
-            explanation: "Kiểm tra n = 1."
-          }
-        ],
-        hints: [
-          "Khởi tạo `tong = 0`",
-          "`for i in range(1, n + 1): tong += i`",
-          "`print(tong)`"
-        ],
-        solutionExplanation: "n = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)"
-      },
-      practices: [
+        // Câu 34: In hình ngôi sao
+        toPractice(LOOPS_EXTRA_PROBLEMS[9]),
+        // Câu 35: In hình vuông
+        toPractice(LOOPS_EXTRA_PROBLEMS[10]),
         {
-          id: "t5-p3",
-          title: "Bài 3: Tính Tổng Các Số Từ 1 Đến n",
-          difficulty: "Cơ bản",
-          problemStatement: "Viết chương trình nhập vào một số nguyên dương `n`. Hãy sử dụng vòng lặp `for` để tính tổng S = 1 + 2 + 3 + ... + n và in kết quả ra màn hình.",
-          inputFormat: "Một dòng chứa số nguyên dương n (1 <= n <= 10^5).",
-          outputFormat: "Một số nguyên duy nhất là giá trị của tổng S.",
-          constraints: "1 <= n <= 10^5.",
+          id: "t5-p-diamond",
+          title: "In Hình Kim Cương Bằng Dấu *",
+          difficulty: "Nâng cao",
+          problemStatement: "Viết chương trình nhập vào một số nguyên dương lẻ `n` (3 <= n <= 29, n là số lẻ). Sử dụng các vòng lặp `for` lồng nhau để in ra hình kim cương đối xứng bằng ký tự `*`.",
+          inputFormat: "Một dòng chứa số nguyên dương lẻ n (3 <= n <= 29).",
+          outputFormat: "Gồm n dòng in hình kim cương đối xứng.",
+          constraints: "3 <= n <= 29, n là số lẻ.",
           sampleCases: [
             {
               input: "5",
-              output: "15",
-              explanation: "1 + 2 + 3 + 4 + 5 = 15."
-            },
-            {
-              input: "10",
-              output: "55",
-              explanation: "Tổng từ 1 đến 10 là 55."
+              output: "  *\n ***\n*****\n ***\n  *",
+              explanation: "Hình kim cương chiều cao 5."
             }
           ],
-          starterCode: `# Nhập n\nn = int(input())\n\n# TODO: Dùng vòng lặp for tính tổng 1 đến n\n`,
+          starterCode: `n = int(input())\n\n# TODO: Dùng vòng lặp for in hình kim cương đối xứng\n`,
           testCases: [
             {
-              id: "t5-3-tc1",
+              id: "t5-dm-tc1",
               input: "5",
-              expectedOutput: "15",
-              isHidden: false,
-              explanation: "Kiểm tra n = 5."
+              expectedOutput: "  *\n ***\n*****\n ***\n  *",
+              isHidden: false
             },
             {
-              id: "t5-3-tc2",
-              input: "100",
-              expectedOutput: "5050",
-              isHidden: false,
-              explanation: "Kiểm tra n = 100."
-            },
-            {
-              id: "t5-3-tc3",
-              input: "1",
-              expectedOutput: "1",
-              isHidden: true,
-              explanation: "Kiểm tra n = 1."
+              id: "t5-dm-tc2",
+              input: "3",
+              expectedOutput: " *\n***\n *",
+              isHidden: false
             }
           ],
           hints: [
-            "Khởi tạo `tong = 0`",
-            "`for i in range(1, n + 1): tong += i`",
-            "`print(tong)`"
+            "Đặt `mid = n // 2`.",
+            "Nửa trên: i từ 0 đến mid: in `(mid - i) * ' ' + (2 * i + 1) * '*'`",
+            "Nửa dưới: i từ mid - 1 về 0: in tương tự."
           ],
-          solutionExplanation: "n = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)"
-        },
-        ...LOOPS_EXTRA_PROBLEMS.slice(14, 23).map(toPractice)
-      ]
-    },
-    {
-      id: "t5-l4",
-      moduleId: "topic-5",
-      moduleTitle: "Chủ đề 5: Vòng Lặp for",
-      order: 4,
-      title: "Bài 4: In Hình Kim Cương Bằng Dấu *",
-      description: "Nhập chiều cao n (n là số lẻ >= 3). Sử dụng vòng lặp for để in hình kim cương đối xứng bằng ký tự *.",
-      durationMin: 25,
-      xpReward: 70,
-      theory: {
-        summary: "Hình kim cương gồm 2 phần: nửa trên là tam giác cân mở rộng và nửa dưới là tam giác cân thu hẹp.",
-        keyPoints: [
-          "Với `n` là số lẻ, đặt `mid = n // 2`.",
-          "Nửa trên (i từ 0 đến mid): số khoảng trắng là `mid - i`, số dấu sao là `2 * i + 1`.",
-          "Nửa dưới (i từ mid - 1 lùi về 0): số khoảng trắng là `mid - i`, số dấu sao là `2 * i + 1`."
-        ],
-        conceptIllustration: {
-          type: "loops",
-          title: "Cấu Trúc Hình Kim Cương n = 5",
-          description: "mid = 2: (i=0: 2 cách 1 sao) | (i=1: 1 cách 3 sao) | (i=2: 0 cách 5 sao) | (i=1: 1 cách 3 sao) | (i=0: 2 cách 1 sao)",
-          visualData: {
-            loopType: "for i in range(mid + 1) & for i in range(mid - 1, -1, -1)",
-            iterations: [
-              { index: 1, state: "  *" },
-              { index: 2, state: " ***" },
-              { index: 3, state: "*****" },
-              { index: 4, state: " ***" },
-              { index: 5, state: "  *" }
-            ]
-          }
-        },
-        examples: [
-          {
-            title: "Ví dụ: n = 3",
-            explanation: "Kim cương cao 3 dòng.",
-            code: "n = 3\n# Dòng 1:  *\n# Dòng 2: ***\n# Dòng 3:  *",
-            output: " *\n***\n *"
-          }
-        ],
-        multipleChoice: {
-          question: "Với hình kim cương có chiều cao n = 5, dòng rộng nhất ở giữa (dòng 3) chứa bao nhiêu ký tự *?",
-          options: ["3", "4", "5", "6"],
-          correctIndex: 2,
-          explanation: "Dòng giữa của hình kim cương kích thước n = 5 chứa đúng 5 dấu sao không có khoảng trắng ở đầu."
+          solutionExplanation: "n = int(input())\nmid = n // 2\nfor i in range(mid + 1):\n    print(' ' * (mid - i) + '*' * (2 * i + 1))\nfor i in range(mid - 1, -1, -1):\n    print(' ' * (mid - i) + '*' * (2 * i + 1))"
         }
-      },
-      practice: {
-        id: "t5-p4",
-        title: "Bài 4: In Hình Kim Cương",
-        difficulty: "Nâng cao",
-        problemStatement: "Viết chương trình nhập vào một số nguyên dương lẻ `n` ($3 \\le n \\le 19$). Hãy sử dụng các vòng lặp `for` để in ra một hình kim cương đối xứng cao đúng `n` dòng bằng ký tự `*`.\n\nVí dụ với `n = 5`:\n  *\n ***\n*****\n ***\n  *",
-        inputFormat: "Một dòng chứa số nguyên dương lẻ n (3 <= n <= 19).",
-        outputFormat: "Gồm n dòng tạo thành hình kim cương đối xứng hoàn hảo.",
-        constraints: "3 <= n <= 19 (n là số lẻ).",
-        sampleCases: [
-          {
-            input: "5",
-            output: "  *\n ***\n*****\n ***\n  *",
-            explanation: "Hình kim cương chiều cao n = 5."
-          },
-          {
-            input: "3",
-            output: " *\n***\n *",
-            explanation: "Hình kim cương chiều cao n = 3."
-          }
-        ],
-        starterCode: `# Nhập số lẻ n
-n = int(input())
-
-# TODO: Dùng vòng lặp for in hình kim cương đối xứng
-`,
-        testCases: [
-          {
-            id: "t5-4-tc1",
-            input: "5",
-            expectedOutput: "  *\n ***\n*****\n ***\n  *",
-            isHidden: false,
-            explanation: "Kiểm tra n = 5."
-          },
-          {
-            id: "t5-4-tc2",
-            input: "3",
-            expectedOutput: " *\n***\n *",
-            isHidden: false,
-            explanation: "Kiểm tra n = 3."
-          },
-          {
-            id: "t5-4-tc3",
-            input: "7",
-            expectedOutput: "   *\n  ***\n *****\n*******\n *****\n  ***\n   *",
-            isHidden: true,
-            explanation: "Kiểm tra n = 7."
-          }
-        ],
-        hints: [
-          "Đặt `mid = n // 2`",
-          "Nửa trên: `for i in range(mid + 1): print(' ' * (mid - i) + '*' * (2 * i + 1))`",
-          "Nửa dưới: `for i in range(mid - 1, -1, -1): print(' ' * (mid - i) + '*' * (2 * i + 1))`"
-        ],
-        solutionExplanation: "n = int(input())\nmid = n // 2\nfor i in range(mid + 1):\n    print(' ' * (mid - i) + '*' * (2 * i + 1))\nfor i in range(mid - 1, -1, -1):\n    print(' ' * (mid - i) + '*' * (2 * i + 1))"
-      }
+      ]
     }
   ]
 };

@@ -19,25 +19,567 @@ const toPractice = (p: any): LessonPractice => ({
 export const TOPIC_4_BRANCHING: Module = {
   id: "topic-4",
   title: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
-  description: "Làm chủ các cấu trúc rẽ nhánh if, if-else, chuỗi if-elif-else, toán tử logic (and, or, not) và giải quyết các bài toán phân loại đa điều kiện.",
+  description: "Làm chủ cấu trúc rẽ nhánh if đơn, if-else, chuỗi if-elif-else, toán tử logic (and, or, not) và ứng dụng phân loại điều kiện từ cơ bản đến nâng cao.",
   iconName: "GitFork",
   order: 4,
   color: "from-purple-500 to-indigo-700",
   lessons: [
+    // ----------------------------------------------------
+    // BÀI 1: CẤU TRÚC IF ĐƠN
+    // ----------------------------------------------------
     {
       id: "t4-l1",
       moduleId: "topic-4",
       moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
       order: 1,
-      title: "Bài 1: Phân Loại BMI",
-      description: "Nhập cân nặng và chiều cao, tính chỉ số khối cơ thể BMI và phân loại tình trạng thể lực.",
+      title: "Bài 1: Cấu Trúc if Đơn (Cơ Bản)",
+      description: "Làm quen với câu lệnh rẽ nhánh if đơn, quy tắc thụt lề 4 dấu cách và các toán tử so sánh (==, !=, >, <, >=, <=).",
+      durationMin: 15,
+      xpReward: 50,
+      theory: {
+        summary: "Câu lệnh if cho phép chương trình chỉ thực hiện một khối lệnh khi điều kiện đưa ra là đúng (True). Nếu điều kiện sai (False), khối lệnh đó sẽ bị bỏ qua.",
+        keyPoints: [
+          "Cú pháp: `if dieu_kien:` (luôn có dấu hai chấm `:` ở cuối dòng lệnh if).",
+          "Khối lệnh thụt lề: Các dòng lệnh bên trong if **bắt buộc phải thụt vào 4 dấu cách**.",
+          "Các toán tử so sánh trả về `True` hoặc `False`:",
+          "  - `==`: So sánh bằng nhau (chú ý khác với `=` là phép gán biến).",
+          "  - `!=`: So sánh khác nhau.",
+          "  - `>`, `<`: Lớn hơn, nhỏ hơn.",
+          "  - `>=`, `<=`: Lớn hơn hoặc bằng, nhỏ hơn hoặc bằng."
+        ],
+        conceptIllustration: {
+          type: "branching",
+          title: "Sơ Đồ Câu Lệnh if Đơn",
+          description: "Điều kiện: Nếu Đúng (True) -> Thực hiện khối lệnh con; Nếu Sai (False) -> Bỏ qua và đi tiếp.",
+          visualData: {
+            condition: "n > 0",
+            ifTrue: "In ra 'So duong'",
+            ifFalse: "Bỏ qua, tiếp tục chương trình"
+          }
+        },
+        examples: [
+          {
+            title: "Ví dụ: Kiểm tra số dương",
+            explanation: "Nhập một số nguyên n, nếu n lớn hơn 0 thì in 'So duong'.",
+            code: "n = int(input())\nif n > 0:\n    print('So duong')",
+            output: "Đầu vào: 5 -> Đầu ra: So duong"
+          }
+        ],
+        multipleChoice: {
+          question: "Trong Python, toán tử nào dùng để kiểm tra hai giá trị có BẰNG NHAU hay không?",
+          options: ["=", "==", "===", "equals"],
+          correctIndex: 1,
+          explanation: "Dấu '=' là phép gán giá trị, còn '==' là toán tử so sánh bằng trong Python."
+        }
+      },
+      practice: {
+        id: "t4-p1",
+        title: "Bài 1: Kiểm Tra Số Dương",
+        difficulty: "Cơ bản",
+        problemStatement: "Viết chương trình nhập vào một số nguyên `n` từ bàn phím. Sử dụng câu lệnh `if` để kiểm tra: nếu `n > 0` thì in ra màn hình chuỗi `So duong`. Ngược lại, nếu số không lớn hơn 0 thì không in gì cả.",
+        inputFormat: "Một dòng duy nhất chứa số nguyên n (-1000 <= n <= 1000).",
+        outputFormat: "In 'So duong' nếu n > 0, ngược lại không in gì.",
+        constraints: "-1000 <= n <= 1000.",
+        sampleCases: [
+          {
+            input: "5",
+            output: "So duong",
+            explanation: "5 > 0 nên in 'So duong'."
+          },
+          {
+            input: "-3",
+            output: "",
+            explanation: "-3 <= 0 nên không in gì."
+          }
+        ],
+        starterCode: `# Nhập số nguyên n
+n = int(input())
+
+# TODO: Dùng if để kiểm tra n > 0 và in "So duong"
+`,
+        testCases: [
+          {
+            id: "t4-1-tc1",
+            input: "5",
+            expectedOutput: "So duong",
+            isHidden: false,
+            explanation: "Kiểm tra số dương."
+          },
+          {
+            id: "t4-1-tc2",
+            input: "-3",
+            expectedOutput: "",
+            isHidden: false,
+            explanation: "Kiểm tra số âm."
+          },
+          {
+            id: "t4-1-tc3",
+            input: "0",
+            expectedOutput: "",
+            isHidden: true,
+            explanation: "Số 0 không lớn hơn 0."
+          },
+          {
+            id: "t4-1-tc4",
+            input: "100",
+            expectedOutput: "So duong",
+            isHidden: true,
+            explanation: "Kiểm tra số 100."
+          }
+        ],
+        hints: [
+          "Dùng lệnh: `if n > 0:`",
+          "Thụt lề 4 dấu cách và in: `print('So duong')`"
+        ],
+        solutionExplanation: "n = int(input())\nif n > 0:\n    print('So duong')"
+      },
+      practices: [
+        {
+          id: "t4-p1",
+          title: "Bài 1: Kiểm Tra Số Dương",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên `n` từ bàn phím. Sử dụng câu lệnh `if` để kiểm tra: nếu `n > 0` thì in ra màn hình chuỗi `So duong`. Ngược lại, nếu số không lớn hơn 0 thì không in gì cả.",
+          inputFormat: "Một dòng duy nhất chứa số nguyên n (-1000 <= n <= 1000).",
+          outputFormat: "In 'So duong' nếu n > 0, ngược lại không in gì.",
+          constraints: "-1000 <= n <= 1000.",
+          sampleCases: [
+            {
+              input: "5",
+              output: "So duong",
+              explanation: "5 > 0 nên in 'So duong'."
+            },
+            {
+              input: "-3",
+              output: "",
+              explanation: "-3 <= 0 nên không in gì."
+            }
+          ],
+          starterCode: `# Nhập số nguyên n\nn = int(input())\n\n# TODO: Dùng if để kiểm tra n > 0 và in "So duong"\n`,
+          testCases: [
+            {
+              id: "t4-1-tc1",
+              input: "5",
+              expectedOutput: "So duong",
+              isHidden: false,
+              explanation: "Kiểm tra số dương."
+            },
+            {
+              id: "t4-1-tc2",
+              input: "-3",
+              expectedOutput: "",
+              isHidden: false,
+              explanation: "Kiểm tra số âm."
+            },
+            {
+              id: "t4-1-tc3",
+              input: "0",
+              expectedOutput: "",
+              isHidden: true,
+              explanation: "Số 0 không lớn hơn 0."
+            },
+            {
+              id: "t4-1-tc4",
+              input: "100",
+              expectedOutput: "So duong",
+              isHidden: true,
+              explanation: "Kiểm tra số 100."
+            }
+          ],
+          hints: [
+            "Dùng lệnh: `if n > 0:`",
+            "Thụt lề 4 dấu cách và in: `print('So duong')`"
+          ],
+          solutionExplanation: "n = int(input())\nif n > 0:\n    print('So duong')"
+        },
+        ...BRANCHING_EXTRA_PROBLEMS.slice(0, 7).map(toPractice)
+      ]
+    },
+
+    // ----------------------------------------------------
+    // BÀI 2: CẤU TRÚC IF - ELSE
+    // ----------------------------------------------------
+    {
+      id: "t4-l2",
+      moduleId: "topic-4",
+      moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
+      order: 2,
+      title: "Bài 2: Cấu Trúc if ... else (Chọn Một Trong Hai)",
+      description: "Học cách xử lý hai trường hợp loại trừ nhau với cấu trúc if ... else: chẵn hay lẻ, đậu hay rớt, lớn hay bé.",
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Cấu trúc `if-elif-else` cho phép kiểm tra tuần tự nhiều điều kiện loại trừ lẫn nhau.",
+        summary: "Cấu trúc if-else cho phép chọn thực hiện một trong hai nhánh lệnh: nếu điều kiện Đúng thì chạy khối lệnh if, nếu điều kiện Sai thì chạy khối lệnh else.",
         keyPoints: [
-          "Công thức: `BMI = weight / (height ** 2)`.",
-          "Phân loại:",
+          "Cú pháp:",
+          "  ```python",
+          "  if dieu_kien:",
+          "      # Khối lệnh khi điều kiện True",
+          "  else:",
+          "      # Khối lệnh khi điều kiện False",
+          "  ```",
+          "Từ khóa `else:` không kèm theo điều kiện nào và luôn có dấu hai chấm `:`.",
+          "Toán tử chia lấy dư `%`: `n % 2 == 0` nghĩa là số chẵn, ngược lại là số lẻ."
+        ],
+        conceptIllustration: {
+          type: "branching",
+          title: "Sơ Đồ Rẽ Nhánh if ... else",
+          description: "Điều kiện: True -> Khối if | False -> Khối else.",
+          visualData: {
+            condition: "n % 2 == 0",
+            ifTrue: "In ra 'So chan'",
+            ifFalse: "In ra 'So le'"
+          }
+        },
+        examples: [
+          {
+            title: "Ví dụ: Kiểm tra chẵn hay lẻ",
+            explanation: "Nếu n chia hết cho 2 in 'So chan', ngược lại in 'So le'.",
+            code: "n = int(input())\nif n % 2 == 0:\n    print('So chan')\nelse:\n    print('So le')",
+            output: "Đầu vào: 4 -> Đầu ra: So chan\nĐầu vào: 7 -> Đầu ra: So le"
+          }
+        ],
+        multipleChoice: {
+          question: "Trong câu lệnh if ... else, khối lệnh sau từ khóa else được thực thi khi nào?",
+          options: [
+            "Khi điều kiện if nhận giá trị True",
+            "Khi điều kiện if nhận giá trị False",
+            "Luôn luôn được thực thi trong mọi trường hợp",
+            "Chỉ khi chương trình gặp lỗi"
+          ],
+          correctIndex: 1,
+          explanation: "Khối lệnh else chỉ được thực thi khi biểu thức điều kiện của if trả về False."
+        }
+      },
+      practice: {
+        id: "t4-p2",
+        title: "Bài 2: Chẵn Hay Lẻ",
+        difficulty: "Cơ bản",
+        problemStatement: "Viết chương trình nhập vào một số nguyên `n`. Sử dụng cấu trúc `if ... else` để kiểm tra:\n- Nếu `n` là số chẵn (chia hết cho 2): in ra `So chan`.\n- Ngược lại (n là số lẻ): in ra `So le`.",
+        inputFormat: "Một dòng chứa một số nguyên n (-10^6 <= n <= 10^6).",
+        outputFormat: "In 'So chan' hoặc 'So le'.",
+        constraints: "-10^6 <= n <= 10^6.",
+        sampleCases: [
+          {
+            input: "8",
+            output: "So chan",
+            explanation: "8 chia hết cho 2 -> So chan."
+          },
+          {
+            input: "7",
+            output: "So le",
+            explanation: "7 chia 2 dư 1 -> So le."
+          }
+        ],
+        starterCode: `# Nhập số nguyên n
+n = int(input())
+
+# TODO: Dùng if ... else kiểm tra chẵn hay lẻ
+`,
+        testCases: [
+          {
+            id: "t4-2-tc1",
+            input: "8",
+            expectedOutput: "So chan",
+            isHidden: false,
+            explanation: "Kiểm tra 8 chẵn."
+          },
+          {
+            id: "t4-2-tc2",
+            input: "7",
+            expectedOutput: "So le",
+            isHidden: false,
+            explanation: "Kiểm tra 7 lẻ."
+          },
+          {
+            id: "t4-2-tc3",
+            input: "0",
+            expectedOutput: "So chan",
+            isHidden: true,
+            explanation: "0 chia hết cho 2 là số chẵn."
+          },
+          {
+            id: "t4-2-tc4",
+            input: "-5",
+            expectedOutput: "So le",
+            isHidden: true,
+            explanation: "-5 là số lẻ."
+          }
+        ],
+        hints: [
+          "Dùng toán tử `% 2`: `if n % 2 == 0:`",
+          "Khối else: `else: print('So le')`"
+        ],
+        solutionExplanation: "n = int(input())\nif n % 2 == 0:\n    print('So chan')\nelse:\n    print('So le')"
+      },
+      practices: [
+        {
+          id: "t4-p2",
+          title: "Bài 2: Chẵn Hay Lẻ",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên `n`. Sử dụng cấu trúc `if ... else` để kiểm tra:\n- Nếu `n` là số chẵn (chia hết cho 2): in ra `So chan`.\n- Ngược lại (n là số lẻ): in ra `So le`.",
+          inputFormat: "Một dòng chứa một số nguyên n (-10^6 <= n <= 10^6).",
+          outputFormat: "In 'So chan' hoặc 'So le'.",
+          constraints: "-10^6 <= n <= 10^6.",
+          sampleCases: [
+            {
+              input: "8",
+              output: "So chan",
+              explanation: "8 chia hết cho 2 -> So chan."
+            },
+            {
+              input: "7",
+              output: "So le",
+              explanation: "7 chia 2 dư 1 -> So le."
+            }
+          ],
+          starterCode: `# Nhập số nguyên n\nn = int(input())\n\n# TODO: Dùng if ... else kiểm tra chẵn hay lẻ\n`,
+          testCases: [
+            {
+              id: "t4-2-tc1",
+              input: "8",
+              expectedOutput: "So chan",
+              isHidden: false,
+              explanation: "Kiểm tra 8 chẵn."
+            },
+            {
+              id: "t4-2-tc2",
+              input: "7",
+              expectedOutput: "So le",
+              isHidden: false,
+              explanation: "Kiểm tra 7 lẻ."
+            },
+            {
+              id: "t4-2-tc3",
+              input: "0",
+              expectedOutput: "So chan",
+              isHidden: true,
+              explanation: "0 chia hết cho 2 là số chẵn."
+            },
+            {
+              id: "t4-2-tc4",
+              input: "-5",
+              expectedOutput: "So le",
+              isHidden: true,
+              explanation: "-5 là số lẻ."
+            }
+          ],
+          hints: [
+            "Dùng toán tử `% 2`: `if n % 2 == 0:`",
+            "Khối else: `else: print('So le')`"
+          ],
+          solutionExplanation: "n = int(input())\nif n % 2 == 0:\n    print('So chan')\nelse:\n    print('So le')"
+        },
+        ...BRANCHING_EXTRA_PROBLEMS.slice(7, 15).map(toPractice)
+      ]
+    },
+
+    // ----------------------------------------------------
+    // BÀI 3: CẤU TRÚC IF - ELIF - ELSE
+    // ----------------------------------------------------
+    {
+      id: "t4-l3",
+      moduleId: "topic-4",
+      moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
+      order: 3,
+      title: "Bài 3: Cấu Trúc if ... elif ... else (Nhiều Trường Hợp)",
+      description: "Xử lý đa nhánh phân loại với chuỗi if - elif - else: phân loại số dương/âm/bằng 0, xếp loại học lực, đánh giá nhiệt độ.",
+      durationMin: 20,
+      xpReward: 60,
+      theory: {
+        summary: "Cấu trúc if-elif-else cho phép kiểm tra tuần tự nhiều điều kiện. Ngay khi một điều kiện Đúng, khối lệnh tương ứng sẽ thực thi và chương trình kết thúc toàn bộ cấu trúc rẽ nhánh.",
+        keyPoints: [
+          "Cú pháp:",
+          "  ```python",
+          "  if dieu_kien_1:",
+          "      # lệnh 1",
+          "  elif dieu_kien_2:",
+          "      # lệnh 2",
+          "  else:",
+          "      # lệnh mặc định",
+          "  ```",
+          "Có thể có nhiều mệnh đề `elif` nằm giữa `if` và `else`.",
+          "Thứ tự điều kiện rất quan trọng: điều kiện chặt chẽ hoặc cụ thể cần được kiểm tra trước."
+        ],
+        conceptIllustration: {
+          type: "branching",
+          title: "Sơ Đồ Chuỗi if - elif - else",
+          description: "n > 0 -> So duong | n < 0 -> So am | Còn lại -> Bang 0",
+          visualData: {
+            condition: "n > 0 ? 'So duong' : (n < 0 ? 'So am' : 'Bang 0')",
+            ifTrue: "In kết quả tương ứng",
+            ifFalse: "Kiểm tra điều kiện kế tiếp"
+          }
+        },
+        examples: [
+          {
+            title: "Ví dụ: Số dương, âm hay bằng 0",
+            explanation: "Kiểm tra 3 trường hợp của một số nguyên n.",
+            code: "n = int(input())\nif n > 0:\n    print('So duong')\nelif n < 0:\n    print('So am')\nelse:\n    print('Bang 0')",
+            output: "Đầu vào: -4 -> Đầu ra: So am"
+          }
+        ],
+        multipleChoice: {
+          question: "Trong Python, từ khóa nào dùng để kiểm tra điều kiện bổ sung nếu lệnh if trước đó nhận False?",
+          options: ["else if", "elif", "elseif", "case"],
+          correctIndex: 1,
+          explanation: "Từ khóa chuẩn trong Python là elif (viết tắt của else if)."
+        }
+      },
+      practice: {
+        id: "t4-p3",
+        title: "Bài 3: Số Dương, Âm Hay Bằng 0",
+        difficulty: "Cơ bản",
+        problemStatement: "Viết chương trình nhập vào một số nguyên `n`. Sử dụng cấu trúc `if ... elif ... else` để phân loại và in ra:\n- Nếu `n > 0`: in ra `So duong`\n- Nếu `n < 0`: in ra `So am`\n- Nếu `n == 0`: in ra `Bang 0`",
+        inputFormat: "Một dòng chứa số nguyên n (-10^6 <= n <= 10^6).",
+        outputFormat: "In 'So duong', 'So am' hoặc 'Bang 0'.",
+        constraints: "-10^6 <= n <= 10^6.",
+        sampleCases: [
+          {
+            input: "10",
+            output: "So duong",
+            explanation: "10 > 0 -> So duong."
+          },
+          {
+            input: "-5",
+            output: "So am",
+            explanation: "-5 < 0 -> So am."
+          },
+          {
+            input: "0",
+            output: "Bang 0",
+            explanation: "n = 0 -> Bang 0."
+          }
+        ],
+        starterCode: `# Nhập số nguyên n
+n = int(input())
+
+# TODO: Dùng if - elif - else để phân loại số dương, âm hay bằng 0
+`,
+        testCases: [
+          {
+            id: "t4-3-tc1",
+            input: "10",
+            expectedOutput: "So duong",
+            isHidden: false,
+            explanation: "Kiểm tra số dương."
+          },
+          {
+            id: "t4-3-tc2",
+            input: "-5",
+            expectedOutput: "So am",
+            isHidden: false,
+            explanation: "Kiểm tra số âm."
+          },
+          {
+            id: "t4-3-tc3",
+            input: "0",
+            expectedOutput: "Bang 0",
+            isHidden: false,
+            explanation: "Kiểm tra số 0."
+          },
+          {
+            id: "t4-3-tc4",
+            input: "-999999",
+            expectedOutput: "So am",
+            isHidden: true,
+            explanation: "Kiểm tra số âm lớn."
+          }
+        ],
+        hints: [
+          "`if n > 0: print('So duong')`",
+          "`elif n < 0: print('So am')`",
+          "`else: print('Bang 0')`"
+        ],
+        solutionExplanation: "n = int(input())\nif n > 0:\n    print('So duong')\nelif n < 0:\n    print('So am')\nelse:\n    print('Bang 0')"
+      },
+      practices: [
+        {
+          id: "t4-p3",
+          title: "Bài 3: Số Dương, Âm Hay Bằng 0",
+          difficulty: "Cơ bản",
+          problemStatement: "Viết chương trình nhập vào một số nguyên `n`. Sử dụng cấu trúc `if ... elif ... else` để phân loại và in ra:\n- Nếu `n > 0`: in ra `So duong`\n- Nếu `n < 0`: in ra `So am`\n- Nếu `n == 0`: in ra `Bang 0`",
+          inputFormat: "Một dòng chứa số nguyên n (-10^6 <= n <= 10^6).",
+          outputFormat: "In 'So duong', 'So am' hoặc 'Bang 0'.",
+          constraints: "-10^6 <= n <= 10^6.",
+          sampleCases: [
+            {
+              input: "10",
+              output: "So duong",
+              explanation: "10 > 0 -> So duong."
+            },
+            {
+              input: "-5",
+              output: "So am",
+              explanation: "-5 < 0 -> So am."
+            },
+            {
+              input: "0",
+              output: "Bang 0",
+              explanation: "n = 0 -> Bang 0."
+            }
+          ],
+          starterCode: `# Nhập số nguyên n\nn = int(input())\n\n# TODO: Dùng if - elif - else để phân loại số dương, âm hay bằng 0\n`,
+          testCases: [
+            {
+              id: "t4-3-tc1",
+              input: "10",
+              expectedOutput: "So duong",
+              isHidden: false,
+              explanation: "Kiểm tra số dương."
+            },
+            {
+              id: "t4-3-tc2",
+              input: "-5",
+              expectedOutput: "So am",
+              isHidden: false,
+              explanation: "Kiểm tra số âm."
+            },
+            {
+              id: "t4-3-tc3",
+              input: "0",
+              expectedOutput: "Bang 0",
+              isHidden: false,
+              explanation: "Kiểm tra số 0."
+            },
+            {
+              id: "t4-3-tc4",
+              input: "-999999",
+              expectedOutput: "So am",
+              isHidden: true,
+              explanation: "Kiểm tra số âm lớn."
+            }
+          ],
+          hints: [
+            "`if n > 0: print('So duong')`",
+            "`elif n < 0: print('So am')`",
+            "`else: print('Bang 0')`"
+          ],
+          solutionExplanation: "n = int(input())\nif n > 0:\n    print('So duong')\nelif n < 0:\n    print('So am')\nelse:\n    print('Bang 0')"
+        },
+        ...BRANCHING_EXTRA_PROBLEMS.slice(15, 24).map(toPractice)
+      ]
+    },
+
+    // ----------------------------------------------------
+    // BÀI 4: RẼ NHÁNH NÂNG CAO & ỨNG DỤNG THỰC TẾ
+    // ----------------------------------------------------
+    {
+      id: "t4-l4",
+      moduleId: "topic-4",
+      moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
+      order: 4,
+      title: "Bài 4: Rẽ Nhánh Nâng Cao & Ứng Dụng Thực Tế",
+      description: "Ứng dụng điều kiện phức hợp (and, or, not) và rẽ nhánh lồng nhau vào các bài toán thực tế: Phân loại chỉ số BMI, tính cước taxi, tiền điện, rút tiền ATM.",
+      durationMin: 25,
+      xpReward: 70,
+      theory: {
+        summary: "Trong thực tế, các quyết định thường phụ thuộc vào nhiều điều kiện kết hợp bằng các toán tử logic `and` (và), `or` (hoặc), `not` (phủ định), hoặc cấu trúc `if` lồng nhau.",
+        keyPoints: [
+          "`and`: Đúng khi TẤT CẢ các điều kiện con đều Đúng.",
+          "`or`: Đúng khi CÓ ÍT NHẤT MỘT điều kiện con Đúng.",
+          "`not`: Đảo ngược giá trị logic (`not True` là `False`).",
+          "Ứng dụng tính chỉ số BMI: `BMI = weight / (height ** 2)`.",
+          "Phân loại BMI:",
           "  - `BMI < 18.5`: `Thieu can`",
           "  - `18.5 <= BMI < 25`: `Binh thuong`",
           "  - `25 <= BMI < 30`: `Thua can`",
@@ -45,34 +587,39 @@ export const TOPIC_4_BRANCHING: Module = {
         ],
         conceptIllustration: {
           type: "branching",
-          title: "Sơ Đồ Phân Loại BMI",
+          title: "Sơ Đồ Phân Loại BMI Thực Tế",
           description: "BMI < 18.5 -> Thiếu cân | < 25 -> Bình thường | < 30 -> Thừa cân | >= 30 -> Béo phì",
           visualData: {
             condition: "BMI < 18.5 ? Thieu can : (BMI < 25 ? Binh thuong : (BMI < 30 ? Thua can : Beo phi))",
-            ifTrue: "In danh muc tuong ung",
-            ifFalse: "Kiem tra tiep"
+            ifTrue: "In phân loại thể lực",
+            ifFalse: "Kiểm tra ngưỡng tiếp theo"
           }
         },
         examples: [
           {
             title: "Ví dụ: Tính BMI",
-            explanation: "Cân nặng 60kg, cao 1.70m -> BMI = 20.76 -> Bình thường.",
+            explanation: "Cân nặng 60kg, cao 1.70m -> BMI = 20.76 -> Binh thuong.",
             code: "w = 60\nh = 1.70\nbmi = w / (h * h)\nif bmi < 18.5:\n    print('Thieu can')\nelif bmi < 25:\n    print('Binh thuong')\nelif bmi < 30:\n    print('Thua can')\nelse:\n    print('Beo phi')",
             output: "Binh thuong"
           }
         ],
         multipleChoice: {
-          question: "Trong Python, từ khóa nào dùng để kiểm tra điều kiện bổ sung nếu lệnh if trước đó là False?",
-          options: ["else if", "elif", "elseif", "case"],
-          correctIndex: 1,
-          explanation: "Từ khóa chuẩn trong Python là elif (viết tắt của else if)."
+          question: "Để kiểm tra số x thỏa mãn đồng thời vừa lớn hơn 10 VÀ vừa nhỏ hơn 50, biểu thức logic nào đúng?",
+          options: [
+            "x > 10 and x < 50",
+            "x > 10 or x < 50",
+            "x > 10 not x < 50",
+            "10 < x > 50"
+          ],
+          correctIndex: 0,
+          explanation: "Từ khóa `and` yêu cầu cả hai điều kiện x > 10 và x < 50 đều phải đúng cùng lúc (Python cũng hỗ trợ cú pháp rút gọn 10 < x < 50)."
         }
       },
       practice: {
-        id: "t4-p1",
-        title: "Bài 1: Phân Loại BMI",
+        id: "t4-p4",
+        title: "Bài 4: Phân Loại BMI",
         difficulty: "Trung bình",
-        problemStatement: "Viết chương trình nhập vào cân nặng `weight` (kg) và chiều cao `height` (mét, số thực) của một người. Hãy tính chỉ số `BMI = weight / (height * height)` và in ra phân loại tương ứng:\n- `BMI < 18.5`: in `Thieu can`\n- `18.5 <= BMI < 25`: in `Binh thuong`\n- `25 <= BMI < 30`: in `Thua can`\n- `BMI >= 30`: in `Beo phi`",
+        problemStatement: "Viết chương trình nhập vào cân nặng `weight` (kg, số thực) và chiều cao `height` (mét, số thực). Hãy tính chỉ số `BMI = weight / (height * height)` và in ra phân loại tương ứng:\n- `BMI < 18.5`: in `Thieu can`\n- `18.5 <= BMI < 25`: in `Binh thuong`\n- `25 <= BMI < 30`: in `Thua can`\n- `BMI >= 30`: in `Beo phi`",
         inputFormat: "Gồm 2 dòng:\n- Dòng 1: Cân nặng weight (kg, số thực)\n- Dòng 2: Chiều cao height (m, số thực)",
         outputFormat: "Một dòng in tên phân loại: `Thieu can`, `Binh thuong`, `Thua can`, hoặc `Beo phi`.",
         constraints: "20 <= weight <= 250; 0.5 <= height <= 2.5.",
@@ -96,21 +643,21 @@ height = float(input())
 `,
         testCases: [
           {
-            id: "t4-1-tc1",
+            id: "t4-4-tc1",
             input: "60.0\n1.70",
             expectedOutput: "Binh thuong",
             isHidden: false,
             explanation: "Kiểm tra bình thường."
           },
           {
-            id: "t4-1-tc2",
+            id: "t4-4-tc2",
             input: "45.0\n1.65",
             expectedOutput: "Thieu can",
             isHidden: false,
             explanation: "BMI = 16.53 -> Thieu can."
           },
           {
-            id: "t4-1-tc3",
+            id: "t4-4-tc3",
             input: "95.0\n1.70",
             expectedOutput: "Beo phi",
             isHidden: true,
@@ -125,10 +672,10 @@ height = float(input())
       },
       practices: [
         {
-          id: "t4-p1",
-          title: "Bài 1: Phân Loại BMI",
+          id: "t4-p4",
+          title: "Bài 4: Phân Loại BMI",
           difficulty: "Trung bình",
-          problemStatement: "Viết chương trình nhập vào cân nặng `weight` (kg) và chiều cao `height` (mét, số thực) của một người. Hãy tính chỉ số `BMI = weight / (height * height)` và in ra phân loại tương ứng:\n- `BMI < 18.5`: in `Thieu can`\n- `18.5 <= BMI < 25`: in `Binh thuong`\n- `25 <= BMI < 30`: in `Thua can`\n- `BMI >= 30`: in `Beo phi`",
+          problemStatement: "Viết chương trình nhập vào cân nặng `weight` (kg, số thực) và chiều cao `height` (mét, số thực). Hãy tính chỉ số `BMI = weight / (height * height)` và in ra phân loại tương ứng:\n- `BMI < 18.5`: in `Thieu can`\n- `18.5 <= BMI < 25`: in `Binh thuong`\n- `25 <= BMI < 30`: in `Thua can`\n- `BMI >= 30`: in `Beo phi`",
           inputFormat: "Gồm 2 dòng:\n- Dòng 1: Cân nặng weight (kg, số thực)\n- Dòng 2: Chiều cao height (m, số thực)",
           outputFormat: "Một dòng in tên phân loại: `Thieu can`, `Binh thuong`, `Thua can`, hoặc `Beo phi`.",
           constraints: "20 <= weight <= 250; 0.5 <= height <= 2.5.",
@@ -147,21 +694,21 @@ height = float(input())
           starterCode: `# Nhập cân nặng và chiều cao\nweight = float(input())\nheight = float(input())\n\n# TODO: Tính BMI và phân loại dùng if - elif - else\n`,
           testCases: [
             {
-              id: "t4-1-tc1",
+              id: "t4-4-tc1",
               input: "60.0\n1.70",
               expectedOutput: "Binh thuong",
               isHidden: false,
               explanation: "Kiểm tra bình thường."
             },
             {
-              id: "t4-1-tc2",
+              id: "t4-4-tc2",
               input: "45.0\n1.65",
               expectedOutput: "Thieu can",
               isHidden: false,
               explanation: "BMI = 16.53 -> Thieu can."
             },
             {
-              id: "t4-1-tc3",
+              id: "t4-4-tc3",
               input: "95.0\n1.70",
               expectedOutput: "Beo phi",
               isHidden: true,
@@ -174,440 +721,88 @@ height = float(input())
           ],
           solutionExplanation: "weight = float(input())\nheight = float(input())\nbmi = weight / (height ** 2)\nif bmi < 18.5:\n    print('Thieu can')\nelif bmi < 25:\n    print('Binh thuong')\nelif bmi < 30:\n    print('Thua can')\nelse:\n    print('Beo phi')"
         },
-        ...BRANCHING_EXTRA_PROBLEMS.slice(0, 7).map(toPractice)
-      ]
-    },
-    {
-      id: "t4-l2",
-      moduleId: "topic-4",
-      moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
-      order: 2,
-      title: "Bài 2: Tính Tiền Taxi Lũy Tiến",
-      description: "Nhập số km di chuyển và tính cước taxi theo các mức giá lũy tiến quy định.",
-      durationMin: 20,
-      xpReward: 60,
-      theory: {
-        summary: "Bài toán tính tiền cước lũy tiến yêu cầu chia quãng đường thành từng phân đoạn để nhân với đơn giá của đoạn đó.",
-        keyPoints: [
-          "2 km đầu: 12.000 đ/km.",
-          "Từ km 3 đến km 10 (tối đa 8 km): 9.500 đ/km.",
-          "Từ km 11 đến km 20 (tối đa 10 km): 8.500 đ/km.",
-          "Trên 20 km: 7.000 đ/km."
-        ],
-        conceptIllustration: {
-          type: "branching",
-          title: "Các Bậc Giá Taxi",
-          description: "[0-2km]: 12k/km | [2-10km]: 9.5k/km | [10-20km]: 8.5k/km | [>20km]: 7k/km",
-          visualData: {
-            condition: "Tách từng phân khúc quãng đường để tính tổng chi phí chính xác",
-            ifTrue: "Tổng tiền cước",
-            ifFalse: "Không hợp lệ"
-          }
-        },
-        examples: [
-          {
-            title: "Ví dụ: Đi 5 km",
-            explanation: "2 km đầu = 2 * 12000 = 24000. 3 km tiếp = 3 * 9500 = 28500. Tổng = 52.500 VND.",
-            code: "km = 5\n# 2 * 12000 + 3 * 9500 = 52500\nprint(52500)",
-            output: "52500"
-          }
-        ],
-        multipleChoice: {
-          question: "Nếu đi đúng 2 km, tiền cước taxi là bao nhiêu?",
-          options: ["12.000 VND", "24.000 VND", "19.000 VND", "20.000 VND"],
-          correctIndex: 1,
-          explanation: "2 km đầu có giá 12.000 đ/km -> 2 * 12.000 = 24.000 VND."
-        }
-      },
-      practice: {
-        id: "t4-p2",
-        title: "Bài 2: Tính Tiền Taxi",
-        difficulty: "Trung bình",
-        problemStatement: "Viết chương trình nhập vào quãng đường `d` (số thực dương, tính bằng km) mà khách hàng đã di chuyển bằng taxi. Hãy tính tổng số tiền cước taxi phải trả theo bảng giá lũy tiến sau:\n- 2 km đầu tiên: giá 12.000 đồng/km.\n- Từ km thứ 3 đến km thứ 10 (khoảng (2, 10]): giá 9.500 đồng/km.\n- Từ km thứ 11 đến km thứ 20 (khoảng (10, 20]): giá 8.500 đồng/km.\n- Trên 20 km (khoảng > 20): giá 7.000 đồng/km.\n\nIn ra số tiền cước (số nguyên làm tròn hoặc kiểu int).",
-        inputFormat: "Một dòng chứa số thực dương d (0 < d <= 500).",
-        outputFormat: "Một dòng chứa số tiền cước (số nguyên).",
-        constraints: "0 < d <= 500.",
-        sampleCases: [
-          {
-            input: "1.5",
-            output: "18000",
-            explanation: "1.5 km * 12000 = 18000."
-          },
-          {
-            input: "5.0",
-            output: "52500",
-            explanation: "2 * 12000 + 3 * 9500 = 24000 + 28500 = 52500."
-          },
-          {
-            input: "15.0",
-            output: "142500",
-            explanation: "2*12000 + 8*9500 + 5*8500 = 24000 + 76000 + 42500 = 142500."
-          }
-        ],
-        starterCode: `# Nhập số km di chuyển
-d = float(input())
-
-# TODO: Tính tổng tiền taxi theo các phân đoạn
-`,
-        testCases: [
-          {
-            id: "t4-2-tc1",
-            input: "1.5",
-            expectedOutput: "18000",
-            isHidden: false,
-            explanation: "Kiểm tra đoạn 1."
-          },
-          {
-            id: "t4-2-tc2",
-            input: "5.0",
-            expectedOutput: "52500",
-            isHidden: false,
-            explanation: "Kiểm tra đoạn 2."
-          },
-          {
-            id: "t4-2-tc3",
-            input: "15.0",
-            expectedOutput: "142500",
-            isHidden: false,
-            explanation: "Kiểm tra đoạn 3."
-          },
-          {
-            id: "t4-2-tc4",
-            input: "25.0",
-            expectedOutput: "220000",
-            isHidden: true,
-            explanation: "Kiểm tra đoạn 4 (>20km): 2*12k + 8*9.5k + 10*8.5k + 5*7k = 24k + 76k + 85k + 35k = 220.000."
-          }
-        ],
-        hints: [
-          "Nếu `d <= 2`: `tien = d * 12000`",
-          "Nếu `d <= 10`: `tien = 2 * 12000 + (d - 2) * 9500`",
-          "Nếu `d <= 20`: `tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500`",
-          "Nếu `d > 20`: `tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000`",
-          "In ra `int(round(tien))`"
-        ],
-        solutionExplanation: "d = float(input())\nif d <= 2:\n    tien = d * 12000\nelif d <= 10:\n    tien = 2 * 12000 + (d - 2) * 9500\nelif d <= 20:\n    tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500\nelse:\n    tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000\nprint(int(round(tien)))"
-      },
-      practices: [
         {
-          id: "t4-p2",
-          title: "Bài 2: Tính Tiền Taxi Lũy Tiến",
+          id: "t4-p-atm",
+          title: "Mini ATM: Rút Tiền Hợp Lệ",
           difficulty: "Trung bình",
-          problemStatement: "Viết chương trình nhập vào số km đã đi `d` (số thực không âm). Hãy tính cước taxi phải trả (đồng) theo bảng giá:\n- 2 km đầu: 12.000 đ/km\n- Từ km 3 đến km 10: 9.500 đ/km\n- Từ km 11 đến km 20: 8.500 đ/km\n- Trên 20 km: 7.000 đ/km cho quãng đường vượt quá 20 km.\n\nIn ra số tiền nguyên (làm tròn số nguyên).",
-          inputFormat: "Một dòng chứa số thực d (km, 0 <= d <= 500).",
-          outputFormat: "Số tiền nguyên (VND) phải thanh toán.",
+          problemStatement: "Mô phỏng máy rút tiền tự động ATM:\nNhập 2 số nguyên:\n- Dòng 1: Số dư hiện tại `balance` (VND)\n- Dòng 2: Số tiền muốn rút `amount` (VND)\n\nKiểm tra và in ra thông báo tương ứng:\n1. Nếu `amount % 50000 != 0`: in `Loi: So tien rut phai la boi so cua 50.000 VND`\n2. Nếu `amount > balance`: in `Loi: So du khong du`\n3. Nếu hợp lệ: in `Giao dich thanh cong. So du con lai: <balance - amount> VND`",
+          inputFormat: "Gồm 2 dòng chứa balance và amount (số nguyên không âm).",
+          outputFormat: "Một dòng thông báo giao dịch.",
+          constraints: "0 <= balance, amount <= 10^9.",
+          sampleCases: [
+            {
+              input: "500000\n200000",
+              output: "Giao dich thanh cong. So du con lai: 300000 VND",
+              explanation: "Rút 200.000 hợp lệ."
+            }
+          ],
+          starterCode: `balance = int(input())\namount = int(input())\n\n# TODO: Kiểm tra điều kiện rút tiền\n`,
+          testCases: [
+            {
+              id: "t4-atm-tc1",
+              input: "500000\n200000",
+              expectedOutput: "Giao dich thanh cong. So du con lai: 300000 VND",
+              isHidden: false
+            },
+            {
+              id: "t4-atm-tc2",
+              input: "500000\n120000",
+              expectedOutput: "Loi: So tien rut phai la boi so cua 50.000 VND",
+              isHidden: false
+            },
+            {
+              id: "t4-atm-tc3",
+              input: "200000\n300000",
+              expectedOutput: "Loi: So du khong du",
+              isHidden: false
+            }
+          ],
+          hints: ["Kiểm tra % 50000 trước, sau đó kiểm tra > balance."],
+          solutionExplanation: "balance = int(input())\namount = int(input())\nif amount % 50000 != 0:\n    print('Loi: So tien rut phai la boi so cua 50.000 VND')\nelif amount > balance:\n    print('Loi: So du khong du')\nelse:\n    print(f'Giao dich thanh cong. So du con lai: {balance - amount} VND')"
+        },
+        {
+          id: "t4-p-taxi",
+          title: "Tính Tiền Taxi Lũy Tiến",
+          difficulty: "Trung bình",
+          problemStatement: "Nhập quãng đường `d` (km, số thực). Tính tiền cước taxi theo các mức lũy tiến:\n- 2 km đầu: 12.000 đ/km\n- Từ km 3 đến km 10: 9.500 đ/km\n- Từ km 11 đến km 20: 8.500 đ/km\n- Trên 20 km: 7.000 đ/km\n\nIn ra số tiền nguyên làm tròn.",
+          inputFormat: "Một dòng chứa số thực d (0 <= d <= 500).",
+          outputFormat: "Số tiền nguyên (VND).",
           constraints: "0 <= d <= 500.",
           sampleCases: [
-            {
-              input: "1.5",
-              output: "18000",
-              explanation: "Đi 1.5 km: 1.5 * 12000 = 18.000đ."
-            },
-            {
-              input: "5.0",
-              output: "52500",
-              explanation: "2 km đầu (24.000) + 3 km tiếp (3 * 9500 = 28.500) = 52.500đ."
-            }
+            { input: "1.5", output: "18000", explanation: "1.5 * 12000 = 18000." },
+            { input: "5.0", output: "52500", explanation: "2 * 12000 + 3 * 9500 = 52500." }
           ],
-          starterCode: `# Nhập quãng đường d (km)\nd = float(input())\n\n# TODO: Tính cước taxi theo các bậc lũy tiến\n`,
+          starterCode: `d = float(input())\n\n# TODO: Tính tiền cước taxi\n`,
           testCases: [
-            {
-              id: "t4-2-tc1",
-              input: "1.5",
-              expectedOutput: "18000",
-              isHidden: false,
-              explanation: "Kiểm tra đoạn 1."
-            },
-            {
-              id: "t4-2-tc2",
-              input: "5.0",
-              expectedOutput: "52500",
-              isHidden: false,
-              explanation: "Kiểm tra đoạn 2."
-            },
-            {
-              id: "t4-2-tc3",
-              input: "15.0",
-              expectedOutput: "142500",
-              isHidden: false,
-              explanation: "Kiểm tra đoạn 3."
-            },
-            {
-              id: "t4-2-tc4",
-              input: "25.0",
-              expectedOutput: "220000",
-              isHidden: true,
-              explanation: "Kiểm tra đoạn 4 (>20km): 2*12k + 8*9.5k + 10*8.5k + 5*7k = 24k + 76k + 85k + 35k = 220.000."
-            }
+            { id: "t4-tx-tc1", input: "1.5", expectedOutput: "18000", isHidden: false },
+            { id: "t4-tx-tc2", input: "5.0", expectedOutput: "52500", isHidden: false },
+            { id: "t4-tx-tc3", input: "25.0", expectedOutput: "220000", isHidden: true }
           ],
-          hints: [
-            "Nếu `d <= 2`: `tien = d * 12000`",
-            "Nếu `d <= 10`: `tien = 2 * 12000 + (d - 2) * 9500`",
-            "Nếu `d <= 20`: `tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500`",
-            "Nếu `d > 20`: `tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000`",
-            "In ra `int(round(tien))`"
-          ],
+          hints: ["Chia từng khoảng quãng đường để nhân đơn giá tương ứng."],
           solutionExplanation: "d = float(input())\nif d <= 2:\n    tien = d * 12000\nelif d <= 10:\n    tien = 2 * 12000 + (d - 2) * 9500\nelif d <= 20:\n    tien = 2 * 12000 + 8 * 9500 + (d - 10) * 8500\nelse:\n    tien = 2 * 12000 + 8 * 9500 + 10 * 8500 + (d - 20) * 7000\nprint(int(round(tien)))"
         },
-        ...BRANCHING_EXTRA_PROBLEMS.slice(7, 15).map(toPractice)
-      ]
-    },
-    {
-      id: "t4-l3",
-      moduleId: "topic-4",
-      moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
-      order: 3,
-      title: "Bài 3: Tính Tiền Điện Sinh Hoạt",
-      description: "Nhập số kWh điện tiêu thụ và tính tiền theo 4 bậc lũy tiến quy định.",
-      durationMin: 20,
-      xpReward: 60,
-      theory: {
-        summary: "Biểu giá điện sinh hoạt bậc thang áp dụng đơn giá cao dần theo các mức tiêu thụ để khuyến khích tiết kiệm điện.",
-        keyPoints: [
-          "Bậc 1 (cho 50 kWh đầu, từ 0 đến 50): 1.678 đ/kWh.",
-          "Bậc 2 (cho 50 kWh tiếp, từ 51 đến 100): 1.734 đ/kWh.",
-          "Bậc 3 (cho 100 kWh tiếp, từ 101 đến 200): 2.014 đ/kWh.",
-          "Bậc 4 (cho mức tiêu thụ từ 201 trở lên): 2.536 đ/kWh."
-        ],
-        conceptIllustration: {
-          type: "branching",
-          title: "4 Bậc Lũy Tiến Điện Sinh Hoạt",
-          description: "0-50 kWh: 1678 | 51-100 kWh: 1734 | 101-200 kWh: 2014 | >200 kWh: 2536",
-          visualData: {
-            condition: "Tính lần lượt theo từng bậc tiêu thụ",
-            ifTrue: "Tổng tiền điện",
-            ifFalse: "Không hợp lệ"
-          }
-        },
-        examples: [
-          {
-            title: "Ví dụ: Dùng 75 kWh",
-            explanation: "50 kWh bậc 1 = 50 * 1678 = 83900. 25 kWh bậc 2 = 25 * 1734 = 43350. Tổng = 127250.",
-            code: "kwh = 75\ntong = 50 * 1678 + 25 * 1734\nprint(tong)",
-            output: "127250"
-          }
-        ],
-        multipleChoice: {
-          question: "Nếu một hộ gia đình sử dụng đúng 50 kWh điện, số tiền điện phải trả là bao nhiêu?",
-          options: ["83.900 đ", "86.700 đ", "100.700 đ", "50.000 đ"],
-          correctIndex: 0,
-          explanation: "50 * 1678 = 83.900 đồng."
-        }
-      },
-      practice: {
-        id: "t4-p3",
-        title: "Bài 3: Tính Tiền Điện",
-        difficulty: "Trung bình",
-        problemStatement: "Viết chương trình nhập vào lượng điện tiêu thụ `kwh` (số nguyên không âm). Tính tổng tiền điện theo 4 bậc lũy tiến sau:\n- 50 kWh đầu tiên: 1.678 đ/kWh\n- 50 kWh tiếp theo (từ kWh 51 đến 100): 1.734 đ/kWh\n- 100 kWh tiếp theo (từ kWh 101 đến 200): 2.014 đ/kWh\n- Từ kWh thứ 201 trở đi: 2.536 đ/kWh\n\nIn ra tổng số tiền điện phải trả (số nguyên).",
-        inputFormat: "Một dòng chứa số nguyên không âm kwh (0 <= kwh <= 10000).",
-        outputFormat: "Một dòng chứa tổng số tiền điện.",
-        constraints: "0 <= kwh <= 10000.",
-        sampleCases: [
-          {
-            input: "75",
-            output: "127250",
-            explanation: "50 * 1678 + 25 * 1734 = 83900 + 43350 = 127250."
-          },
-          {
-            input: "150",
-            output: "271300",
-            explanation: "50*1678 + 50*1734 + 50*2014 = 83900 + 86700 + 100700 = 271300."
-          }
-        ],
-        starterCode: `# Nhập số kWh điện tiêu thụ
-kwh = int(input())
-
-# TODO: Tính tổng tiền điện theo 4 bậc
-`,
-        testCases: [
-          {
-            id: "t4-3-tc1",
-            input: "75",
-            expectedOutput: "127250",
-            isHidden: false,
-            explanation: "Kiểm tra 75 kWh."
-          },
-          {
-            id: "t4-3-tc2",
-            input: "150",
-            expectedOutput: "271300",
-            isHidden: false,
-            explanation: "Kiểm tra 150 kWh."
-          },
-          {
-            id: "t4-3-tc3",
-            input: "250",
-            expectedOutput: "498800",
-            isHidden: true,
-            explanation: "Kiểm tra 250 kWh (>200): 50*1678 + 50*1734 + 100*2014 + 50*2536 = 83900 + 86700 + 201400 + 126800 = 498800."
-          }
-        ],
-        hints: [
-          "Dùng `if kwh <= 50: ...`",
-          "`elif kwh <= 100: tien = 50 * 1678 + (kwh - 50) * 1734`",
-          "`elif kwh <= 200: tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014`",
-          "`else: tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536`"
-        ],
-        solutionExplanation: "kwh = int(input())\nif kwh <= 50:\n    tien = kwh * 1678\nelif kwh <= 100:\n    tien = 50 * 1678 + (kwh - 50) * 1734\nelif kwh <= 200:\n    tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014\nelse:\n    tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536\nprint(tien)"
-      },
-      practices: [
         {
-          id: "t4-p3",
-          title: "Bài 3: Tính Tiền Điện Sinh Hoạt",
+          id: "t4-p-electric",
+          title: "Tính Tiền Điện Bậc Thang",
           difficulty: "Nâng cao",
-          problemStatement: "Viết chương trình nhập vào số điện năng tiêu thụ `kwh` (số nguyên không âm trong tháng). Tính tổng tiền điện theo biểu giá:\n- Bậc 1 (cho kWh từ 0 đến 50): 1.678 đ/kWh\n- Bậc 2 (cho kWh từ 51 đến 100): 1.734 đ/kWh\n- Bậc 3 (cho kWh từ 101 đến 200): 2.014 đ/kWh\n- Bậc 4 (cho kWh từ 201 trở lên): 2.536 đ/kWh\n\nIn ra tổng số tiền điện phải trả (đồng, số nguyên).",
+          problemStatement: "Nhập số kWh điện tiêu thụ `kwh` (số nguyên không âm). Tính tổng tiền điện theo 4 bậc lũy tiến:\n- 50 kWh đầu: 1.678 đ/kWh\n- 50 kWh tiếp theo (51 - 100): 1.734 đ/kWh\n- 100 kWh tiếp theo (101 - 200): 2.014 đ/kWh\n- Từ 201 trở đi: 2.536 đ/kWh\n\nIn ra số tiền nguyên.",
           inputFormat: "Một số nguyên kwh (0 <= kwh <= 10000).",
-          outputFormat: "Một số nguyên duy nhất là số tiền điện.",
+          outputFormat: "Số tiền nguyên (VND).",
           constraints: "0 <= kwh <= 10000.",
           sampleCases: [
-            {
-              input: "45",
-              output: "75510",
-              explanation: "45 kWh thuộc Bậc 1: 45 * 1678 = 75.510 VND."
-            },
-            {
-              input: "80",
-              output: "135920",
-              explanation: "50 kWh bậc 1 (83.900) + 30 kWh bậc 2 (30 * 1734 = 52.020) = 135.920 VND."
-            }
+            { input: "75", output: "127250", explanation: "50*1678 + 25*1734 = 127250." },
+            { input: "150", output: "271300", explanation: "50*1678 + 50*1734 + 50*2014 = 271300." }
           ],
-          starterCode: `# Nhập số kWh điện tiêu thụ\nkwh = int(input())\n\n# TODO: Tính tiền điện theo 4 bậc lũy tiến\n`,
+          starterCode: `kwh = int(input())\n\n# TODO: Tính tiền điện theo 4 bậc\n`,
           testCases: [
-            {
-              id: "t4-3-tc1",
-              input: "45",
-              expectedOutput: "75510",
-              isHidden: false,
-              explanation: "Kiểm tra bậc 1."
-            },
-            {
-              id: "t4-3-tc2",
-              input: "80",
-              expectedOutput: "135920",
-              isHidden: false,
-              explanation: "Kiểm tra bậc 2."
-            },
-            {
-              id: "t4-3-tc3",
-              input: "250",
-              expectedOutput: "498800",
-              isHidden: true,
-              explanation: "Kiểm tra 250 kWh (>200): 50*1678 + 50*1734 + 100*2014 + 50*2536 = 83900 + 86700 + 201400 + 126800 = 498800."
-            }
+            { id: "t4-el-tc1", input: "75", expectedOutput: "127250", isHidden: false },
+            { id: "t4-el-tc2", input: "150", expectedOutput: "271300", isHidden: false },
+            { id: "t4-el-tc3", input: "250", expectedOutput: "498800", isHidden: true }
           ],
-          hints: [
-            "Dùng `if kwh <= 50: ...`",
-            "`elif kwh <= 100: tien = 50 * 1678 + (kwh - 50) * 1734`",
-            "`elif kwh <= 200: tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014`",
-            "`else: tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536`"
-          ],
+          hints: ["Tách số kWh thành các khoảng 50, 50, 100 và phần dôi dư."],
           solutionExplanation: "kwh = int(input())\nif kwh <= 50:\n    tien = kwh * 1678\nelif kwh <= 100:\n    tien = 50 * 1678 + (kwh - 50) * 1734\nelif kwh <= 200:\n    tien = 50 * 1678 + 50 * 1734 + (kwh - 100) * 2014\nelse:\n    tien = 50 * 1678 + 50 * 1734 + 100 * 2014 + (kwh - 200) * 2536\nprint(tien)"
-        },
-        ...BRANCHING_EXTRA_PROBLEMS.slice(15, 24).map(toPractice)
-      ]
-    },
-    {
-      id: "t4-l4",
-      moduleId: "topic-4",
-      moduleTitle: "Chủ đề 4: Cấu Trúc Rẽ Nhánh if / elif / else",
-      order: 4,
-      title: "Bài 4: Mô Phỏng Cây Rút Tiền Mini ATM",
-      description: "Nhập số dư tài khoản và số tiền cần rút. Kiểm tra các điều kiện rút tiền và in thông báo.",
-      durationMin: 20,
-      xpReward: 60,
-      theory: {
-        summary: "Mô phỏng máy rút tiền tự động ATM với các ràng buộc nghiệp vụ: số tiền rút phải là bội số của 50.000 VND và không vượt quá số dư hiện có.",
-        keyPoints: [
-          "Điều kiện bội số: `amount % 50000 == 0`.",
-          "Điều kiện đủ số dư: `amount <= balance`.",
-          "Nếu hợp lệ: `balance -= amount` và in thông báo thành công."
-        ],
-        conceptIllustration: {
-          type: "branching",
-          title: "Kiểm Tra Giao Dịch ATM",
-          description: "Số tiền chia hết cho 50k? -> Số tiền <= Số dư? -> Thành công & Cập nhật số dư.",
-          visualData: {
-            condition: "amount % 50000 == 0 and amount <= balance",
-            ifTrue: "Giao dich thanh cong. So du con lai: ...",
-            ifFalse: "Báo lỗi tương ứng"
-          }
-        },
-        examples: [
-          {
-            title: "Ví dụ: Rút 200.000 từ số dư 500.000",
-            explanation: "200k chia hết 50k và <= 500k -> Thành công, còn 300.000 VND.",
-            code: "balance = 500000\namount = 200000\nif amount % 50000 != 0:\n    print('Loi: So tien rut phai la boi so cua 50.000 VND')\nelif amount > balance:\n    print('Loi: So du khong du')\nelse:\n    print(f'Giao dich thanh cong. So du con lai: {balance - amount} VND')",
-            output: "Giao dich thanh cong. So du con lai: 300000 VND"
-          }
-        ],
-        multipleChoice: {
-          question: "Để kiểm tra số tiền `amount` có phải là bội số của 50.000 hay không, điều kiện nào đúng?",
-          options: ["amount / 50000 == 0", "amount % 50000 == 0", "amount // 50000 == 0", "amount == 50000"],
-          correctIndex: 1,
-          explanation: "amount % 50000 == 0 kiểm tra phần dư bằng 0, nghĩa là chia hết cho 50.000."
         }
-      },
-      practice: {
-        id: "t4-p4",
-        title: "Bài 4: Mini ATM",
-        difficulty: "Trung bình",
-        problemStatement: "Viết chương trình mô phỏng giao dịch rút tiền tại cây ATM:\nNhập 2 số nguyên:\n- Dòng 1: Số dư hiện tại `balance` (VND)\n- Dòng 2: Số tiền muốn rút `amount` (VND)\n\nKiểm tra và in ra thông báo tương ứng:\n1. Nếu `amount % 50000 != 0`: in `Loi: So tien rut phai la boi so cua 50.000 VND`\n2. Nếu `amount > balance`: in `Loi: So du khong du`\n3. Nếu hợp lệ: in `Giao dich thanh cong. So du con lai: <balance - amount> VND`",
-        inputFormat: "Gồm 2 dòng:\n- Dòng 1: balance (số nguyên >= 0)\n- Dòng 2: amount (số nguyên >= 0)",
-        outputFormat: "Một dòng thông báo theo các trường hợp quy định.",
-        constraints: "0 <= balance, amount <= 10^9.",
-        sampleCases: [
-          {
-            input: "500000\n200000",
-            output: "Giao dich thanh cong. So du con lai: 300000 VND",
-            explanation: "Rút 200.000 hợp lệ, số dư còn lại 300.000 VND."
-          },
-          {
-            input: "500000\n120000",
-            output: "Loi: So tien rut phai la boi so cua 50.000 VND",
-            explanation: "120.000 không chia hết cho 50.000."
-          },
-          {
-            input: "200000\n300000",
-            output: "Loi: So du khong du",
-            explanation: "Số tiền rút vượt quá số dư."
-          }
-        ],
-        starterCode: `# Nhập số dư balance và số tiền rút amount
-balance = int(input())
-amount = int(input())
-
-# TODO: Kiểm tra điều kiện rút tiền và in thông báo
-`,
-        testCases: [
-          {
-            id: "t4-4-tc1",
-            input: "500000\n200000",
-            expectedOutput: "Giao dich thanh cong. So du con lai: 300000 VND",
-            isHidden: false,
-            explanation: "Kiểm tra rút hợp lệ."
-          },
-          {
-            id: "t4-4-tc2",
-            input: "500000\n120000",
-            expectedOutput: "Loi: So tien rut phai la boi so cua 50.000 VND",
-            isHidden: false,
-            explanation: "Kiểm tra không chia hết 50k."
-          },
-          {
-            id: "t4-4-tc3",
-            input: "200000\n300000",
-            expectedOutput: "Loi: So du khong du",
-            isHidden: false,
-            explanation: "Kiểm tra không đủ số dư."
-          }
-        ],
-        hints: [
-          "Ưu tiên kiểm tra `if amount % 50000 != 0:` trước.",
-          "Tiếp theo kiểm tra `elif amount > balance:`",
-          "Cuối cùng `else:` in giao dịch thành công."
-        ],
-        solutionExplanation: "balance = int(input())\namount = int(input())\nif amount % 50000 != 0:\n    print('Loi: So tien rut phai la boi so cua 50.000 VND')\nelif amount > balance:\n    print('Loi: So du khong du')\nelse:\n    print(f'Giao dich thanh cong. So du con lai: {balance - amount} VND')"
-      }
+      ]
     }
   ]
 };

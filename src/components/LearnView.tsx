@@ -41,6 +41,27 @@ interface LearnViewProps {
   }) => void;
 }
 
+const renderFormattedText = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('`') && part.endsWith('`')) {
+          return (
+            <code key={i} className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-semibold border border-indigo-100">
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+        return part;
+      })}
+    </>
+  );
+};
+
 export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => {
   const {
     modules,
@@ -60,12 +81,21 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   // Active Main Pane: 'theory' or 'practice'
   const [activePane, setActivePane] = useState<'theory' | 'practice'>('theory');
 
-  // Sidebar expanded modules
+  // Sidebar expanded modules - mở sẵn các chủ đề quan trọng
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
-    "module-1": true,
-    "module-2": true,
-    "module-3": true,
+    "topic-1": true,
+    "topic-2": true,
+    "topic-3": true,
+    "topic-4": true,
+    "topic-5": true,
   });
+
+  // Tự động mở rộng module chứa bài học đang chọn
+  useEffect(() => {
+    if (selectedLesson?.moduleId) {
+      setExpandedModules(prev => ({ ...prev, [selectedLesson.moduleId]: true }));
+    }
+  }, [selectedLesson.moduleId]);
 
   // Multiple Practice Exercises Support
   const availablePractices = selectedLesson.practices && selectedLesson.practices.length > 0
@@ -145,8 +175,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   };
 
   const handleSelectLesson = (lesson: Lesson) => {
-    if (!isLessonUnlocked(lesson.id)) return;
     setSelectedLesson(lesson);
+    setActivePracticeIndex(0);
   };
 
   // Run Code manually against custom input / sample input
@@ -293,23 +323,18 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     return (
                       <button
                         key={lesson.id}
-                        disabled={!unlocked}
                         onClick={() => handleSelectLesson(lesson)}
                         className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer ${
                           isSelected
                             ? "bg-indigo-50 border border-indigo-200 text-indigo-950 font-semibold shadow-xs"
-                            : unlocked
-                            ? "hover:bg-slate-100 text-slate-700 border border-transparent"
-                            : "opacity-40 cursor-not-allowed text-slate-400 border border-transparent"
+                            : "hover:bg-slate-100 text-slate-700 border border-transparent"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 pr-2">
                           {completed ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                          ) : unlocked ? (
-                            <Unlock className="h-3.5 w-3.5 text-indigo-600 flex-shrink-0" />
                           ) : (
-                            <Lock className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                            <BookOpen className="h-3.5 w-3.5 text-indigo-600 flex-shrink-0" />
                           )}
                           <div className="min-w-0">
                             <p className="text-xs font-medium truncate">{lesson.title}</p>
@@ -337,20 +362,53 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
       {/* RIGHT MAIN AREA: Dual Pane (Theory & Visuals OR Code Compiler & Auto-Grader) */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
-        {/* Top Lesson Action Bar */}
+        {/* Top Lesson Action Bar with Fast Topic & Lesson Switcher */}
         <div className="px-4 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
-                {selectedLesson.moduleTitle}
-              </span>
-              {isCompleted && (
-                <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Đã hoàn thành
-                </span>
-              )}
+          <div className="min-w-0 flex-1 flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                aria-label="Chọn chuyên đề"
+                value={selectedLesson.moduleId}
+                onChange={(e) => {
+                  const targetMod = modules.find((m) => m.id === e.target.value);
+                  if (targetMod && targetMod.lessons.length > 0) {
+                    handleSelectLesson(targetMod.lessons[0]);
+                  }
+                }}
+                className="text-xs font-bold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-2xs"
+              >
+                {modules.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.title}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                aria-label="Chọn bài học trong chuyên đề"
+                value={selectedLesson.id}
+                onChange={(e) => {
+                  const allLessons = modules.flatMap((m) => m.lessons);
+                  const targetLesson = allLessons.find((l) => l.id === e.target.value);
+                  if (targetLesson) {
+                    handleSelectLesson(targetLesson);
+                  }
+                }}
+                className="text-xs font-semibold px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-indigo-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer max-w-[280px] truncate shadow-2xs"
+              >
+                {(modules.find((m) => m.id === selectedLesson.moduleId)?.lessons || []).map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.title}
+                  </option>
+                ))}
+              </select>
             </div>
-            <h1 className="text-base sm:text-lg font-bold text-slate-900 truncate">{selectedLesson.title}</h1>
+
+            {isCompleted && (
+              <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Đã hoàn thành
+              </span>
+            )}
           </div>
 
           {/* Pane Switcher Tabs */}
@@ -391,16 +449,16 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   <Info className="h-4 w-4" />
                   <span>Tổng quan kiến thức</span>
                 </div>
-                <p className="text-sm text-slate-700 leading-relaxed">{selectedLesson.theory.summary}</p>
+                <p className="text-sm text-slate-700 leading-relaxed font-medium">{selectedLesson.theory.summary}</p>
                 <div className="pt-2">
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Điểm cốt lõi cần nhớ:
                   </h4>
-                  <ul className="space-y-1.5 text-xs text-slate-700">
+                  <ul className="space-y-2 text-xs text-slate-700">
                     {selectedLesson.theory.keyPoints.map((pt, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 mt-1.5 flex-shrink-0" />
-                        <span className="leading-normal">{pt}</span>
+                        <span className="leading-relaxed">{renderFormattedText(pt)}</span>
                       </li>
                     ))}
                   </ul>
@@ -518,6 +576,27 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           <span className="text-slate-700 font-medium">{step}</span>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {selectedLesson.theory.conceptIllustration.visualData.iterations && (
+                    <div className="space-y-2.5">
+                      {selectedLesson.theory.conceptIllustration.visualData.loopType && (
+                        <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 font-mono text-xs text-indigo-900 font-bold flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-indigo-600 text-white text-2xs uppercase">Cú pháp lặp</span>
+                          <span>{selectedLesson.theory.conceptIllustration.visualData.loopType}</span>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {selectedLesson.theory.conceptIllustration.visualData.iterations.map((iter: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-white border border-slate-200 rounded-xl shadow-xs space-y-1">
+                            <span className="text-2xs font-bold text-indigo-600 uppercase tracking-wider block">
+                              Bước {iter.index || idx + 1}
+                            </span>
+                            <p className="font-mono text-xs text-slate-800 font-semibold">{iter.state}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

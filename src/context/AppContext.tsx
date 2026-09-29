@@ -49,6 +49,8 @@ interface AppContextType {
   getLessonProgressPercentage: () => number;
   teacherMode: boolean;
   setTeacherMode: (val: boolean) => void;
+  enforceSequentialProgression: boolean;
+  setEnforceSequentialProgression: (enabled: boolean) => void;
 
   // Code & Submissions
   userCodes: Record<string, string>;
@@ -270,19 +272,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentUser]);
 
-  // Unlock check logic: Luôn mở khóa để học sinh & giáo viên có thể học và tham khảo mọi chủ đề
-  const isLessonUnlocked = (_lessonId: string): boolean => {
-    return true;
+  // Chế độ ràng buộc học sinh: Bắt buộc học và pass bài thực hành mới mở bài tiếp theo
+  // MẶC ĐỊNH: BẬT (true) theo yêu cầu người dùng
+  const [enforceSequentialProgression, setEnforceSequentialProgressionState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("pyedu_enforce_sequential");
+      if (saved !== null) {
+        return saved === "true";
+      }
+    } catch {}
+    return true; // Mặc định BẬT
+  });
+
+  const setEnforceSequentialProgression = (enabled: boolean) => {
+    setEnforceSequentialProgressionState(enabled);
+    try {
+      localStorage.setItem("pyedu_enforce_sequential", String(enabled));
+    } catch {}
   };
 
+  // Lưu tiến trình cho cả khách vãng lai (guest)
+  const [guestCompletedLessons, setGuestCompletedLessons] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("pyedu_guest_completed_lessons");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const isLessonCompleted = (lessonId: string): boolean => {
-    return currentUser?.completedLessons.includes(lessonId) ?? false;
+    if (currentUser?.completedLessons?.includes(lessonId)) return true;
+    if (guestCompletedLessons.includes(lessonId)) return true;
+    if (lessonSubmissions[lessonId]?.some(s => s.passed)) return true;
+    return false;
+  };
+
+  // Unlock check logic:
+  // - Nếu tắt chế độ ràng buộc -> mở khóa tất cả
+  // - Giáo viên / Admin -> mở khóa tất cả
+  // - Học sinh: Bài 1 của mỗi chuyên đề luôn mở. Các bài tiếp theo (Bài 2, 3, 4...) BẮT BUỘC bài ngay trước phải đạt/pass bài thực hành
+  const isLessonUnlocked = (lessonId: string): boolean => {
+    if (!enforceSequentialProgression) return true;
+    if (teacherMode || currentUser?.role === 'teacher' || currentUser?.role === 'admin') return true;
+
+    // Tìm vị trí bài học trong từng chuyên đề
+    for (const mod of CURRICULUM_MODULES) {
+      const idxInMod = mod.lessons.findIndex(l => l.id === lessonId);
+      if (idxInMod !== -1) {
+        // Bài đầu tiên của chuyên đề luôn mở để học sinh tiếp thu kiến thức chủ đề mới
+        if (idxInMod === 0) return true;
+
+        // Các bài tiếp theo trong chuyên đề (Bài 2, 3, 4...): BẮT BUỘC bài ngay trước đó phải ĐẠT / PASS bài thực hành
+        const previousLessonInMod = mod.lessons[idxInMod - 1];
+        return isLessonCompleted(previousLessonInMod.id);
+      }
+    }
+
+    return true;
   };
 
   const getLessonProgressPercentage = (): number => {
     const allLessons = CURRICULUM_MODULES.flatMap(m => m.lessons);
-    if (!currentUser || allLessons.length === 0) return 0;
-    const completedCount = allLessons.filter(l => currentUser.completedLessons.includes(l.id)).length;
+    if (allLessons.length === 0) return 0;
+    const completedCount = allLessons.filter(l => isLessonCompleted(l.id)).length;
     return Math.round((completedCount / allLessons.length) * 100);
   };
 
@@ -300,13 +353,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       [lessonId]: [result, ...(prev[lessonId] || [])]
     }));
 
-    if (!currentUser) return;
-
     const allLessons = CURRICULUM_MODULES.flatMap(m => m.lessons);
     const lessonObj = allLessons.find(l => l.id === lessonId);
     const xpEarned = lessonObj?.xpReward || 50;
 
     if (result.passed) {
+      // Đánh dấu hoàn thành cho guest
+      setGuestCompletedLessons(prev => {
+        if (!prev.includes(lessonId)) {
+          const next = [...prev, lessonId];
+          try {
+            localStorage.setItem("pyedu_guest_completed_lessons", JSON.stringify(next));
+          } catch {}
+          return next;
+        }
+        return prev;
+      });
+
+      // Cập nhật ngay lập tức vào state currentUser
+      if (currentUser && !currentUser.completedLessons.includes(lessonId)) {
+        const nextUser: User = {
+          ...currentUser,
+          completedLessons: [...currentUser.completedLessons, lessonId],
+          totalXp: currentUser.totalXp + xpEarned,
+          weeklyXp: currentUser.weeklyXp + xpEarned,
+        };
+        setCurrentUser(nextUser);
+        try {
+          localStorage.setItem("pyedu_current_user", JSON.stringify(nextUser));
+        } catch {}
+      }
+
       try {
         confetti({
           particleCount: 80,
@@ -317,6 +394,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // ignore in iframe
       }
     }
+
+    if (!currentUser) return;
 
     try {
       const updatedUser = await ApiService.recordSubmission(currentUser.id, {
@@ -896,6 +975,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getLessonProgressPercentage,
         teacherMode,
         setTeacherMode,
+        enforceSequentialProgression,
+        setEnforceSequentialProgression,
 
         userCodes,
         setUserCodeForLesson,

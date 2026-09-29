@@ -75,11 +75,23 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     lessonSubmissions,
     addNote,
     teacherMode,
-    currentUser
+    currentUser,
+    enforceSequentialProgression,
+    setEnforceSequentialProgression
   } = useApp();
 
   // Active Main Pane: 'theory' or 'practice'
   const [activePane, setActivePane] = useState<'theory' | 'practice'>('theory');
+
+  // Modal cảnh báo khi bấm vào bài học bị khóa
+  const [lockedNoticeLesson, setLockedNoticeLesson] = useState<Lesson | null>(null);
+
+  // Tính bài học tiếp theo trong toàn bộ lộ trình
+  const allLessons = modules.flatMap((m) => m.lessons);
+  const currentLessonIndex = allLessons.findIndex((l) => l.id === selectedLesson.id);
+  const nextLesson = currentLessonIndex !== -1 && currentLessonIndex < allLessons.length - 1
+    ? allLessons[currentLessonIndex + 1]
+    : null;
 
   // Sidebar expanded modules - mở sẵn các chủ đề quan trọng
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
@@ -175,6 +187,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   };
 
   const handleSelectLesson = (lesson: Lesson) => {
+    if (enforceSequentialProgression && !isLessonUnlocked(lesson.id)) {
+      setLockedNoticeLesson(lesson);
+      return;
+    }
     setSelectedLesson(lesson);
     setActivePracticeIndex(0);
   };
@@ -284,11 +300,30 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             </h2>
             {teacherMode && (
               <span className="text-xs font-bold px-2 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200">
-                Unlocked All
+                Teacher
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 mt-1">Hoàn thành bài tập để mở khóa bài tiếp theo</p>
+          <p className="text-xs text-slate-500 mt-1">Pass bài thực hành để mở khóa bài tiếp theo</p>
+
+          {/* Toggle Chế độ học ràng buộc */}
+          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
+              <Lock className={`h-3.5 w-3.5 ${enforceSequentialProgression ? "text-indigo-600" : "text-slate-400"}`} />
+              <span className="text-2xs sm:text-xs">Ràng buộc bài học:</span>
+            </div>
+            <button
+              onClick={() => setEnforceSequentialProgression(!enforceSequentialProgression)}
+              className={`px-2 py-0.5 rounded text-2xs font-bold transition-all cursor-pointer ${
+                enforceSequentialProgression
+                  ? "bg-indigo-600 text-white shadow-2xs"
+                  : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+              }`}
+              title="Bật/Tắt chế độ ràng buộc tuần tự: Phải pass bài trước mới mở bài sau"
+            >
+              {enforceSequentialProgression ? "ĐANG BẬT" : "TẮT"}
+            </button>
+          </div>
         </div>
 
         <div className="p-2 space-y-2 flex-1">
@@ -327,17 +362,28 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                         className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer ${
                           isSelected
                             ? "bg-indigo-50 border border-indigo-200 text-indigo-950 font-semibold shadow-xs"
-                            : "hover:bg-slate-100 text-slate-700 border border-transparent"
+                            : unlocked
+                            ? "hover:bg-slate-100 text-slate-700 border border-transparent"
+                            : "opacity-60 bg-slate-100/60 text-slate-400 border border-dashed border-slate-200 hover:bg-amber-50/60 hover:text-amber-800"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 pr-2">
                           {completed ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                          ) : (
+                          ) : unlocked ? (
                             <BookOpen className="h-3.5 w-3.5 text-indigo-600 flex-shrink-0" />
+                          ) : (
+                            <Lock className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
                           )}
                           <div className="min-w-0">
-                            <p className="text-xs font-medium truncate">{lesson.title}</p>
+                            <p className="text-xs font-medium truncate flex items-center gap-1">
+                              <span>{lesson.title}</span>
+                              {!unlocked && (
+                                <span className="text-3xs px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded font-semibold">
+                                  Khóa
+                                </span>
+                              )}
+                            </p>
                             <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                               <span className="flex items-center gap-0.5">
                                 <Clock className="h-3 w-3" /> {lesson.durationMin}p
@@ -362,7 +408,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
       {/* RIGHT MAIN AREA: Dual Pane (Theory & Visuals OR Code Compiler & Auto-Grader) */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
-        {/* Top Lesson Action Bar with Fast Topic & Lesson Switcher */}
+        {/* Top Lesson Action Bar with Fast Topic & Lesson Switcher & Sequential Mode Status */}
         <div className="px-4 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1 flex flex-wrap items-center gap-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -396,12 +442,24 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 }}
                 className="text-xs font-semibold px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-indigo-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer max-w-[280px] truncate shadow-2xs"
               >
-                {(modules.find((m) => m.id === selectedLesson.moduleId)?.lessons || []).map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.title}
-                  </option>
-                ))}
+                {(modules.find((m) => m.id === selectedLesson.moduleId)?.lessons || []).map((l) => {
+                  const unlocked = isLessonUnlocked(l.id);
+                  const completed = isLessonCompleted(l.id);
+                  return (
+                    <option key={l.id} value={l.id}>
+                      {completed ? "✓ " : !unlocked ? "🔒 " : ""}{l.title}{!unlocked ? " (Chưa mở)" : ""}
+                    </option>
+                  );
+                })}
               </select>
+            </div>
+
+            {/* Trạng thái chế độ ràng buộc */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-xl text-xs">
+              <Lock className={`h-3.5 w-3.5 ${enforceSequentialProgression ? "text-amber-700" : "text-slate-400"}`} />
+              <span className="text-2xs sm:text-xs font-semibold text-amber-900">
+                Học ràng buộc: {enforceSequentialProgression ? "ĐANG BẬT" : "TẮT"}
+              </span>
             </div>
 
             {isCompleted && (
@@ -1170,6 +1228,27 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           ))}
                         </div>
 
+                        {latestSubmission.passed && nextLesson && (
+                          <div className="pt-3 flex flex-wrap items-center justify-between gap-3 bg-emerald-950/60 p-3.5 rounded-2xl border border-emerald-500/40 mt-2">
+                            <div className="text-xs">
+                              <span className="font-bold text-emerald-400 block mb-0.5">
+                                🔓 ĐÃ MỞ KHÓA BÀI HỌC TIẾP THEO:
+                              </span>
+                              <span className="text-white font-medium">{nextLesson.title}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                handleSelectLesson(nextLesson);
+                                setActivePane("theory");
+                              }}
+                              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-900/50 transition-all cursor-pointer"
+                            >
+                              <span>Chuyển sang bài tiếp theo</span>
+                              <ArrowRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+
                         {!latestSubmission.passed && (
                           <div className="pt-2 flex justify-end">
                             <button
@@ -1211,6 +1290,56 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
           )}
         </div>
       </main>
+
+      {/* Modal cảnh báo khi chọn bài học bị khóa do chưa pass bài trước */}
+      {lockedNoticeLesson && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-amber-200 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="h-12 w-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+              <Lock className="h-6 w-6" />
+            </div>
+            <div className="text-center space-y-1">
+              <h3 className="font-bold text-base text-slate-900">Bài Học Này Đang Bị Khóa</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Hệ thống đang bật <strong className="text-indigo-600 font-bold">Chế độ học ràng buộc</strong>. Học sinh cần hoàn thành và đạt bài thực hành trước đó mới được phép mở khóa bài học này.
+              </p>
+              <div className="text-xs font-semibold text-slate-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200 mt-2 text-left">
+                <span className="text-slate-500 font-normal block text-2xs">Bài học muốn truy cập:</span>
+                <span className="text-indigo-900 font-bold">{lockedNoticeLesson.title}</span>
+              </div>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <p className="font-semibold text-slate-700 flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-indigo-600" />
+                Hướng dẫn mở khóa:
+              </p>
+              <p className="leading-relaxed">
+                Vui lòng quay lại bài học trước đó, làm bài tập thực hành và nhấn <strong>"Chấm Bài Tự Động"</strong> để đạt 100% test case. Sau khi pass, bài học này sẽ tự động mở!
+              </p>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setLockedNoticeLesson(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-colors cursor-pointer"
+              >
+                Đã hiểu
+              </button>
+              {teacherMode && (
+                <button
+                  onClick={() => {
+                    setSelectedLesson(lockedNoticeLesson);
+                    setActivePracticeIndex(0);
+                    setLockedNoticeLesson(null);
+                  }}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Mở bài (Quyền GV)
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

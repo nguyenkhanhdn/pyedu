@@ -38,6 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
     triggerDailyReminder,
     getLessonProgressPercentage,
     teacherMode,
+    allUsers,
   } = useApp();
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -45,6 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
   const unreadCount = notifications.filter((n) => !n.read).length;
   const progressPercent = getLessonProgressPercentage();
   const isAdmin = currentUser?.role === "admin";
+  const pendingUsersCount = allUsers.filter((u) => u.status === "pending").length;
 
   const handleAdminNav = (section: 'users' | 'stats' | 'curriculum' | 'algorithms') => {
     setActiveTab('admin');
@@ -114,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
             <nav className="hidden md:flex items-center space-x-1">
               <button
                 onClick={() => handleAdminNav("users")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer relative ${
                   activeTab === "admin" && adminSection === "users"
                     ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
                     : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
@@ -122,6 +124,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 <Users className="h-4 w-4" />
                 <span>Người Dùng</span>
+                {pendingUsersCount > 0 && (
+                  <span className="px-1.5 py-0.2 text-[10px] font-black bg-amber-400 text-amber-950 rounded-full animate-pulse shadow-xs">
+                    {pendingUsersCount}
+                  </span>
+                )}
               </button>
 
               <button

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 export const AuthGateView: React.FC = () => {
-  const { currentUser, logout, login, register, allUsers } = useApp();
+  const { currentUser, logout, login, register, allUsers, authErrorMessage, requireApprovalForRegistration } = useApp();
 
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
@@ -64,9 +64,13 @@ export const AuthGateView: React.FC = () => {
         });
 
         if (success) {
-          setSuccessMessage("Đăng ký tài khoản thành công! Đang lưu vào CSDL Supabase và mở giao diện...");
+          if (role !== 'admin' && requireApprovalForRegistration) {
+            setSuccessMessage("Đăng ký tài khoản thành công! Tài khoản đang chờ Ban Quản trị phê duyệt trước khi có thể đăng nhập.");
+          } else {
+            setSuccessMessage("Đăng ký tài khoản thành công! Đang lưu vào CSDL Supabase và mở giao diện...");
+          }
         } else {
-          setErrorMessage("Tên đăng nhập hoặc Email đã tồn tại trong CSDL. Vui lòng chọn tên khác!");
+          setErrorMessage(authErrorMessage || "Tên đăng nhập hoặc Email đã tồn tại trong CSDL. Vui lòng chọn tên khác!");
         }
       } else {
         if (!username.trim()) {
@@ -79,7 +83,7 @@ export const AuthGateView: React.FC = () => {
         if (success) {
           setSuccessMessage("Đăng nhập thành công! Đang đồng bộ tiến độ từ CSDL Supabase...");
         } else {
-          setErrorMessage("Không tìm thấy tài khoản hoặc mật khẩu không chính xác. Hãy kiểm tra lại!");
+          setErrorMessage(authErrorMessage || "Không tìm thấy tài khoản hoặc mật khẩu không chính xác. Hãy kiểm tra lại!");
         }
       }
     } catch (err: any) {
@@ -94,7 +98,7 @@ export const AuthGateView: React.FC = () => {
     setErrorMessage("");
     const ok = await login(identifier, pwd);
     if (!ok) {
-      setErrorMessage("Không thể đăng nhập tài khoản mẫu.");
+      setErrorMessage(authErrorMessage || "Không thể đăng nhập tài khoản mẫu.");
     }
     setIsLoading(false);
   };

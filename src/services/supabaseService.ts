@@ -63,6 +63,11 @@ export class SupabaseService {
         fullName: u.full_name,
         avatar: u.avatar,
         role: u.role as any,
+        status: (u.status as any) || "active",
+        banReason: u.ban_reason,
+        bannedAt: u.banned_at,
+        approvedAt: u.approved_at,
+        registeredAt: u.registered_at || (u.created_at ? String(u.created_at).split("T")[0] : undefined),
         grade: u.grade,
         school: u.school,
         totalXp: u.total_xp,
@@ -112,6 +117,11 @@ export class SupabaseService {
         fullName: u.full_name,
         avatar: u.avatar,
         role: u.role as any,
+        status: (u.status as any) || "active",
+        banReason: u.ban_reason,
+        bannedAt: u.banned_at,
+        approvedAt: u.approved_at,
+        registeredAt: u.registered_at || (u.created_at ? String(u.created_at).split("T")[0] : undefined),
         grade: u.grade,
         school: u.school,
         totalXp: u.total_xp,
@@ -165,6 +175,7 @@ export class SupabaseService {
     fullName: string;
     grade: string;
     role: "student" | "teacher" | "admin";
+    status?: "active" | "pending" | "blocked";
     school?: string;
     password?: string;
   }): Promise<User | null> {
@@ -184,6 +195,8 @@ export class SupabaseService {
         full_name: userData.fullName,
         avatar,
         role: userData.role || "student",
+        status: userData.status || (userData.role === "admin" ? "active" : "pending"),
+        registered_at: today,
         grade: userData.grade || "Lớp 10 Tin",
         school: userData.school || "THPT Chuyên Tin Học",
         total_xp: userData.role === "admin" ? 9999 : 0,
@@ -256,6 +269,13 @@ export class SupabaseService {
     try {
       const dbUpdates: any = {};
       if (updates.fullName !== undefined) dbUpdates.full_name = updates.fullName;
+      if (updates.email !== undefined) dbUpdates.email = updates.email;
+      if (updates.role !== undefined) dbUpdates.role = updates.role;
+      if (updates.password !== undefined) dbUpdates.password = updates.password;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      if (updates.banReason !== undefined) dbUpdates.ban_reason = updates.banReason;
+      if (updates.bannedAt !== undefined) dbUpdates.banned_at = updates.bannedAt;
+      if (updates.approvedAt !== undefined) dbUpdates.approved_at = updates.approvedAt;
       if (updates.grade !== undefined) dbUpdates.grade = updates.grade;
       if (updates.school !== undefined) dbUpdates.school = updates.school;
       if (updates.avatar !== undefined) dbUpdates.avatar = updates.avatar;

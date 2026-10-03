@@ -1,4 +1,5 @@
 export type UserRole = 'student' | 'teacher' | 'admin';
+export type UserStatus = 'active' | 'pending' | 'blocked';
 
 export interface User {
   id: string;
@@ -8,6 +9,11 @@ export interface User {
   fullName: string;
   avatar: string;
   role: UserRole;
+  status?: UserStatus; // 'active' (hoạt động/đã duyệt), 'pending' (chờ admin duyệt), 'blocked' (bị khóa/ban)
+  banReason?: string; // Lý do bị khóa/cấm
+  bannedAt?: string;
+  registeredAt?: string; // Ngày đăng ký
+  approvedAt?: string; // Ngày phê duyệt
   grade: string;
   school?: string;
   totalXp: number;

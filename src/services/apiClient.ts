@@ -102,7 +102,76 @@ const INITIAL_FALLBACK_USERS: User[] = [
     badges: ["first_step", "streak_3", "streak_7", "loop_master"],
     dailyGoal: 30,
     reminderTime: "21:00",
+    reminderEnabled: true,
+    status: "active"
+  },
+  {
+    id: "usr-pending-1",
+    username: "minhtriet_tin",
+    email: "triet.nguyen@chuyentin.edu.vn",
+    password: "123",
+    fullName: "Nguyễn Minh Triết",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=MinhTriet",
+    grade: "Lớp 10 Chuyên Tin",
+    school: "THPT Chuyên Lê Hồng Phong",
+    role: "student",
+    status: "pending",
+    registeredAt: "2026-10-02",
+    totalXp: 0,
+    weeklyXp: 0,
+    streakDays: 0,
+    lastActiveDate: "2026-10-02",
+    completedLessons: [],
+    badges: [],
+    dailyGoal: 20,
+    reminderTime: "19:00",
     reminderEnabled: true
+  },
+  {
+    id: "usr-pending-2",
+    username: "hongngoc_py",
+    email: "ngoc.tran@lequydon.edu.vn",
+    password: "123",
+    fullName: "Trần Thị Hồng Ngọc",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=HongNgoc",
+    grade: "Lớp 11A2",
+    school: "THPT Lê Quý Đôn",
+    role: "student",
+    status: "pending",
+    registeredAt: "2026-10-03",
+    totalXp: 0,
+    weeklyXp: 0,
+    streakDays: 0,
+    lastActiveDate: "2026-10-03",
+    completedLessons: [],
+    badges: [],
+    dailyGoal: 30,
+    reminderTime: "20:00",
+    reminderEnabled: true
+  },
+  {
+    id: "usr-blocked-1",
+    username: "tuankhang_hack",
+    email: "khang.tuan@spammail.com",
+    password: "123",
+    fullName: "Lê Tuấn Khang",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TuanKhang",
+    grade: "Lớp 12 Tin",
+    school: "THPT Nguyễn Trãi",
+    role: "student",
+    status: "blocked",
+    banReason: "Spam mã nguồn độc hại và gian lận nộp bài thi trái phép",
+    bannedAt: "2026-09-30",
+    registeredAt: "2026-09-20",
+    totalXp: 200,
+    weeklyXp: 0,
+    streakDays: 0,
+    lastActiveDate: "2026-09-30",
+    completedLessons: ["lesson-1-1"],
+    badges: [],
+    dailyGoal: 15,
+    reminderTime: "19:00",
+    reminderEnabled: false
   }
 ];
 
@@ -128,6 +197,21 @@ export class LocalDataManager {
   private static STORAGE_KEY_NOTES = "pyedu_offline_notes";
   private static STORAGE_KEY_GROUPS = "pyedu_offline_groups";
   private static STORAGE_KEY_NOTIFS = "pyedu_offline_notifs";
+  private static STORAGE_KEY_REQUIRE_APPROVAL = "pyedu_require_approval";
+
+  public static getRequireApprovalSetting(): boolean {
+    try {
+      const val = localStorage.getItem(this.STORAGE_KEY_REQUIRE_APPROVAL);
+      if (val !== null) return val === "true";
+    } catch {}
+    return true; // Mặc định BẬT chế độ kiểm duyệt tài khoản đăng ký
+  }
+
+  public static setRequireApprovalSetting(enabled: boolean) {
+    try {
+      localStorage.setItem(this.STORAGE_KEY_REQUIRE_APPROVAL, String(enabled));
+    } catch {}
+  }
 
   public static getUsers(): User[] {
     let users: User[] = [];
@@ -144,6 +228,12 @@ export class LocalDataManager {
     if (users.length === 0) {
       users = [...INITIAL_FALLBACK_USERS];
     } else {
+      // Ensure all users have valid status
+      users = users.map(u => ({
+        ...u,
+        status: u.status || 'active'
+      }));
+
       // Self-heal: ensure default system accounts exist
       // 1. Admin account
       const adminIdx = users.findIndex(u => u.username?.toLowerCase() === "admin" || u.email?.toLowerCase() === "admin@pyedu.edu.vn");
@@ -155,6 +245,7 @@ export class LocalDataManager {
           ...defaultAdmin,
           ...users[adminIdx],
           role: "admin",
+          status: "active",
           password: users[adminIdx].password || "admin@password"
         };
       }
@@ -168,6 +259,7 @@ export class LocalDataManager {
         users[khanhIdx] = {
           ...defaultKhanh,
           ...users[khanhIdx],
+          status: users[khanhIdx].status || "active",
           password: users[khanhIdx].password || "123456"
         };
       }
@@ -181,8 +273,23 @@ export class LocalDataManager {
         users[teacherIdx] = {
           ...defaultTeacher,
           ...users[teacherIdx],
+          status: users[teacherIdx].status || "active",
           password: users[teacherIdx].password || "123456"
         };
+      }
+
+      // Ensure demo pending and blocked accounts exist if missing
+      const pending1 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-pending-1");
+      if (pending1 && !users.some(u => u.id === pending1.id || u.username === pending1.username)) {
+        users.push(pending1);
+      }
+      const pending2 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-pending-2");
+      if (pending2 && !users.some(u => u.id === pending2.id || u.username === pending2.username)) {
+        users.push(pending2);
+      }
+      const blocked1 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-blocked-1");
+      if (blocked1 && !users.some(u => u.id === blocked1.id || u.username === blocked1.username)) {
+        users.push(blocked1);
       }
     }
 
@@ -222,6 +329,66 @@ export class LocalDataManager {
       localStorage.removeItem(`${this.STORAGE_KEY_NOTIFS}_${id}`);
     } catch {}
     return true;
+  }
+
+  public static approveUser(userId: string): User | null {
+    const user = this.getUserById(userId);
+    if (!user) return null;
+    return this.updateUser(userId, {
+      status: "active",
+      approvedAt: new Date().toISOString().split("T")[0]
+    });
+  }
+
+  public static blockUser(userId: string, reason?: string): User | null {
+    const user = this.getUserById(userId);
+    if (!user || user.role === 'admin') return null;
+    return this.updateUser(userId, {
+      status: "blocked",
+      banReason: reason?.trim() || "Vi phạm quy chế sử dụng hệ thống PyEdu",
+      bannedAt: new Date().toISOString().split("T")[0]
+    });
+  }
+
+  public static unblockUser(userId: string): User | null {
+    const user = this.getUserById(userId);
+    if (!user) return null;
+    return this.updateUser(userId, {
+      status: "active",
+      banReason: undefined,
+      bannedAt: undefined
+    });
+  }
+
+  public static batchApproveUsers(userIds: string[]): boolean {
+    const users = this.getUsers();
+    let changed = false;
+    const now = new Date().toISOString().split("T")[0];
+    users.forEach(u => {
+      if (userIds.includes(u.id) && u.status === 'pending') {
+        u.status = 'active';
+        u.approvedAt = now;
+        changed = true;
+      }
+    });
+    if (changed) this.saveUsers(users);
+    return changed;
+  }
+
+  public static batchBlockUsers(userIds: string[], reason?: string): boolean {
+    const users = this.getUsers();
+    let changed = false;
+    const now = new Date().toISOString().split("T")[0];
+    users.forEach(u => {
+      if (userIds.includes(u.id) && u.role !== 'admin') {
+        u.status = 'blocked';
+        u.banReason = reason?.trim() || "Bị khóa theo danh sách vi phạm của Quản trị viên";
+        u.bannedAt = now;
+        changed = true;
+      }
+    });
+    if (changed) this.saveUsers(users);
+    return changed;
   }
 
   public static resetUserProgress(id: string): User | null {
@@ -444,10 +611,25 @@ export const ApiService = {
       try {
         const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined);
         if (suUser) {
+          if (suUser.status === 'blocked') {
+            const err: any = new Error(`Tài khoản @${suUser.username} đã bị KHÓA bởi Quản trị viên!\nLý do: ${suUser.banReason || 'Vi phạm quy định sử dụng hệ thống'}`);
+            err.code = 'USER_BLOCKED';
+            throw err;
+          }
+
+          if (suUser.status === 'pending') {
+            const err: any = new Error(`Tài khoản @${suUser.username} đang CHỜ DUYỆT từ Quản trị viên. Vui lòng liên hệ ban quản trị để kích hoạt tài khoản!`);
+            err.code = 'USER_PENDING';
+            throw err;
+          }
+
           LocalDataManager.updateUser(suUser.id, suUser);
           return suUser;
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.code === 'USER_BLOCKED' || err.code === 'USER_PENDING') {
+          throw err;
+        }
         console.warn("Supabase login notice:", err);
       }
     }
@@ -464,9 +646,24 @@ export const ApiService = {
         if (pwd && pwd !== "admin@password" && matched.password && matched.password !== pwd) {
           return null;
         }
+        return matched;
       } else if (pwd && matched.password && matched.password !== pwd) {
         return null;
       }
+
+      // Kiểm tra trạng thái tài khoản
+      if (matched.status === 'blocked') {
+        const err: any = new Error(`Tài khoản @${matched.username} đã bị KHÓA bởi Quản trị viên!\nLý do: ${matched.banReason || 'Vi phạm quy định sử dụng hệ thống'}`);
+        err.code = 'USER_BLOCKED';
+        throw err;
+      }
+
+      if (matched.status === 'pending') {
+        const err: any = new Error(`Tài khoản @${matched.username} đang CHỜ DUYỆT từ Quản trị viên. Vui lòng liên hệ ban quản trị để kích hoạt tài khoản!`);
+        err.code = 'USER_PENDING';
+        throw err;
+      }
+
       return matched;
     }
 
@@ -503,10 +700,16 @@ export const ApiService = {
     school?: string;
     password?: string;
   }): Promise<User | null> {
+    const requireApproval = LocalDataManager.getRequireApprovalSetting();
+    const initialStatus: "active" | "pending" = userData.role === 'admin' ? 'active' : (requireApproval ? 'pending' : 'active');
+
     // 1. Direct Supabase Creation
     if (SupabaseService.isAvailable()) {
       try {
-        const suUser = await SupabaseService.createUser(userData);
+        const suUser = await SupabaseService.createUser({
+          ...userData,
+          status: initialStatus
+        });
         if (suUser) {
           const users = LocalDataManager.getUsers();
           users.push(suUser);
@@ -529,6 +732,8 @@ export const ApiService = {
       grade: userData.grade || "Lớp 10 Tin",
       school: userData.school || "THPT Chuyên Tin Học",
       role: userData.role || "student",
+      status: initialStatus,
+      registeredAt: new Date().toISOString().split("T")[0],
       avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${userData.username}`,
       totalXp: userData.role === 'admin' ? 9999 : 0,
       weeklyXp: 0,
@@ -544,6 +749,49 @@ export const ApiService = {
     users.push(newUser);
     LocalDataManager.saveUsers(users);
     return newUser;
+  },
+
+  async adminApproveUser(userId: string): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.updateUserProfile(userId, { status: "active", approvedAt: new Date().toISOString().split("T")[0] });
+    }
+    return LocalDataManager.approveUser(userId);
+  },
+
+  async adminRejectUser(userId: string): Promise<boolean> {
+    return this.adminDeleteUser(userId);
+  },
+
+  async adminBlockUser(userId: string, reason?: string): Promise<User | null> {
+    const today = new Date().toISOString().split("T")[0];
+    const finalReason = reason?.trim() || "Vi phạm quy chế sử dụng hệ thống PyEdu";
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.updateUserProfile(userId, { status: "blocked", banReason: finalReason, bannedAt: today });
+    }
+    return LocalDataManager.blockUser(userId, finalReason);
+  },
+
+  async adminUnblockUser(userId: string): Promise<User | null> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.updateUserProfile(userId, { status: "active", banReason: null as any, bannedAt: null as any });
+    }
+    return LocalDataManager.unblockUser(userId);
+  },
+
+  async adminBatchApproveUsers(userIds: string[]): Promise<boolean> {
+    return LocalDataManager.batchApproveUsers(userIds);
+  },
+
+  async adminBatchBlockUsers(userIds: string[], reason?: string): Promise<boolean> {
+    return LocalDataManager.batchBlockUsers(userIds, reason);
+  },
+
+  getRequireApprovalSetting(): boolean {
+    return LocalDataManager.getRequireApprovalSetting();
+  },
+
+  setRequireApprovalSetting(enabled: boolean): void {
+    LocalDataManager.setRequireApprovalSetting(enabled);
   },
 
   async adminDeleteUser(userId: string): Promise<boolean> {

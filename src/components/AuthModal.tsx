@@ -8,7 +8,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { login, register, allUsers } = useApp();
+  const { login, register, allUsers, authErrorMessage, requireApprovalForRegistration } = useApp();
 
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
@@ -45,12 +45,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           password: password.trim() || "123456"
         });
         if (success) {
-          setSuccessMessage("Đăng ký tài khoản thành công! Đang lưu vào Supabase...");
-          setTimeout(() => {
-            onClose();
-          }, 800);
+          if (role !== 'admin' && requireApprovalForRegistration) {
+            setSuccessMessage("Đăng ký tài khoản thành công! Tài khoản đang chờ Ban Quản trị phê duyệt trước khi có thể đăng nhập.");
+            setTimeout(() => {
+              onClose();
+            }, 2500);
+          } else {
+            setSuccessMessage("Đăng ký tài khoản thành công! Đang lưu vào Supabase...");
+            setTimeout(() => {
+              onClose();
+            }, 800);
+          }
         } else {
-          setErrorMessage("Tên đăng nhập hoặc Email đã tồn tại trong CSDL.");
+          setErrorMessage(authErrorMessage || "Tên đăng nhập hoặc Email đã tồn tại trong CSDL.");
         }
       } else {
         if (!username.trim()) {
@@ -65,7 +72,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             onClose();
           }, 500);
         } else {
-          setErrorMessage("Không tìm thấy tài khoản hoặc mật khẩu không chính xác. Hãy kiểm tra lại!");
+          setErrorMessage(authErrorMessage || "Không tìm thấy tài khoản hoặc mật khẩu không chính xác. Hãy kiểm tra lại!");
         }
       }
     } catch (err: any) {
@@ -77,9 +84,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const handleQuickSwitch = async (uName: string, pwd?: string) => {
     setIsLoading(true);
-    await login(uName, pwd);
+    setErrorMessage("");
+    const ok = await login(uName, pwd);
+    if (!ok && authErrorMessage) {
+      setErrorMessage(authErrorMessage);
+    } else if (ok) {
+      onClose();
+    }
     setIsLoading(false);
-    onClose();
   };
 
   return (

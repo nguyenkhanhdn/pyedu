@@ -32,6 +32,8 @@ interface AppContextType {
   register: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher' | 'admin'; school?: string; password?: string }) => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
+  authErrorMessage: string | null;
+  clearAuthError: () => void;
 
   // Admin Management Actions
   adminCreateUser: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher' | 'admin'; school?: string; password?: string }) => Promise<boolean>;
@@ -39,6 +41,14 @@ interface AppContextType {
   adminDeleteUser: (userId: string) => Promise<boolean>;
   adminResetUserProgress: (userId: string) => Promise<boolean>;
   adminBatchAddXp: (userIds: string[], xpAmount: number) => Promise<void>;
+  adminApproveUser: (userId: string) => Promise<boolean>;
+  adminRejectUser: (userId: string) => Promise<boolean>;
+  adminBlockUser: (userId: string, reason?: string) => Promise<boolean>;
+  adminUnblockUser: (userId: string) => Promise<boolean>;
+  adminBatchApproveUsers: (userIds: string[]) => Promise<boolean>;
+  adminBatchBlockUsers: (userIds: string[], reason?: string) => Promise<boolean>;
+  requireApprovalForRegistration: boolean;
+  setRequireApprovalForRegistration: (enabled: boolean) => void;
 
   // Curriculum & Progression
   modules: typeof CURRICULUM_MODULES;
@@ -531,8 +541,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const clearAuthError = () => setAuthErrorMessage(null);
+
+  const [requireApprovalForRegistration, setRequireApprovalForRegistrationState] = useState<boolean>(() => {
+    return ApiService.getRequireApprovalSetting();
+  });
+
+  const setRequireApprovalForRegistration = (enabled: boolean) => {
+    setRequireApprovalForRegistrationState(enabled);
+    ApiService.setRequireApprovalSetting(enabled);
+  };
+
   // Login via Supabase Direct / Auth
   const login = async (usernameOrEmail: string, password?: string): Promise<boolean> => {
+    setAuthErrorMessage(null);
     try {
       const user = await ApiService.login(usernameOrEmail, password);
       if (user) {
@@ -546,9 +569,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAllUsers(users);
         return true;
       }
+      setAuthErrorMessage("Tên đăng nhập hoặc mật khẩu không chính xác.");
       return false;
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Login notice:", err);
+      setAuthErrorMessage(err?.message || "Lỗi đăng nhập.");
       return false;
     }
   };
@@ -563,18 +588,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     school?: string;
     password?: string;
   }): Promise<boolean> => {
+    setAuthErrorMessage(null);
     try {
       const user = await ApiService.register(userData);
       if (user) {
-        setCurrentUser(user);
-        await loadUserData(user);
         const users = await ApiService.fetchUsers();
         setAllUsers(users);
+        // Chỉ tự động đăng nhập khi tài khoản đã được kích hoạt/active
+        if (user.status === 'active') {
+          setCurrentUser(user);
+          await loadUserData(user);
+        }
         return true;
       }
       return false;
-    } catch (err) {
+    } catch (err: any) {
       console.warn("Register notice:", err);
+      setAuthErrorMessage(err?.message || "Lỗi đăng ký.");
       return false;
     }
   };
@@ -675,6 +705,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch (e) {
       console.error("Admin batch add XP error:", e);
+    }
+  };
+
+  const adminApproveUser = async (userId: string): Promise<boolean> => {
+    try {
+      const updated = await ApiService.adminApproveUser(userId);
+      if (updated) {
+        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active', approvedAt: updated.approvedAt } : u));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin approve user error:", e);
+      return false;
+    }
+  };
+
+  const adminRejectUser = async (userId: string): Promise<boolean> => {
+    try {
+      const success = await ApiService.adminRejectUser(userId);
+      if (success) {
+        setAllUsers(prev => prev.filter(u => u.id !== userId));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin reject user error:", e);
+      return false;
+    }
+  };
+
+  const adminBlockUser = async (userId: string, reason?: string): Promise<boolean> => {
+    try {
+      const updated = await ApiService.adminBlockUser(userId, reason);
+      if (updated) {
+        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'blocked', banReason: updated.banReason, bannedAt: updated.bannedAt } : u));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin block user error:", e);
+      return false;
+    }
+  };
+
+  const adminUnblockUser = async (userId: string): Promise<boolean> => {
+    try {
+      const updated = await ApiService.adminUnblockUser(userId);
+      if (updated) {
+        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active', banReason: undefined, bannedAt: undefined } : u));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin unblock user error:", e);
+      return false;
+    }
+  };
+
+  const adminBatchApproveUsers = async (userIds: string[]): Promise<boolean> => {
+    try {
+      const success = await ApiService.adminBatchApproveUsers(userIds);
+      if (success) {
+        const now = new Date().toISOString().split("T")[0];
+        setAllUsers(prev => prev.map(u => userIds.includes(u.id) ? { ...u, status: 'active', approvedAt: now } : u));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin batch approve error:", e);
+      return false;
+    }
+  };
+
+  const adminBatchBlockUsers = async (userIds: string[], reason?: string): Promise<boolean> => {
+    try {
+      const success = await ApiService.adminBatchBlockUsers(userIds, reason);
+      if (success) {
+        const now = new Date().toISOString().split("T")[0];
+        setAllUsers(prev => prev.map(u => userIds.includes(u.id) && u.role !== 'admin' ? { ...u, status: 'blocked', banReason: reason || "Khóa hàng loạt", bannedAt: now } : u));
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin batch block error:", e);
+      return false;
     }
   };
 
@@ -959,6 +1075,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         register,
         logout,
         updateUserProfile,
+        authErrorMessage,
+        clearAuthError,
 
         // Admin methods
         adminCreateUser,
@@ -966,6 +1084,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminDeleteUser,
         adminResetUserProgress,
         adminBatchAddXp,
+        adminApproveUser,
+        adminRejectUser,
+        adminBlockUser,
+        adminUnblockUser,
+        adminBatchApproveUsers,
+        adminBatchBlockUsers,
+        requireApprovalForRegistration,
+        setRequireApprovalForRegistration,
 
         modules: CURRICULUM_MODULES,
         selectedLesson,

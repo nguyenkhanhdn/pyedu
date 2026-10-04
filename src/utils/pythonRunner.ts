@@ -113,13 +113,20 @@ export class PythonRunner {
         py.setStdout({ batched: (str: string) => { stdoutBuffer += str + "\n"; } });
         py.setStderr({ batched: (str: string) => { stderrBuffer += str + "\n"; } });
         py.setStdin({
-          stdin: () => (inputIdx < inputLines.length ? inputLines[inputIdx++] : ""),
+          // Hết dữ liệu → undefined (EOF) giống Python thật: input() báo EOFError, sys.stdin.read() kết thúc
+          stdin: () => (inputIdx < inputLines.length ? inputLines[inputIdx++] : undefined),
         });
 
         // Mỗi lần chạy dùng một không gian biến mới để các lần chạy / test không ảnh hưởng nhau
         globals = py.globals.get("dict")();
         globals.set("__name__", "__main__");   // để `if __name__ == "__main__":` hoạt động như Python thật
-        await py.runPythonAsync(code, { globals });
+        try {
+          await py.runPythonAsync(code, { globals });
+        } finally {
+          // Pyodide chỉ trả về dòng đã kết thúc bằng "\n": thêm một xuống dòng để lấy nốt phần
+          // chưa xuống dòng (print(..., end="")) và không để nó dồn sang lần chạy sau (đã cắt ở cuối).
+          try { py.runPython("import sys\nsys.stdout.write('\\n')\nsys.stdout.flush()\nsys.stderr.flush()"); } catch {}
+        }
         const executionTimeMs = Math.round(performance.now() - startTime);
 
         return {

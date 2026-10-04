@@ -26,6 +26,7 @@ import {
   addNotification,
   markNotificationRead,
   clearNotifications,
+  deleteUser,
   getDatabase
 } from "./db";
 
@@ -163,6 +164,36 @@ app.put("/api/user/:id/profile", async (req, res) => {
   } catch (error: any) {
     console.error("Update user error:", error);
     res.status(500).json({ error: "Lỗi cập nhật hồ sơ", details: error.message });
+  }
+});
+
+// Delete user endpoint (supports user ID, username, or email)
+app.delete(["/api/user/:id", "/api/auth/users/:id", "/api/admin/users/:id"], async (req, res) => {
+  try {
+    const rawId = req.params.id;
+    const identifier = decodeURIComponent(rawId);
+    const success = await deleteUser(identifier);
+    res.json({ success, deleted: identifier });
+  } catch (error: any) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: "Lỗi xóa người dùng", details: error.message });
+  }
+});
+
+// Batch delete users
+app.post("/api/admin/users/batch-delete", async (req, res) => {
+  try {
+    const { identifiers } = req.body;
+    if (!Array.isArray(identifiers)) {
+      return res.status(400).json({ error: "Danh sách người dùng không hợp lệ" });
+    }
+    for (const id of identifiers) {
+      await deleteUser(String(id));
+    }
+    res.json({ success: true, count: identifiers.length });
+  } catch (error: any) {
+    console.error("Batch delete users error:", error);
+    res.status(500).json({ error: "Lỗi xóa hàng loạt", details: error.message });
   }
 });
 

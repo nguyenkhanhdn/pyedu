@@ -1,29 +1,38 @@
 import React from "react";
 import { BarChart3, TrendingUp, Users, Award, BookOpen, Flame, GraduationCap, School } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import { ApiService } from "../../services/apiClient";
 
 export const AdminStatsView: React.FC = () => {
   const { allUsers } = useApp();
 
-  const totalUsers = allUsers.length;
-  const studentUsers = allUsers.filter((u) => u.role === "student");
-  const teacherUsers = allUsers.filter((u) => u.role === "teacher");
-  const adminUsers = allUsers.filter((u) => u.role === "admin");
+  const activeUsersList = allUsers.filter(
+    (u) =>
+      u.role !== "deleted" &&
+      u.fullName !== "[Tài khoản đã xóa]" &&
+      u.fullName !== "[Đã xóa]" &&
+      !ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName)
+  );
 
-  const totalXp = allUsers.reduce((sum, u) => sum + (u.totalXp || 0), 0);
-  const totalCompletedLessons = allUsers.reduce((sum, u) => sum + (u.completedLessons?.length || 0), 0);
+  const totalUsers = activeUsersList.length;
+  const studentUsers = activeUsersList.filter((u) => u.role === "student");
+  const teacherUsers = activeUsersList.filter((u) => u.role === "teacher");
+  const adminUsers = activeUsersList.filter((u) => u.role === "admin");
+
+  const totalXp = activeUsersList.reduce((sum, u) => sum + (u.totalXp || 0), 0);
+  const totalCompletedLessons = activeUsersList.reduce((sum, u) => sum + (u.completedLessons?.length || 0), 0);
   const avgXp = totalUsers > 0 ? Math.round(totalXp / totalUsers) : 0;
-  const maxStreak = allUsers.reduce((max, u) => Math.max(max, u.streakDays || 0), 0);
+  const maxStreak = activeUsersList.reduce((max, u) => Math.max(max, u.streakDays || 0), 0);
 
   // Group by grade
-  const gradeDistribution = allUsers.reduce((acc, u) => {
+  const gradeDistribution = activeUsersList.reduce((acc, u) => {
     const gr = u.grade || "Khác";
     acc[gr] = (acc[gr] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   // Top 5 XP Leaders
-  const topUsers = [...allUsers].sort((a, b) => b.totalXp - a.totalXp).slice(0, 5);
+  const topUsers = [...activeUsersList].sort((a, b) => b.totalXp - a.totalXp).slice(0, 5);
 
   return (
     <div className="space-y-6">

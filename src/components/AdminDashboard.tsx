@@ -43,6 +43,7 @@ import {
   X
 } from "lucide-react";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { ApiService } from "../services/apiClient";
 import { AdminStatsView } from "./admin/AdminStatsView";
 import { AdminCurriculumView } from "./admin/AdminCurriculumView";
 import { AdminAlgorithmsView } from "./admin/AdminAlgorithmsView";
@@ -58,6 +59,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
     adminCreateUser,
     adminUpdateUser,
     adminDeleteUser,
+    adminBatchDeleteUsers,
     adminResetUserProgress,
     adminBatchAddXp,
     adminApproveUser,
@@ -123,15 +125,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
 
   // Metrics calculations
   const stats = useMemo(() => {
-    const total = allUsers.length;
-    const students = allUsers.filter((u) => u.role === "student").length;
-    const teachers = allUsers.filter((u) => u.role === "teacher").length;
-    const admins = allUsers.filter((u) => u.role === "admin").length;
-    const pending = allUsers.filter((u) => u.status === "pending").length;
-    const blocked = allUsers.filter((u) => u.status === "blocked").length;
-    const active = allUsers.filter((u) => u.status === "active" || !u.status).length;
-    const totalXp = allUsers.reduce((sum, u) => sum + (u.totalXp || 0), 0);
-    const totalCompletedLessons = allUsers.reduce((sum, u) => sum + (u.completedLessons?.length || 0), 0);
+    const validUsers = allUsers.filter((u) => 
+      u.role !== "deleted" && 
+      u.fullName !== "[Tài khoản đã xóa]" && 
+      u.fullName !== "[Đã xóa]" &&
+      !(u.username && u.username.startsWith("deleted_")) &&
+      !ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName)
+    );
+    const total = validUsers.length;
+    const students = validUsers.filter((u) => u.role === "student").length;
+    const teachers = validUsers.filter((u) => u.role === "teacher").length;
+    const admins = validUsers.filter((u) => u.role === "admin").length;
+    const pending = validUsers.filter((u) => u.status === "pending").length;
+    const blocked = validUsers.filter((u) => u.status === "blocked").length;
+    const active = validUsers.filter((u) => u.status === "active" || !u.status).length;
+    const totalXp = validUsers.reduce((sum, u) => sum + (u.totalXp || 0), 0);
+    const totalCompletedLessons = validUsers.reduce((sum, u) => sum + (u.completedLessons?.length || 0), 0);
 
     return {
       total,
@@ -150,6 +159,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
   const filteredUsers = useMemo(() => {
     return allUsers
       .filter((u) => {
+        if (
+          u.role === "deleted" ||
+          u.fullName === "[Tài khoản đã xóa]" ||
+          u.fullName === "[Đã xóa]" ||
+          (u.username && u.username.startsWith("deleted_")) ||
+          ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName)
+        ) {
+          return false;
+        }
+
         const query = searchQuery.toLowerCase().trim();
         const matchesQuery =
           !query ||
@@ -306,11 +325,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
   const handleConfirmReject = async () => {
     if (!userToReject) return;
     setIsProcessing(true);
-    const ok = await adminRejectUser(userToReject.id);
+    const targetId = userToReject.id;
+    const targetUsername = userToReject.username;
+    const ok = await adminRejectUser(targetId, targetUsername);
     setIsProcessing(false);
     if (ok) {
-      showAlert("success", `Đã từ chối và hủy đăng ký tài khoản @${userToReject.username}.`);
-      setSelectedUserIds((prev) => prev.filter((id) => id !== userToReject.id));
+      showAlert("success", `Đã từ chối và hủy đăng ký tài khoản @${targetUsername}.`);
+      setSelectedUserIds((prev) => prev.filter((id) => id !== targetId));
       setUserToReject(null);
     } else {
       showAlert("error", "Không thể từ chối tài khoản. Vui lòng thử lại.");
@@ -418,7 +439,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
     }
 
     setIsProcessing(true);
-    const ok = await adminDeleteUser(userToDelete.id);
+    const ok = await adminDeleteUser(userToDelete.id, userToDelete.username, userToDelete.email, userToDelete.fullName);
     setIsProcessing(false);
 
     if (ok) {
@@ -427,6 +448,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
       setUserToDelete(null);
     } else {
       showAlert("error", "Không thể xóa người dùng. Vui lòng thử lại.");
+    }
+  };
+
+  // Batch Delete Selected Users
+  const handleBatchDeleteSelected = async () => {
+    const validUsers = selectedUserIds
+      .map(id => allUsers.find(u => u.id === id))
+      .filter((u): u is User => Boolean(u && u.role !== "admin" && u.id !== currentUser?.id));
+
+    if (validUsers.length === 0) {
+      showAlert("error", "Không thể xóa tài khoản Admin hoặc không có tài khoản hợp lệ để xóa.");
+      return;
+    }
+
+    const validIds = validUsers.map(u => u.id);
+    setIsProcessing(true);
+    const ok = await adminBatchDeleteUsers(validIds);
+    setIsProcessing(false);
+
+    if (ok) {
+      showAlert("success", `Đã xóa vĩnh viễn ${validIds.length} tài khoản đã chọn khỏi hệ thống!`);
+      setSelectedUserIds([]);
+    } else {
+      showAlert("error", "Không thể xóa người dùng hàng loạt. Vui lòng thử lại.");
     }
   };
 
@@ -994,6 +1039,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                       >
                         <Ban className="h-3.5 w-3.5" />
                         <span>Khóa các mục đã chọn</span>
+                      </button>
+                    )}
+
+                    {/* Batch Delete button for non-admin accounts */}
+                    {selectedUserIds.some((id) => {
+                      const u = allUsers.find((user) => user.id === id);
+                      return u && u.role !== "admin" && u.id !== currentUser?.id;
+                    }) && (
+                      <button
+                        onClick={handleBatchDeleteSelected}
+                        disabled={isProcessing}
+                        className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                        title="Xóa vĩnh viễn các tài khoản đã chọn"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Xóa các mục đã chọn</span>
                       </button>
                     )}
 

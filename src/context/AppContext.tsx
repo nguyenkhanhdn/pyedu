@@ -38,11 +38,12 @@ interface AppContextType {
   // Admin Management Actions
   adminCreateUser: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher' | 'admin'; school?: string; password?: string }) => Promise<boolean>;
   adminUpdateUser: (userId: string, updates: Partial<User> & { password?: string }) => Promise<boolean>;
-  adminDeleteUser: (userId: string) => Promise<boolean>;
+  adminDeleteUser: (userId: string, username?: string, email?: string, fullName?: string) => Promise<boolean>;
+  adminBatchDeleteUsers: (userIds: string[]) => Promise<boolean>;
   adminResetUserProgress: (userId: string) => Promise<boolean>;
   adminBatchAddXp: (userIds: string[], xpAmount: number) => Promise<void>;
   adminApproveUser: (userId: string) => Promise<boolean>;
-  adminRejectUser: (userId: string) => Promise<boolean>;
+  adminRejectUser: (userId: string, username?: string, email?: string, fullName?: string) => Promise<boolean>;
   adminBlockUser: (userId: string, reason?: string) => Promise<boolean>;
   adminUnblockUser: (userId: string) => Promise<boolean>;
   adminBatchApproveUsers: (userIds: string[]) => Promise<boolean>;
@@ -650,16 +651,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const adminDeleteUser = async (userId: string): Promise<boolean> => {
+  const adminDeleteUser = async (userId: string, username?: string, email?: string, fullName?: string): Promise<boolean> => {
     try {
-      const success = await ApiService.adminDeleteUser(userId);
+      const success = await ApiService.adminDeleteUser(userId, username, email, fullName);
       if (success) {
-        setAllUsers(prev => prev.filter(u => u.id !== userId));
+        setAllUsers(prev => prev.filter(u => {
+          if (ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName)) return false;
+          if (userId && (u.id === userId || u.username?.toLowerCase() === userId.toLowerCase() || (u.email && u.email.toLowerCase() === userId.toLowerCase()))) return false;
+          if (username && (u.username?.toLowerCase() === username.toLowerCase() || u.id === username)) return false;
+          if (email && u.email && u.email.toLowerCase() === email.toLowerCase()) return false;
+          if (fullName && u.fullName && u.fullName.toLowerCase() === fullName.toLowerCase()) return false;
+          return true;
+        }));
+        if (currentUser && (
+          currentUser.id === userId ||
+          currentUser.username?.toLowerCase() === userId.toLowerCase() ||
+          (username && currentUser.username?.toLowerCase() === username.toLowerCase()) ||
+          (email && currentUser.email?.toLowerCase() === email.toLowerCase()) ||
+          (fullName && currentUser.fullName?.toLowerCase() === fullName.toLowerCase()) ||
+          ApiService.isUserDeleted(currentUser.id, currentUser.username, currentUser.email, currentUser.fullName)
+        )) {
+          logout();
+        }
         return true;
       }
       return false;
     } catch (e) {
       console.error("Admin delete user error:", e);
+      return false;
+    }
+  };
+
+  const adminBatchDeleteUsers = async (userIds: string[]): Promise<boolean> => {
+    try {
+      const userObjects = allUsers.filter(u => userIds.includes(u.id));
+      const success = await ApiService.adminBatchDeleteUsers(userIds, userObjects);
+      if (success) {
+        setAllUsers(prev => prev.filter(u => 
+          !userIds.includes(u.id) && !ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName)
+        ));
+        if (currentUser && (
+          userIds.includes(currentUser.id) ||
+          ApiService.isUserDeleted(currentUser.id, currentUser.username, currentUser.email, currentUser.fullName)
+        )) {
+          logout();
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Admin batch delete error:", e);
       return false;
     }
   };
@@ -722,11 +763,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const adminRejectUser = async (userId: string): Promise<boolean> => {
+  const adminRejectUser = async (userId: string, username?: string, email?: string, fullName?: string): Promise<boolean> => {
     try {
-      const success = await ApiService.adminRejectUser(userId);
+      const success = await ApiService.adminDeleteUser(userId, username, email, fullName);
       if (success) {
-        setAllUsers(prev => prev.filter(u => u.id !== userId));
+        setAllUsers(prev => prev.filter(u => {
+          if (ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName)) return false;
+          if (userId && (u.id === userId || u.username?.toLowerCase() === userId.toLowerCase())) return false;
+          if (username && (u.username?.toLowerCase() === username.toLowerCase() || u.id === username)) return false;
+          if (email && u.email && u.email.toLowerCase() === email.toLowerCase()) return false;
+          if (fullName && u.fullName && u.fullName.toLowerCase() === fullName.toLowerCase()) return false;
+          return true;
+        }));
         return true;
       }
       return false;
@@ -948,7 +996,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Compute dynamic leaderboards from allUsers
-  const userListForLeaderboard = allUsers.length > 0 ? allUsers : (currentUser ? [currentUser] : []);
+  const userListForLeaderboard = (allUsers.length > 0 ? allUsers : (currentUser ? [currentUser] : [])).filter(
+    u => !ApiService.isUserDeleted(u.id, u.username, u.email, u.fullName) && u.role !== 'deleted' && u.fullName !== '[Tài khoản đã xóa]'
+  );
 
   // Sort by Total XP
   const leaderboard: LeaderboardEntry[] = [...userListForLeaderboard]
@@ -1082,6 +1132,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminCreateUser,
         adminUpdateUser,
         adminDeleteUser,
+        adminBatchDeleteUsers,
         adminResetUserProgress,
         adminBatchAddXp,
         adminApproveUser,

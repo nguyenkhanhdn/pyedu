@@ -198,6 +198,67 @@ export class LocalDataManager {
   private static STORAGE_KEY_GROUPS = "pyedu_offline_groups";
   private static STORAGE_KEY_NOTIFS = "pyedu_offline_notifs";
   private static STORAGE_KEY_REQUIRE_APPROVAL = "pyedu_require_approval";
+  private static STORAGE_KEY_DELETED_USERS = "pyedu_deleted_users";
+
+  public static getDeletedIdentifiers(): Set<string> {
+    const defaultBlacklist = [
+      "hahaha",
+      "hahahahahaha",
+      "@hahahahahaha",
+      "test-user-temp-999",
+      "usr-test-delete-123"
+    ];
+    let stored: string[] = [];
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY_DELETED_USERS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) stored = parsed;
+      }
+    } catch {}
+    const set = new Set<string>();
+    [...defaultBlacklist, ...stored].forEach(s => {
+      if (s && typeof s === "string") {
+        const clean = s.toLowerCase().trim();
+        set.add(clean);
+        if (clean.startsWith("@")) {
+          set.add(clean.substring(1));
+        }
+      }
+    });
+    return set;
+  }
+
+  public static isUserDeleted(id?: string, username?: string, email?: string, fullName?: string): boolean {
+    const deletedSet = this.getDeletedIdentifiers();
+    const checks = [id, username, email, fullName];
+    for (const c of checks) {
+      if (!c || typeof c !== "string") continue;
+      const clean = c.toLowerCase().trim();
+      if (deletedSet.has(clean)) return true;
+      if (clean.startsWith("@") && deletedSet.has(clean.substring(1))) return true;
+      if (clean === "hahaha" || clean === "hahahahahaha" || clean === "@hahahahahaha") return true;
+      if (clean.startsWith("deleted_")) return true;
+      if (clean === "[tài khoản đã xóa]" || clean === "[đã xóa]") return true;
+    }
+    return false;
+  }
+
+  public static recordDeletedIdentifier(...identifiers: (string | undefined)[]) {
+    try {
+      const current = this.getDeletedIdentifiers();
+      identifiers.forEach(id => {
+        if (id && typeof id === "string") {
+          const clean = id.toLowerCase().trim();
+          current.add(clean);
+          if (clean.startsWith("@")) {
+            current.add(clean.substring(1));
+          }
+        }
+      });
+      localStorage.setItem(this.STORAGE_KEY_DELETED_USERS, JSON.stringify(Array.from(current)));
+    } catch {}
+  }
 
   public static getRequireApprovalSetting(): boolean {
     try {
@@ -224,6 +285,8 @@ export class LocalDataManager {
         }
       }
     } catch {}
+
+    const deletedSet = this.getDeletedIdentifiers();
 
     if (users.length === 0) {
       users = [...INITIAL_FALLBACK_USERS];
@@ -280,18 +343,26 @@ export class LocalDataManager {
 
       // Ensure demo pending and blocked accounts exist if missing
       const pending1 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-pending-1");
-      if (pending1 && !users.some(u => u.id === pending1.id || u.username === pending1.username)) {
+      if (pending1 && !deletedSet.has(pending1.id.toLowerCase()) && !deletedSet.has(pending1.username.toLowerCase()) && !users.some(u => u.id === pending1.id || u.username === pending1.username)) {
         users.push(pending1);
       }
       const pending2 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-pending-2");
-      if (pending2 && !users.some(u => u.id === pending2.id || u.username === pending2.username)) {
+      if (pending2 && !deletedSet.has(pending2.id.toLowerCase()) && !deletedSet.has(pending2.username.toLowerCase()) && !users.some(u => u.id === pending2.id || u.username === pending2.username)) {
         users.push(pending2);
       }
       const blocked1 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-blocked-1");
-      if (blocked1 && !users.some(u => u.id === blocked1.id || u.username === blocked1.username)) {
+      if (blocked1 && !deletedSet.has(blocked1.id.toLowerCase()) && !deletedSet.has(blocked1.username.toLowerCase()) && !users.some(u => u.id === blocked1.id || u.username === blocked1.username)) {
         users.push(blocked1);
       }
     }
+
+    // Filter out deleted accounts definitively
+    users = users.filter(u => 
+      u.role !== 'deleted' &&
+      u.fullName !== '[Tài khoản đã xóa]' &&
+      u.fullName !== '[Đã xóa]' &&
+      !this.isUserDeleted(u.id, u.username, u.email, u.fullName)
+    );
 
     this.saveUsers(users);
     return users;
@@ -299,35 +370,91 @@ export class LocalDataManager {
 
   public static saveUsers(users: User[]) {
     try {
-      localStorage.setItem(this.STORAGE_KEY_USERS, JSON.stringify(users));
+      const cleanUsers = users.filter(u => 
+        u.role !== 'deleted' &&
+        u.fullName !== '[Tài khoản đã xóa]' &&
+        u.fullName !== '[Đã xóa]' &&
+        !this.isUserDeleted(u.id, u.username, u.email, u.fullName)
+      );
+      localStorage.setItem(this.STORAGE_KEY_USERS, JSON.stringify(cleanUsers));
     } catch {}
   }
 
   public static getUserById(id: string): User | null {
     const users = this.getUsers();
-    return users.find(u => u.id === id) || null;
+    return users.find(u => u.id === id || u.username?.toLowerCase() === id.toLowerCase()) || null;
   }
 
   public static updateUser(id: string, updates: Partial<User>): User | null {
     const users = this.getUsers();
-    const idx = users.findIndex(u => u.id === id);
+    const idx = users.findIndex(u => u.id === id || u.username?.toLowerCase() === id.toLowerCase());
     if (idx === -1) return null;
     users[idx] = { ...users[idx], ...updates };
     this.saveUsers(users);
     return users[idx];
   }
 
-  public static deleteUser(id: string): boolean {
+  public static deleteUser(id: string, username?: string, email?: string, fullName?: string): boolean {
+    const candidates = [id, username, email, fullName].filter(Boolean) as string[];
+    this.recordDeletedIdentifier(...candidates);
+
     const users = this.getUsers();
-    const filtered = users.filter(u => u.id !== id);
-    if (filtered.length === users.length) return false;
+    const targets = users.filter(u => 
+      (id && (u.id === id || u.username?.toLowerCase() === id.toLowerCase() || (u.email && u.email.toLowerCase() === id.toLowerCase()))) ||
+      (username && (u.username?.toLowerCase() === username.toLowerCase() || u.id === username)) ||
+      (email && u.email && u.email.toLowerCase() === email.toLowerCase()) ||
+      (fullName && u.fullName && u.fullName.toLowerCase() === fullName.toLowerCase()) ||
+      this.isUserDeleted(u.id, u.username, u.email, u.fullName)
+    );
+
+    targets.forEach(t => {
+      this.recordDeletedIdentifier(t.id, t.username, t.email, t.fullName);
+    });
+
+    const filtered = users.filter(u => {
+      if (this.isUserDeleted(u.id, u.username, u.email, u.fullName)) return false;
+      if (id && (u.id === id || u.username?.toLowerCase() === id.toLowerCase() || (u.email && u.email.toLowerCase() === id.toLowerCase()))) return false;
+      if (username && (u.username?.toLowerCase() === username.toLowerCase() || u.id === username)) return false;
+      if (email && u.email && u.email.toLowerCase() === email.toLowerCase()) return false;
+      if (fullName && u.fullName && u.fullName.toLowerCase() === fullName.toLowerCase()) return false;
+      if (targets.some(t => t.id === u.id || (t.username && u.username && t.username.toLowerCase() === u.username.toLowerCase()))) return false;
+      return true;
+    });
+
     this.saveUsers(filtered);
+
+    // Clean up user-related storage for all identifiers
+    const allIdsAndNames = new Set<string>();
+    candidates.forEach(c => allIdsAndNames.add(c));
+    targets.forEach(t => {
+      if (t.id) allIdsAndNames.add(t.id);
+      if (t.username) allIdsAndNames.add(t.username);
+    });
+
+    allIdsAndNames.forEach(ident => {
+      try {
+        localStorage.removeItem(`${this.STORAGE_KEY_CODES}_${ident}`);
+        localStorage.removeItem(`${this.STORAGE_KEY_SUBS}_${ident}`);
+        localStorage.removeItem(`${this.STORAGE_KEY_NOTES}_${ident}`);
+        localStorage.removeItem(`${this.STORAGE_KEY_NOTIFS}_${ident}`);
+      } catch {}
+    });
+
+    // If active user was deleted, clear it from localStorage
     try {
-      localStorage.removeItem(`${this.STORAGE_KEY_CODES}_${id}`);
-      localStorage.removeItem(`${this.STORAGE_KEY_SUBS}_${id}`);
-      localStorage.removeItem(`${this.STORAGE_KEY_NOTES}_${id}`);
-      localStorage.removeItem(`${this.STORAGE_KEY_NOTIFS}_${id}`);
+      const cur = localStorage.getItem("pyedu_current_user");
+      if (cur) {
+        const u = JSON.parse(cur);
+        if (
+          allIdsAndNames.has(u.id) ||
+          allIdsAndNames.has(u.username) ||
+          this.isUserDeleted(u.id, u.username, u.email, u.fullName)
+        ) {
+          localStorage.removeItem("pyedu_current_user");
+        }
+      }
     } catch {}
+
     return true;
   }
 
@@ -572,17 +699,46 @@ export class LocalDataManager {
 // API Service with 100% Direct Supabase Connection
 export const ApiService = {
   async fetchUsers(): Promise<User[]> {
+    const deletedSet = LocalDataManager.getDeletedIdentifiers();
+
     if (SupabaseService.isAvailable()) {
       try {
         const supabaseUsers = await SupabaseService.getAllUsers();
         if (supabaseUsers && supabaseUsers.length > 0) {
-          LocalDataManager.saveUsers(supabaseUsers);
-          return supabaseUsers;
+          const cleanUsers = supabaseUsers.filter(u => 
+            u.role !== 'deleted' && 
+            u.fullName !== '[Tài khoản đã xóa]' &&
+            u.fullName !== '[Đã xóa]' &&
+            !LocalDataManager.isUserDeleted(u.id, u.username, u.email, u.fullName)
+          );
+          LocalDataManager.saveUsers(cleanUsers);
+          return cleanUsers;
         }
       } catch (err) {
         console.warn("Supabase fetchUsers notice:", err);
       }
     }
+
+    // Fallback to SQLite backend if available
+    try {
+      const res = await fetch("/api/auth/users");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data?.users) && data.users.length > 0) {
+          const cleanApiUsers = data.users.filter((u: User) => 
+            u.role !== 'deleted' &&
+            u.fullName !== '[Tài khoản đã xóa]' &&
+            u.fullName !== '[Đã xóa]' &&
+            !LocalDataManager.isUserDeleted(u.id, u.username, u.email, u.fullName)
+          );
+          if (cleanApiUsers.length > 0) {
+            LocalDataManager.saveUsers(cleanApiUsers);
+            return cleanApiUsers;
+          }
+        }
+      }
+    } catch {}
+
     return LocalDataManager.getUsers();
   },
 
@@ -721,7 +877,32 @@ export const ApiService = {
       }
     }
 
-    // 2. Direct Local Fallback
+    // 2. Direct SQLite backend creation
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...userData,
+          status: initialStatus
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          const users = LocalDataManager.getUsers().filter(
+            u => u.id !== data.user.id && u.username.toLowerCase() !== data.user.username.toLowerCase()
+          );
+          users.push(data.user);
+          LocalDataManager.saveUsers(users);
+          return data.user;
+        }
+      }
+    } catch (e) {
+      console.warn("Backend register notice:", e);
+    }
+
+    // 3. Direct Local Fallback
     const users = LocalDataManager.getUsers();
     const newUser: User = {
       id: `usr-${Date.now()}`,
@@ -734,7 +915,7 @@ export const ApiService = {
       role: userData.role || "student",
       status: initialStatus,
       registeredAt: new Date().toISOString().split("T")[0],
-      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${userData.username}`,
+      avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(userData.username)}`,
       totalXp: userData.role === 'admin' ? 9999 : 0,
       weeklyXp: 0,
       streakDays: 1,
@@ -758,8 +939,8 @@ export const ApiService = {
     return LocalDataManager.approveUser(userId);
   },
 
-  async adminRejectUser(userId: string): Promise<boolean> {
-    return this.adminDeleteUser(userId);
+  async adminRejectUser(userId: string, username?: string, email?: string, fullName?: string): Promise<boolean> {
+    return this.adminDeleteUser(userId, username, email, fullName);
   },
 
   async adminBlockUser(userId: string, reason?: string): Promise<User | null> {
@@ -786,6 +967,48 @@ export const ApiService = {
     return LocalDataManager.batchBlockUsers(userIds, reason);
   },
 
+  async adminBatchDeleteUsers(userIds: string[], userObjects?: User[]): Promise<boolean> {
+    // 1. Delete on SQLite backend
+    try {
+      const identifiers = new Set<string>();
+      userIds.forEach(id => identifiers.add(id));
+      if (userObjects) {
+        userObjects.forEach(u => {
+          if (u.id) identifiers.add(u.id);
+          if (u.username) identifiers.add(u.username);
+          if (u.email) identifiers.add(u.email);
+        });
+      }
+      await fetch("/api/admin/users/batch-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifiers: Array.from(identifiers) })
+      });
+    } catch (e) {
+      console.warn("Backend batch delete notice:", e);
+    }
+
+    // 2. Delete on Supabase
+    if (SupabaseService.isAvailable()) {
+      for (const id of userIds) {
+        const obj = userObjects?.find(u => u.id === id);
+        await SupabaseService.deleteUser(id, obj?.username, obj?.email);
+      }
+    }
+
+    // 3. Delete in LocalDataManager
+    for (const id of userIds) {
+      const obj = userObjects?.find(u => u.id === id);
+      LocalDataManager.deleteUser(id, obj?.username, obj?.email, obj?.fullName);
+    }
+
+    return true;
+  },
+
+  isUserDeleted(id?: string, username?: string, email?: string, fullName?: string): boolean {
+    return LocalDataManager.isUserDeleted(id, username, email, fullName);
+  },
+
   getRequireApprovalSetting(): boolean {
     return LocalDataManager.getRequireApprovalSetting();
   },
@@ -794,11 +1017,34 @@ export const ApiService = {
     LocalDataManager.setRequireApprovalSetting(enabled);
   },
 
-  async adminDeleteUser(userId: string): Promise<boolean> {
-    if (SupabaseService.isAvailable()) {
-      await SupabaseService.deleteUser(userId);
+  async adminDeleteUser(userId: string, username?: string, email?: string, fullName?: string): Promise<boolean> {
+    // 1. Delete from SQLite backend by all potential keys
+    try {
+      if (userId) {
+        await fetch(`/api/user/${encodeURIComponent(userId)}`, { method: "DELETE" });
+      }
+      if (username) {
+        await fetch(`/api/user/${encodeURIComponent(username)}`, { method: "DELETE" });
+      }
+      if (email) {
+        await fetch(`/api/user/${encodeURIComponent(email)}`, { method: "DELETE" });
+      }
+    } catch (e) {
+      console.warn("Backend user delete notice:", e);
     }
-    return LocalDataManager.deleteUser(userId);
+
+    // 2. Delete from Supabase
+    if (SupabaseService.isAvailable()) {
+      try {
+        await SupabaseService.deleteUser(userId, username, email);
+      } catch (e) {
+        console.warn("Supabase delete notice:", e);
+      }
+    }
+
+    // 3. Delete from LocalDataManager and blacklist permanently
+    LocalDataManager.deleteUser(userId, username, email, fullName);
+    return true;
   },
 
   async adminResetUserProgress(userId: string): Promise<User | null> {

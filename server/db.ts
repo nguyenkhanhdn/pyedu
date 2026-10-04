@@ -615,6 +615,70 @@ export async function updateUser(id: string, updates: any) {
   return getUserById(id);
 }
 
+export async function deleteUser(identifier: string): Promise<boolean> {
+  const db = await getDatabase();
+  try {
+    const clean = identifier.trim();
+    if (!clean) return false;
+
+    // Find all matching user records by id, username, email, or full_name
+    const stmt = db.prepare(
+      `SELECT id, username, email FROM users WHERE id = ? OR LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) OR LOWER(full_name) = LOWER(?)`
+    );
+    stmt.bind([clean, clean, clean, clean]);
+    const matchedIds: string[] = [];
+    const matchedUsernames: string[] = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      if (row.id) matchedIds.push(row.id as string);
+      if (row.username) matchedUsernames.push(row.username as string);
+    }
+    stmt.free();
+
+    const idsToDelete = Array.from(new Set([clean, ...matchedIds]));
+    const usernamesToDelete = Array.from(new Set(matchedUsernames));
+
+    for (const uid of idsToDelete) {
+      db.run(`DELETE FROM user_badges WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM user_progress WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM user_codes WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM submissions WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM personal_notes WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM group_members WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM group_messages WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM message_likes WHERE user_id = ?`, [uid]);
+      db.run(`DELETE FROM notifications WHERE user_id = ?`, [uid]);
+    }
+
+    for (const uName of usernamesToDelete) {
+      db.run(`DELETE FROM user_badges WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM user_progress WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM user_codes WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM submissions WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM personal_notes WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM group_members WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM group_messages WHERE user_id = ? OR LOWER(user_name) = LOWER(?)`, [uName, uName]);
+      db.run(`DELETE FROM message_likes WHERE user_id = ?`, [uName]);
+      db.run(`DELETE FROM notifications WHERE user_id = ?`, [uName]);
+    }
+
+    db.run(
+      `DELETE FROM users WHERE id = ? OR LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) OR LOWER(full_name) = LOWER(?)`,
+      [clean, clean, clean, clean]
+    );
+
+    for (const uid of matchedIds) {
+      db.run(`DELETE FROM users WHERE id = ?`, [uid]);
+    }
+
+    saveDatabase();
+    return true;
+  } catch (error) {
+    console.error("Error deleting user from SQLite:", error);
+    return false;
+  }
+}
+
 export async function getAllUsers() {
   const db = await getDatabase();
   const res = db.exec(`SELECT * FROM users ORDER BY total_xp DESC`);

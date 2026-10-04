@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
+import { ApiService } from "../services/apiClient";
 import { Trophy, Medal, Flame, Award, Users, Search, Sparkles, Star } from "lucide-react";
 
 export const LeaderboardView: React.FC = () => {
@@ -8,7 +9,9 @@ export const LeaderboardView: React.FC = () => {
   const [filterGrade, setFilterGrade] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const currentList = boardType === 'weekly' ? weeklyLeaderboard : leaderboard;
+  const currentList = (boardType === 'weekly' ? weeklyLeaderboard : leaderboard).filter(
+    item => !ApiService.isUserDeleted(item.userId, item.username, undefined, item.fullName)
+  );
 
   const filteredList = currentList.filter(item => {
     const matchGrade = filterGrade === 'all' || item.grade.toLowerCase().includes(filterGrade.toLowerCase());

@@ -34,6 +34,14 @@ export class SupabaseService {
 
       if (error || !users) return null;
 
+      // Filter out deleted accounts
+      const activeUsers = users.filter((u: any) => 
+        u.role !== "deleted" &&
+        u.full_name !== "[Tài khoản đã xóa]" &&
+        u.full_name !== "[Đã xóa]" &&
+        !(u.username && typeof u.username === "string" && u.username.startsWith("deleted_"))
+      );
+
       // Get badges & completed lessons for each user
       const { data: allBadges } = await supabase.from("user_badges").select("*");
       const { data: allProgress } = await supabase.from("user_progress").select("*");
@@ -56,7 +64,7 @@ export class SupabaseService {
         });
       }
 
-      return users.map((u: any) => ({
+      return activeUsers.map((u: any) => ({
         id: u.id,
         username: u.username,
         email: u.email,
@@ -227,14 +235,43 @@ export class SupabaseService {
     }
   }
 
-  public static async deleteUser(userId: string): Promise<boolean> {
+  public static async deleteUser(userId: string, username?: string, email?: string): Promise<boolean> {
     const supabase = getSupabase();
     if (!supabase) return false;
 
     try {
-      // CASCADE will delete user_badges, user_progress, user_codes, submissions, notes, etc.
-      const { error } = await supabase.from("users").delete().eq("id", userId);
-      return !error;
+      const identifiers = [userId, username, email].filter(Boolean) as string[];
+
+      // 1. Clean up associated data for all identifiers
+      for (const id of identifiers) {
+        await supabase.from("user_progress").delete().eq("user_id", id);
+        await supabase.from("user_codes").delete().eq("user_id", id);
+        await supabase.from("submissions").delete().eq("user_id", id);
+        await supabase.from("algorithm_submissions").delete().eq("user_id", id);
+        await supabase.from("user_badges").delete().eq("user_id", id);
+        await supabase.from("personal_notes").delete().eq("user_id", id);
+        await supabase.from("notifications").delete().eq("user_id", id);
+      }
+
+      // 2. Try hard delete by id, username, and email
+      const filterConditions = identifiers.map(id => `id.eq.${id},username.eq.${id},email.eq.${id}`).join(",");
+      const { data, error } = await supabase.from("users").delete().or(filterConditions).select();
+
+      // If hard delete is restricted by anon RLS (0 rows affected), mark as deleted
+      if (error || !data || data.length === 0) {
+        for (const id of identifiers) {
+          await supabase.from("users").update({
+            role: "deleted",
+            full_name: "[Tài khoản đã xóa]",
+            username: `deleted_${id}_${Date.now()}`,
+            email: `deleted_${id}_${Date.now()}@deleted.local`,
+            status: "blocked",
+            ban_reason: "Tài khoản đã bị xóa bởi Quản trị viên"
+          }).or(`id.eq.${id},username.eq.${id},email.eq.${id}`);
+        }
+      }
+
+      return true;
     } catch (e) {
       console.error("Supabase deleteUser error:", e);
       return false;

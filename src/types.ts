@@ -245,6 +245,7 @@ export interface AlgorithmProblem {
   starterCode: string;
   hints: string[];
   solutionExplanation?: string;
+  sampleSolution?: string; // bài mẫu (code Python đã kiểm thử đạt toàn bộ test)
   testCases: TestCase[];
 }
 

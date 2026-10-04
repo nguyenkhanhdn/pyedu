@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sổ Tay Python Toàn Diện - PyEdu</title>
+<meta name="description" content="Sổ tay tra cứu Python từ cơ bản đến nâng cao: cú pháp, cấu trúc dữ liệu, hàm, thư viện và thuật toán. Mỗi chủ đề có ví dụ chạy thật, code tô màu cú pháp.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+<style>
+:root{
+  --primary:#4f46e5;--primary-soft:#eef2ff;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;
+  --ic-bg:#f1f5f9;--ic-text:#334155;
+  --i-kw:#7c3aed;--i-bi:#0369a1;--i-lib:#0f766e;--i-fn:#b45309;--i-fc:#a16207;--i-mt:#0e7490;--i-str:#15803d;--i-num:#c2410c;--i-cm:#64748b;--i-op:#be185d;--i-dec:#a21caf;
+  --tip-bg:#f0fdf4;--tip-bd:#16a34a;--tip-tx:#166534;--warn-bg:#fffbeb;--warn-bd:#d97706;--warn-tx:#92400e;
+  --code-bg:#0f172a;--code-tx:#e2e8f0;--out-bg:#ecfdf5;--out-tx:#065f46;--out-bd:#a7f3d0;
+  --side:290px;
+}
+[data-theme="dark"]{
+  --primary:#818cf8;--primary-soft:rgba(129,140,248,.14);--bg:#0b0f19;--card:#111827;--text:#f1f5f9;--muted:#94a3b8;--border:#1f2937;
+  --ic-bg:#1e293b;--ic-text:#e2e8f0;
+  --i-kw:#c084fc;--i-bi:#7dd3fc;--i-lib:#5eead4;--i-fn:#fde68a;--i-fc:#fcd34d;--i-mt:#67e8f9;--i-str:#86efac;--i-num:#fdba74;--i-cm:#94a3b8;--i-op:#f9a8d4;--i-dec:#f0abfc;
+  --tip-bg:rgba(22,163,74,.12);--tip-bd:#16a34a;--tip-tx:#86efac;--warn-bg:rgba(217,119,6,.12);--warn-bd:#d97706;--warn-tx:#fde68a;
+  --code-bg:#030712;--out-bg:rgba(16,185,129,.1);--out-tx:#6ee7b7;--out-bd:rgba(16,185,129,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+/* ---- mã & tô màu cú pháp ---- */
+.t-kw{color:var(--i-kw);font-weight:600}.t-bi{color:var(--i-bi)}.t-lib{color:var(--i-lib);font-weight:600}.t-fn{color:var(--i-fn);font-weight:700}.t-cls{color:var(--i-fn);font-weight:700}
+.t-fc{color:var(--i-fc)}.t-mt{color:var(--i-mt)}.t-str{color:var(--i-str)}.t-num{color:var(--i-num)}.t-cm{color:var(--i-cm);font-style:italic}.t-op{color:var(--i-op)}.t-dec{color:var(--i-dec)}
+pre.code{--i-kw:#c084fc;--i-bi:#7dd3fc;--i-lib:#5eead4;--i-fn:#fde68a;--i-fc:#fcd34d;--i-mt:#67e8f9;--i-str:#86efac;--i-num:#fdba74;--i-cm:#94a3b8;--i-op:#f9a8d4;--i-dec:#f0abfc}
+code,pre{font-family:'JetBrains Mono','SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace}
+code.ic{background:var(--ic-bg);color:var(--ic-text);border:1px solid var(--border);padding:1px 6px;border-radius:5px;font-size:.88em;white-space:pre-wrap;word-break:break-word}
+pre.code{background:var(--code-bg);color:var(--code-tx);padding:14px 16px;overflow-x:auto;font-size:13.5px;line-height:1.6;tab-size:4}
+/* ---- header ---- */
+.top{position:sticky;top:0;z-index:60;background:var(--card);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text)}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#4f46e5,#9333ea);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.brand b{font-size:15px;display:block;line-height:1.2}.brand small{font-size:11px;color:var(--muted)}
+.search{flex:1;max-width:560px;position:relative}
+.search input{width:100%;padding:9px 70px 9px 36px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;outline:none}
+.search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.18)}
+.search .ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:1px 6px;background:var(--card)}
+.actions{display:flex;gap:6px;margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text)}
+.btn:hover{border-color:var(--primary);color:var(--primary);text-decoration:none}
+.menu-btn{display:none}
+/* ---- layout ---- */
+.wrap{display:flex}
+aside{width:var(--side);position:sticky;top:57px;height:calc(100vh - 57px);overflow-y:auto;background:var(--card);border-right:1px solid var(--border);padding:14px 12px;flex-shrink:0}
+.toc{list-style:none}
+.toc-group{font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--muted);padding:12px 8px 4px}
+.toc-item a{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:7px;font-size:13px;color:var(--muted)}
+.toc-item a .n{min-width:20px;height:20px;border-radius:5px;background:var(--bg);border:1px solid var(--border);font-size:11px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.toc-item a:hover{background:var(--bg);color:var(--primary);text-decoration:none}
+.toc-item a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.toc-item a.active .n{background:var(--primary);color:#fff;border-color:var(--primary)}
+main{flex:1;min-width:0;max-width:980px;margin:0 auto;padding:26px 32px 80px}
+/* ---- intro ---- */
+.intro{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px}
+.intro h1{font-size:24px;line-height:1.25}
+.intro p{color:var(--muted);font-size:14px;margin-top:6px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stat{font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--primary-soft);color:var(--primary)}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:16px}
+.road{display:block;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text)}
+.road:hover{text-decoration:none;border-color:var(--primary)}
+.road b{display:block;font-size:13px}.road span{font-size:12px;color:var(--muted)}
+.legend{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--muted);align-items:center}
+.legend code.ic{font-size:12px}
+.howto{margin-top:12px;font-size:13px;color:var(--muted)}
+.howto b{color:var(--text)}
+/* ---- bộ lọc ---- */
+.filters{position:sticky;top:57px;z-index:30;background:var(--bg);padding:10px 0;margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{padding:6px 12px;border-radius:99px;font-size:12.5px;font-weight:600;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer}
+.pill:hover{color:var(--text)}
+.pill.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.sp{flex:1}
+#result-info{font-size:12.5px;color:var(--muted);margin:2px 0 10px}
+.empty{display:none;text-align:center;padding:40px 10px;color:var(--muted)}
+/* ---- chủ đề ---- */
+.topic{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:18px;scroll-margin-top:120px}
+.topic-head{display:flex;align-items:center;gap:10px;padding:16px 20px 0;cursor:pointer}
+.topic-head h2{font-size:19px;flex:1}
+.topic-head .num{color:var(--muted);font-weight:500}
+.topic-head::after{content:'▾';color:var(--muted);transition:transform .15s}
+.topic.collapsed .topic-head::after{transform:rotate(-90deg)}
+.topic.collapsed .topic-body{display:none}
+.lv{font-size:10.5px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:6px;color:#fff;white-space:nowrap}
+.lv1{background:#16a34a}.lv2{background:#0891b2}.lv3{background:#d97706}.lv4{background:#7c3aed}.lv5{background:#dc2626}
+.road.rd1{border-left:4px solid #16a34a}.road.rd2{border-left:4px solid #0891b2}.road.rd3{border-left:4px solid #d97706}.road.rd4{border-left:4px solid #7c3aed}.road.rd5{border-left:4px solid #dc2626}
+.summary{padding:6px 20px 10px;color:var(--muted);font-size:14px}
+.topic-body{padding:0 20px 18px}
+.blk{margin-top:12px}
+.blk p,.blk li{font-size:14px}
+.blk ul{padding-left:20px}
+/* ---- ví dụ ---- */
+.example{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ex-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:var(--primary-soft);font-size:13px;font-weight:600;color:var(--primary)}
+.copy{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer}
+.copy:hover{border-color:var(--primary)}
+.stdin{padding:8px 14px;background:var(--bg);border-top:1px dashed var(--border);font-size:12.5px;color:var(--muted)}
+.stdin pre{display:inline-block;vertical-align:top;margin-left:6px;color:var(--text);font-size:12.5px}
+.output{padding:9px 14px;background:var(--out-bg);border-top:1px solid var(--out-bd);color:var(--out-tx)}
+.out-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;opacity:.8}
+.output pre{font-size:13px;white-space:pre-wrap}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;text-align:left}
+th{background:var(--bg);padding:9px 12px;font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--primary-soft)}
+.tip-box,.warn-box{border-radius:9px;padding:10px 14px;font-size:13.5px;border-left:4px solid}
+.tip-box{background:var(--tip-bg);border-color:var(--tip-bd);color:var(--tip-tx)}
+.warn-box{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
+.tip-box code.ic,.warn-box code.ic{color:inherit}
+/* ---- phụ lục ---- */
+.appendix{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:18px;scroll-margin-top:120px}
+.appendix h2{font-size:19px;margin-bottom:4px}
+.appendix .sub{color:var(--muted);font-size:13.5px;margin-bottom:12px}
+.kind{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--primary-soft);color:var(--primary);white-space:nowrap}
+select{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;margin-bottom:10px}
+.az-row td:first-child{white-space:nowrap}
+.fab{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;text-decoration:none}
+.fab.show{opacity:1;pointer-events:auto}
+mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
+/* ---- mobile ---- */
+@media(max-width:860px){
+  .menu-btn{display:inline-flex}
+  aside{position:fixed;left:0;top:57px;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.2);width:min(86vw,320px)}
+  body.nav-open aside{transform:none}
+  main{padding:16px 14px 80px}
+  .brand>span:last-child,.actions .lbl,.search kbd{display:none}
+  .search{min-width:0}.search input{padding-right:12px}
+  .actions{flex-shrink:0}
+  .top{padding:8px 12px;gap:8px}
+  .topic-head{padding:14px 14px 0}.summary{padding:6px 14px 10px}.topic-body{padding:0 14px 16px}
+}
+@media print{
+  .top,aside,.filters,.fab,.copy,.menu-btn{display:none!important}
+  main{max-width:100%;padding:0}
+  .topic,.appendix{border:none;page-break-inside:auto}
+  .topic.collapsed .topic-body{display:block}
+  pre.code{background:#fff!important;color:#000!important;border:1px solid #ccc}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="btn menu-btn" id="menuBtn" aria-label="Mục lục">☰</button>
+  <a class="brand" href="#top"><span class="logo">Py</span><span><b>Sổ Tay Python</b><small>Từ cơ bản đến nâng cao</small></span></a>
+  <div class="search">
+    <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="q" type="search" placeholder="Tìm hàm, từ khóa, ví dụ… (vd: split, range, sort, gcd)" autocomplete="off">
+    <kbd>/</kbd>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/" target="_top" title="Về giao diện học lập trình">← <span class="lbl">Vào bài học</span></a>
+    <button class="btn" id="theme" title="Sáng / tối">🌓</button>
+    <button class="btn" onclick="window.print()" title="In hoặc lưu PDF">🖨️<span class="lbl"> In</span></button>
+  </div>
+</header>
+<div class="wrap" id="top">
+  <aside><ul class="toc" id="toc">
+%%TOC%%
+  </ul></aside>
+  <main>
+    <section class="intro">
+      <h1>📖 Sổ Tay Python Toàn Diện</h1>
+      <p>Tra cứu nhanh cú pháp, cấu trúc dữ liệu và thuật toán Python. Mỗi chủ đề đi từ <b>ngắn gọn</b> đến <b>ví dụ chạy thật</b> kèm kết quả.</p>
+      <div class="stats"><span class="stat">%%COUNT%% chủ đề</span><span class="stat">%%EXCOUNT%% ví dụ có kết quả</span><span class="stat">5 cấp độ</span><span class="stat">Dùng được khi offline</span></div>
+      <div class="roadmap">%%ROADMAP%%</div>
+      <div class="legend">Chú giải màu:
+        <code class="ic"><span class="t-kw">từ khóa</span></code>
+        <code class="ic"><span class="t-bi">hàm có sẵn</span></code>
+        <code class="ic"><span class="t-lib">thư viện</span></code>
+        <code class="ic"><span class="t-fn">tên hàm/lớp</span></code>
+        <code class="ic"><span class="t-mt">phương thức</span></code>
+        <code class="ic"><span class="t-str">"chuỗi"</span></code>
+        <code class="ic"><span class="t-num">123</span></code>
+        <code class="ic"><span class="t-cm"># chú thích</span></code>
+      </div>
+      <p class="howto"><b>Cách dùng:</b> gõ vào ô tìm kiếm (hoặc nhấn <b>/</b>) để lọc theo hàm / từ khóa; chọn <b>cấp độ</b> để học theo lộ trình; bấm <b>📋 Chép</b> rồi dán vào trình soạn thảo để thử.</p>
+    </section>
+
+    <div class="filters" id="filters">%%PILLS%%<span class="sp"></span>
+      <button class="pill" id="collapseAll">Thu gọn tất cả</button><button class="pill" id="expandAll">Mở rộng tất cả</button>
+    </div>
+    <div id="result-info"></div>
+    <div class="empty" id="empty">😕 Không tìm thấy nội dung phù hợp. Thử từ khóa khác (vd: <code class="ic">list</code>, <code class="ic">for</code>, <code class="ic">sort</code>).</div>
+
+%%TOPICS%%
+
+    <section class="appendix" id="az" data-ref="1">
+      <h2>🔎 Bảng tra nhanh A–Z</h2>
+      <p class="sub">Hàm, từ khóa, toán tử, phương thức thường dùng. Bấm liên kết để xem ví dụ đầy đủ.</p>
+      <select id="kindSel"><option value="">Tất cả loại</option>%%KINDOPTS%%</select>
+      <div class="table-wrap"><table><thead><tr><th>Tên</th><th>Loại</th><th>Tác dụng</th><th>Ví dụ</th><th>Xem</th></tr></thead><tbody>
+%%AZROWS%%
+      </tbody></table></div>
+    </section>
+
+    <section class="appendix" id="errors" data-ref="1">
+      <h2>🛠️ Lỗi thường gặp & cách sửa</h2>
+      <p class="sub">Đọc tên lỗi ở dòng cuối của thông báo, đối chiếu bảng dưới đây.</p>
+      <div class="table-wrap"><table><thead><tr><th>Lỗi</th><th>Nguyên nhân</th><th>Cách sửa</th></tr></thead><tbody>
+%%ERRROWS%%
+      </tbody></table></div>
+    </section>
+
+    <section class="appendix" id="contest" data-ref="1">
+      <h2>🏆 Mẹo làm bài thi</h2>
+      <ul style="padding-left:20px;font-size:14px">%%CONTEST%%</ul>
+    </section>
+  </main>
+</div>
+<a href="#top" class="fab" id="fab" title="Lên đầu trang">↑</a>
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  var root=document.documentElement, q=$('#q'), level='all', kind='';
+  var topics=$$('.topic'), appendix=$$('.appendix'), tocItems=$$('.toc-item'), groups=$$('.toc-group');
+
+  // chép code
+  window.copyCode=function(btn){
+    var code=btn.closest('.example').querySelector('pre code').innerText;
+    var done=function(){var o=btn.innerHTML;btn.innerHTML='✅ Đã chép';setTimeout(function(){btn.innerHTML=o},1500)};
+    if(navigator.clipboard){navigator.clipboard.writeText(code).then(done)}else{var t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();done()}
+  };
+
+  // giao diện sáng / tối
+  var saved=null;try{saved=localStorage.getItem('pyedu_handbook_theme')}catch(e){}
+  root.setAttribute('data-theme',saved||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  $('#theme').onclick=function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);try{localStorage.setItem('pyedu_handbook_theme',d)}catch(e){}};
+
+  // lọc: cấp độ + từ khóa
+  function apply(){
+    var s=q.value.trim().toLowerCase(), shown=0, visibleTopics={};
+    topics.forEach(function(t){
+      var lvOk=(level==='all')||(level===t.dataset.level);
+      var tMatch=!s||t.dataset.title.indexOf(s)>-1, any=false;
+      $$('.blk',t).forEach(function(b){
+        var ok=!s||tMatch||b.dataset.text.indexOf(s)>-1;
+        b.style.display=ok?'':'none';
+        if(ok&&lvOk&&s)any=true;
+      });
+      var vis=lvOk&&(!s||tMatch||any);
+      t.style.display=vis?'':'none';
+      if(vis){visibleTopics[t.id]=1;shown+=$$('.example',t).filter(function(e){return e.style.display!=='none'}).length||1;}
+    });
+    appendix.forEach(function(a){
+      var lvOk=(level==='all'||level==='ref'), rows=$$('tbody tr',a), n=0;
+      rows.forEach(function(r){
+        var ok=(!s||r.dataset.text.indexOf(s)>-1)&&(!(a.id==='az'&&kind)||r.dataset.kind===kind);
+        r.style.display=ok?'':'none';if(ok)n++;
+      });
+      var isList=a.id==='contest';
+      var vis=lvOk&&(isList?(!s||a.innerText.toLowerCase().indexOf(s)>-1):n>0);
+      a.style.display=vis?'':'none';
+      if(vis){visibleTopics[a.id]=1;shown+=isList?1:n;}
+    });
+    tocItems.forEach(function(li){var id=$('a',li).dataset.id;li.style.display=visibleTopics[id]?'':'none'});
+    groups.forEach(function(g){
+      var any=tocItems.some(function(li){return li.style.display!=='none'&&li.dataset.level===g.dataset.level});
+      g.style.display=any?'':'none';
+    });
+    $('#empty').style.display=Object.keys(visibleTopics).length?'none':'block';
+    $('#result-info').textContent=s?('Tìm thấy '+shown+' mục cho “'+q.value.trim()+'”'):'';
+  }
+  q.addEventListener('input',apply);
+  $$('.pill[data-level]').forEach(function(p){p.onclick=function(){
+    $$('.pill[data-level]').forEach(function(x){x.classList.remove('active')});p.classList.add('active');
+    level=p.dataset.level;apply();window.scrollTo({top:0,behavior:'smooth'});
+  }});
+  $('#kindSel').onchange=function(){kind=this.value;apply()};
+  $('#collapseAll').onclick=function(){topics.forEach(function(t){t.classList.add('collapsed')})};
+  $('#expandAll').onclick=function(){topics.forEach(function(t){t.classList.remove('collapsed')})};
+  topics.forEach(function(t){$('.topic-head',t).onclick=function(){t.classList.toggle('collapsed')}});
+
+  // phím tắt
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement!==q&&!/input|textarea|select/i.test(document.activeElement.tagName)){e.preventDefault();q.focus();q.select()}
+    else if(e.key==='Escape'){if(q.value){q.value='';apply()}q.blur();document.body.classList.remove('nav-open')}
+  });
+
+  // mục lục trên điện thoại
+  $('#menuBtn').onclick=function(){document.body.classList.toggle('nav-open')};
+  $$('.toc a').forEach(function(a){a.addEventListener('click',function(){document.body.classList.remove('nav-open');
+    var t=document.getElementById(a.dataset.id);if(t&&t.classList)t.classList.remove('collapsed')})});
+  // đến chủ đề đang bị lọc ẩn → bỏ bộ lọc
+  window.addEventListener('hashchange',function(){
+    var el=document.getElementById(location.hash.slice(1));
+    if(el&&el.style.display==='none'){q.value='';level='all';kind='';$('#kindSel').value='';$$('.pill[data-level]').forEach(function(p){p.classList.toggle('active',p.dataset.level==='all')});apply();el.scrollIntoView()}
+    if(el&&el.classList)el.classList.remove('collapsed');
+  });
+
+  // đánh dấu mục đang xem ở mục lục + nút lên đầu trang
+  var links={};$$('.toc a').forEach(function(a){links[a.dataset.id]=a});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){$$('.toc a.active').forEach(function(x){x.classList.remove('active')});var a=links[en.target.id];if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'})}}})},{rootMargin:'-20% 0px -70% 0px'});
+    topics.concat(appendix).forEach(function(s){io.observe(s)});
+  }
+  window.addEventListener('scroll',function(){$('#fab').classList.toggle('show',window.scrollY>400)});
+  if(location.hash){var h=document.getElementById(location.hash.slice(1));if(h&&h.classList)h.classList.remove('collapsed')}
+})();
+</script>
+</body>
+</html>

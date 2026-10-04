@@ -871,6 +871,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotifications([]);
   };
 
+  // Kiểm tra lại phiên đăng nhập đã lưu: tài khoản bị khóa / chuyển về chờ duyệt / bị xóa sẽ bị đăng xuất
+  const currentUserId = currentUser?.id;
+  const currentUserRole = currentUser?.role;
+  useEffect(() => {
+    if (!currentUserId) return;
+    let cancelled = false;
+    const validateSession = async () => {
+      try {
+        const users = await ApiService.fetchUsers();
+        if (cancelled || !users) return;
+        const fresh = users.find(u => u.id === currentUserId);
+        if (!fresh) return;
+        if (fresh.status === 'blocked') {
+          logout();
+          setAuthErrorMessage(`Tài khoản @${fresh.username} đã bị KHÓA bởi Quản trị viên!\nLý do: ${fresh.banReason || 'Vi phạm quy định sử dụng hệ thống'}`);
+        } else if (fresh.status === 'pending') {
+          logout();
+          setAuthErrorMessage(`Tài khoản @${fresh.username} đang CHỜ DUYỆT từ Quản trị viên.`);
+        } else if (fresh.role !== currentUserRole) {
+          setCurrentUser(prev => (prev ? { ...prev, role: fresh.role } : prev));
+        }
+      } catch {}
+    };
+    validateSession();
+    const timer = setInterval(validateSession, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [currentUserId]);
+
   const updateUserProfile = async (updates: Partial<User>) => {
     if (!currentUser) return;
     const updated = { ...currentUser, ...updates };

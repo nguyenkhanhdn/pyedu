@@ -2,6 +2,9 @@ import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, Gro
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
 
+// Chỉ 2 tài khoản hệ thống được phép tồn tại cục bộ ngoài Supabase
+const CORE_ACCOUNT_IDENTIFIERS = ["admin", "admin@pyedu.edu.vn", "khanh_it", "khanhdsp@gmail.com"];
+
 // Initial seed users for offline / static fallback
 const INITIAL_FALLBACK_USERS: User[] = [
   {
@@ -43,135 +46,6 @@ const INITIAL_FALLBACK_USERS: User[] = [
     dailyGoal: 25,
     reminderTime: "19:30",
     reminderEnabled: true
-  },
-  {
-    id: "teacher-nam",
-    username: "thaynam_tin",
-    email: "thaynam@pyedu.edu.vn",
-    password: "123456",
-    fullName: "Thầy Trần Văn Nam",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TeacherNam",
-    grade: "Tổ trưởng Bộ môn Tin",
-    school: "THPT Chuyên Tin Học",
-    role: "teacher",
-    totalXp: 5200,
-    weeklyXp: 1200,
-    streakDays: 45,
-    lastActiveDate: new Date().toISOString().split("T")[0],
-    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1", "lesson-3-2", "lesson-4-1", "lesson-5-1", "lesson-6-1"],
-    badges: ["first_step", "streak_3", "streak_7", "perfect_score", "loop_master", "algo_wizard"],
-    dailyGoal: 60,
-    reminderTime: "20:00",
-    reminderEnabled: true
-  },
-  {
-    id: "usr-demo-2",
-    username: "lananh_coder",
-    email: "lananh@gmail.com",
-    password: "123456",
-    fullName: "Nguyễn Lan Anh",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=LanAnh",
-    grade: "Lớp 10A1",
-    school: "THPT Chuyên Tin",
-    role: "student",
-    totalXp: 1450,
-    weeklyXp: 480,
-    streakDays: 12,
-    lastActiveDate: new Date().toISOString().split("T")[0],
-    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3"],
-    badges: ["first_step", "streak_3"],
-    dailyGoal: 20,
-    reminderTime: "19:00",
-    reminderEnabled: true
-  },
-  {
-    id: "usr-demo-3",
-    username: "hoang_coder",
-    email: "hoang@thpt-chuyentin.edu.vn",
-    password: "123456",
-    fullName: "Vũ Huy Hoàng",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=HuyHoang",
-    grade: "Lớp 11 Tin",
-    school: "THPT Chuyên Tin Học",
-    role: "student",
-    totalXp: 2150,
-    weeklyXp: 610,
-    streakDays: 9,
-    lastActiveDate: new Date().toISOString().split("T")[0],
-    completedLessons: ["lesson-1-1", "lesson-1-2", "lesson-1-3", "lesson-2-1", "lesson-2-2", "lesson-3-1"],
-    badges: ["first_step", "streak_3", "streak_7", "loop_master"],
-    dailyGoal: 30,
-    reminderTime: "21:00",
-    reminderEnabled: true,
-    status: "active"
-  },
-  {
-    id: "usr-pending-1",
-    username: "minhtriet_tin",
-    email: "triet.nguyen@chuyentin.edu.vn",
-    password: "123",
-    fullName: "Nguyễn Minh Triết",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=MinhTriet",
-    grade: "Lớp 10 Chuyên Tin",
-    school: "THPT Chuyên Lê Hồng Phong",
-    role: "student",
-    status: "pending",
-    registeredAt: "2026-10-02",
-    totalXp: 0,
-    weeklyXp: 0,
-    streakDays: 0,
-    lastActiveDate: "2026-10-02",
-    completedLessons: [],
-    badges: [],
-    dailyGoal: 20,
-    reminderTime: "19:00",
-    reminderEnabled: true
-  },
-  {
-    id: "usr-pending-2",
-    username: "hongngoc_py",
-    email: "ngoc.tran@lequydon.edu.vn",
-    password: "123",
-    fullName: "Trần Thị Hồng Ngọc",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=HongNgoc",
-    grade: "Lớp 11A2",
-    school: "THPT Lê Quý Đôn",
-    role: "student",
-    status: "pending",
-    registeredAt: "2026-10-03",
-    totalXp: 0,
-    weeklyXp: 0,
-    streakDays: 0,
-    lastActiveDate: "2026-10-03",
-    completedLessons: [],
-    badges: [],
-    dailyGoal: 30,
-    reminderTime: "20:00",
-    reminderEnabled: true
-  },
-  {
-    id: "usr-blocked-1",
-    username: "tuankhang_hack",
-    email: "khang.tuan@spammail.com",
-    password: "123",
-    fullName: "Lê Tuấn Khang",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=TuanKhang",
-    grade: "Lớp 12 Tin",
-    school: "THPT Nguyễn Trãi",
-    role: "student",
-    status: "blocked",
-    banReason: "Spam mã nguồn độc hại và gian lận nộp bài thi trái phép",
-    bannedAt: "2026-09-30",
-    registeredAt: "2026-09-20",
-    totalXp: 200,
-    weeklyXp: 0,
-    streakDays: 0,
-    lastActiveDate: "2026-09-30",
-    completedLessons: ["lesson-1-1"],
-    badges: [],
-    dailyGoal: 15,
-    reminderTime: "19:00",
-    reminderEnabled: false
   }
 ];
 
@@ -325,34 +199,6 @@ export class LocalDataManager {
           status: users[khanhIdx].status || "active",
           password: users[khanhIdx].password || "123456"
         };
-      }
-
-      // 3. Teacher Nam account
-      const teacherIdx = users.findIndex(u => u.username?.toLowerCase() === "thaynam_tin" || u.username?.toLowerCase() === "thaynam_gv");
-      const defaultTeacher = INITIAL_FALLBACK_USERS.find(u => u.username === "thaynam_tin")!;
-      if (teacherIdx === -1) {
-        users.push(defaultTeacher);
-      } else {
-        users[teacherIdx] = {
-          ...defaultTeacher,
-          ...users[teacherIdx],
-          status: users[teacherIdx].status || "active",
-          password: users[teacherIdx].password || "123456"
-        };
-      }
-
-      // Ensure demo pending and blocked accounts exist if missing
-      const pending1 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-pending-1");
-      if (pending1 && !deletedSet.has(pending1.id.toLowerCase()) && !deletedSet.has(pending1.username.toLowerCase()) && !users.some(u => u.id === pending1.id || u.username === pending1.username)) {
-        users.push(pending1);
-      }
-      const pending2 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-pending-2");
-      if (pending2 && !deletedSet.has(pending2.id.toLowerCase()) && !deletedSet.has(pending2.username.toLowerCase()) && !users.some(u => u.id === pending2.id || u.username === pending2.username)) {
-        users.push(pending2);
-      }
-      const blocked1 = INITIAL_FALLBACK_USERS.find(u => u.id === "usr-blocked-1");
-      if (blocked1 && !deletedSet.has(blocked1.id.toLowerCase()) && !deletedSet.has(blocked1.username.toLowerCase()) && !users.some(u => u.id === blocked1.id || u.username === blocked1.username)) {
-        users.push(blocked1);
       }
     }
 
@@ -757,15 +603,17 @@ export const ApiService = {
     return LocalDataManager.getGroups(userId);
   },
 
-  async login(usernameOrEmail: string, password?: string): Promise<User | null> {
+  async login(usernameOrEmail: string, password?: string, skipPassword = false): Promise<User | null> {
     const rawQuery = (usernameOrEmail || "").trim();
     const query = rawQuery.toLowerCase();
     const pwd = (password || "").trim();
 
     // 1. Direct Supabase Cloud Authentication & User retrieval
+    let supabaseAnswered = false;
     if (SupabaseService.isAvailable()) {
       try {
-        const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined);
+        const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined, skipPassword);
+        supabaseAnswered = true;
         if (suUser) {
           if (suUser.status === 'blocked') {
             const err: any = new Error(`Tài khoản @${suUser.username} đã bị KHÓA bởi Quản trị viên!\nLý do: ${suUser.banReason || 'Vi phạm quy định sử dụng hệ thống'}`);
@@ -783,11 +631,17 @@ export const ApiService = {
           return suUser;
         }
       } catch (err: any) {
-        if (err.code === 'USER_BLOCKED' || err.code === 'USER_PENDING') {
+        if (['USER_BLOCKED', 'USER_PENDING', 'INVALID_PASSWORD', 'SUPABASE_ERROR'].includes(err.code)) {
           throw err;
         }
         console.warn("Supabase login notice:", err);
       }
+    }
+
+    // Supabase là nguồn dữ liệu chính: chỉ 2 tài khoản hệ thống được dùng bản sao cục bộ
+    // khi Supabase không có tài khoản đó. Mọi tài khoản khác phải tồn tại trên Supabase.
+    if (supabaseAnswered && !CORE_ACCOUNT_IDENTIFIERS.includes(query)) {
+      return null;
     }
 
     // 2. Direct Fallback: search in local state cache
@@ -835,12 +689,6 @@ export const ApiService = {
         const defaultKhanh = INITIAL_FALLBACK_USERS.find(u => u.username === "khanh_it")!;
         LocalDataManager.updateUser(defaultKhanh.id, defaultKhanh);
         return defaultKhanh;
-      }
-    } else if (query === "thaynam_tin" || query === "thaynam@pyedu.edu.vn") {
-      if (!pwd || pwd === "123456" || pwd === "123") {
-        const defaultTeacher = INITIAL_FALLBACK_USERS.find(u => u.username === "thaynam_tin")!;
-        LocalDataManager.updateUser(defaultTeacher.id, defaultTeacher);
-        return defaultTeacher;
       }
     }
 

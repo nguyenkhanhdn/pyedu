@@ -274,20 +274,6 @@ export const AuthGateView: React.FC = () => {
                     <p className="text-[10px] text-slate-500">Lớp 10A1 (280 XP)</p>
                   </div>
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin("thaynam_tin", "123456")}
-                  className="px-3 py-2 bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 rounded-xl text-xs text-left transition-all flex items-center gap-2 group cursor-pointer shadow-xs"
-                >
-                  <div className="h-7 w-7 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 font-bold text-xs">
-                    N
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 group-hover:text-amber-700">Thầy Nam (giáo viên)</p>
-                    <p className="text-[10px] text-slate-500">Mở toàn bộ bài giảng</p>
-                  </div>
-                </button>
               </div>
             </div>
             */}

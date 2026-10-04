@@ -18,11 +18,11 @@ export const TOPIC_9_RECURSION: Module = {
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Dãy số Fibonacci được định nghĩa đệ quy: $F(1) = 1$, $F(2) = 1$, và $F(n) = F(n - 1) + F(n - 2)$ với mọi $n \\ge 3$.",
+        summary: "**Fibonacci**: F(1) = F(2) = 1; **F(n) = F(n-1) + F(n-2)** với n ≥ 3.",
         keyPoints: [
-          "Bài toán cơ sở (Base Case): Nếu `n <= 2`: `return 1`.",
-          "Bước đệ quy: `return fibonacci(n - 1) + fibonacci(n - 2)`.",
-          "Cần chú ý điều kiện cơ sở để tránh tràn ngăn xếp đệ quy (RecursionError)."
+          "**Base case**: `if n <= 2: return 1`",
+          "**Bước đệ quy**: `return fibonacci(n - 1) + fibonacci(n - 2)`",
+          "Thiếu base case → **`RecursionError`**."
         ],
         conceptIllustration: {
           type: "recursion",
@@ -122,10 +122,10 @@ n = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Tổng các số từ 1 đến n có thể phân rã thành: $S(n) = n + S(n - 1)$ với trường hợp dừng $S(1) = 1$.",
+        summary: "Tổng 1 đến n: **S(n) = n + S(n-1)**, dừng ở **S(1) = 1**.",
         keyPoints: [
-          "Base case: `if n == 1: return 1`.",
-          "Recursive step: `return n + tong_de_quy(n - 1)`."
+          "Base case: `if n == 1: return 1`",
+          "Đệ quy: `return n + tong_de_quy(n - 1)`"
         ],
         conceptIllustration: {
           type: "recursion",
@@ -220,10 +220,10 @@ n = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Giai thừa của một số nguyên không âm $n$ được định nghĩa: $0! = 1, 1! = 1$ và $n! = n \\times (n - 1)!$ với mọi $n \\ge 1$.",
+        summary: "**Giai thừa**: 0! = 1! = 1; **n! = n × (n-1)!**.",
         keyPoints: [
-          "Bài toán cơ sở: `if n == 0 or n == 1: return 1`.",
-          "Bước đệ quy: `return n * giai_thua(n - 1)`."
+          "Base case: `if n == 0 or n == 1: return 1`",
+          "Đệ quy: `return n * giai_thua(n - 1)`"
         ],
         conceptIllustration: {
           type: "recursion",

@@ -18,10 +18,10 @@ export const TOPIC_8_FUNCTIONS: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Hàm (Function) là khối lệnh có tên, có thể tái sử dụng nhiều lần để thực hiện một tác vụ cụ thể. Khai báo bằng từ khóa `def` và trả về kết quả bằng `return`.",
+        summary: "**Hàm** là khối lệnh có tên, **dùng lại nhiều lần**. Khai báo bằng **`def`**, trả kết quả bằng **`return`**.",
         keyPoints: [
-          "Cú pháp: `def ten_ham(tham_so_1, tham_so_2): ... return ket_qua`",
-          "Lệnh `return` kết thúc hàm và chuyển giá trị kết quả về cho nơi gọi hàm."
+          "Cú pháp: `def ten_ham(a, b):` … `return ket_qua`",
+          "`return` **kết thúc hàm** và trả giá trị về nơi gọi."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -107,10 +107,11 @@ y = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Một hàm trong Python có thể trả về nhiều giá trị cùng lúc dưới dạng một `tuple` (bộ dữ liệu), ví dụ: `return chu_vi, dien_tich`.",
+        summary: "Hàm có thể **trả về nhiều giá trị** (dạng `tuple`): **`return c, s`**.",
         keyPoints: [
-          "Dùng `import math` để có `math.pi`.",
-          "Hàm tính: `c = round(2 * math.pi * r, 2)` và `s = round(math.pi * (r ** 2), 2)`.",
+          "`import math` để dùng `math.pi`",
+          "`c = round(2 * math.pi * r, 2)`",
+          "`s = round(math.pi * r ** 2, 2)`",
           "`return c, s`"
         ],
         conceptIllustration: {
@@ -196,10 +197,10 @@ r = float(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Hàm kiểm tra logic (Predicate Function) thường có tiền tố `is_` và trả về giá trị boolean `True` hoặc `False`.",
+        summary: "Hàm **kiểm tra** thường đặt tên **`is_...`** và trả về **`True`/`False`**.",
         keyPoints: [
-          "Định nghĩa: `def is_even(n): return n % 2 == 0`",
-          "Hàm boolean rất gọn gàng và dễ kết hợp trong các điều kiện logic."
+          "`def is_even(n): return n % 2 == 0`",
+          "Hàm boolean **gọn** và dễ dùng trong `if`."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -294,10 +295,10 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Đóng gói thuật toán chuẩn hóa họ tên vào một hàm giúp mã nguồn sạch sẽ, dễ bảo trì và có thể gọi lại ở nhiều nơi trong chương trình.",
+        summary: "**Đóng gói** thuật toán vào hàm để code **gọn, dễ bảo trì, tái sử dụng**.",
         keyPoints: [
-          "Định nghĩa: `def chuan_hoa(name): ... return ' '.join(w.capitalize() for w in name.split())`",
-          "Hàm nhận vào chuỗi `name` và trả về chuỗi họ tên chuẩn."
+          "`def chuan_hoa(name): return ' '.join(w.capitalize() for w in name.split())`",
+          "Nhận chuỗi `name` → trả về họ tên **chuẩn**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -385,10 +386,11 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Khối `try ... except ValueError` giúp chương trình không bị dừng đột ngột (crash) khi người dùng nhập chuỗi ký tự chữ cái vào vị trí yêu cầu số nguyên.",
+        summary: "**`try ... except ValueError`** giúp chương trình **không bị dừng** khi nhập sai kiểu.",
         keyPoints: [
-          "Cấu trúc: `try: val = int(raw_input) ... except ValueError: in lỗi và nhập lại`.",
-          "Kết hợp kiểm tra `min_val <= val <= max_val`."
+          "`try:` `val = int(raw_input)`",
+          "`except ValueError:` báo lỗi và **nhập lại**.",
+          "Kiểm tra khoảng: `min_val <= val <= max_val`"
         ],
         conceptIllustration: {
           type: "syntax",

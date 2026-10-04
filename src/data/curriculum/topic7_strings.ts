@@ -18,11 +18,11 @@ export const TOPIC_7_STRINGS: Module = {
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Phương thức `s.split()` tự động tách các từ và loại bỏ mọi khoảng trắng thừa (ở đầu, cuối và giữa các từ). Dùng `' '.join(words)` kết hợp `.capitalize()` hoặc `.title()` để chuẩn hóa.",
+        summary: "**`split()`** tách từ và **bỏ khoảng trắng thừa**; **`join()`** nối lại.",
         keyPoints: [
-          "`words = s.split()`: Tách chuỗi thành danh sách các từ sạch.",
-          "`words = [w.capitalize() for w in words]`: Viết hoa chữ cái đầu và viết thường các chữ còn lại của mỗi từ.",
-          "`result = ' '.join(words)`: Nối lại các từ bằng 1 khoảng trắng duy nhất."
+          "`words = s.split()` → danh sách các từ sạch.",
+          "`w.capitalize()` → **Hoa đầu**, còn lại thường.",
+          "`' '.join(words)` → nối bằng **1 dấu cách**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -115,10 +115,10 @@ s = input()
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Cú pháp cắt lát chuỗi (slicing) trong Python có dạng `s[start:stop:step]`. Khi đặt `step = -1` và bỏ trống start, stop (`s[::-1]`), Python sẽ duyệt chuỗi từ ký tự cuối cùng về ký tự đầu tiên.",
+        summary: "**Slicing** `s[start:stop:step]`; **`s[::-1]`** đảo ngược chuỗi.",
         keyPoints: [
-          "`s[::-1]`: Đảo ngược chuỗi tức thì với hiệu năng tối ưu $O(N)$.",
-          "Áp dụng được cho cả chuỗi ký tự, danh sách (list) và bộ dữ liệu (tuple)."
+          "`s[::-1]`: đọc từ **cuối về đầu**.",
+          "Dùng được cho **chuỗi, list, tuple**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -209,10 +209,10 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Chuỗi đối xứng (Palindrome) là chuỗi đọc xuôi hay đọc ngược đều hoàn toàn giống nhau (ví dụ: 'radar', 'madam', 'level').",
+        summary: "**Palindrome**: đọc xuôi hay ngược **đều giống nhau** (radar, madam, level).",
         keyPoints: [
-          "Điều kiện đối xứng: `s == s[::-1]`.",
-          "Chuyển về chữ thường bằng `.lower()` và loại bỏ khoảng trắng thừa nếu muốn kiểm tra không phân biệt hoa thường."
+          "Kiểm tra: **`s == s[::-1]`**",
+          "Muốn bỏ qua hoa/thường: dùng `.lower()` trước."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -303,12 +303,12 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật Slicing đa dạng trong Python:\n1. 2 ký tự đầu: `s[:2]`\n2. 2 ký tự cuối: `s[-2:]`\n3. Đảo ngược: `s[::-1]`\n4. Ký tự vị trí chỉ số chẵn (bước 2): `s[::2]`",
+        summary: "Các mẫu **slicing** hay dùng để cắt chuỗi.",
         keyPoints: [
-          "`s[:2]`: Lấy từ đầu đến chỉ số 1 (2 ký tự đầu).",
-          "`s[-2:]`: Lấy từ vị trí thứ 2 đếm từ cuối lên.",
-          "`s[::2]`: Lấy các ký tự ở chỉ số 0, 2, 4, 6...",
-          "`s[::-1]`: Đảo ngược toàn bộ chuỗi."
+          "`s[:2]`: **2 ký tự đầu**",
+          "`s[-2:]`: **2 ký tự cuối**",
+          "`s[::2]`: ký tự ở chỉ số **0, 2, 4…**",
+          "`s[::-1]`: **đảo ngược**"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -390,12 +390,11 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Phân tích cấu trúc tên người Việt Nam: Từ đầu tiên là Họ, từ cuối cùng là Tên, các từ ở giữa (nếu có) là Tên đệm.",
+        summary: "Tên người Việt: từ **đầu** là **Họ**, từ **cuối** là **Tên**, ở giữa là **Tên đệm**.",
         keyPoints: [
           "`words = s.split()`",
-          "Họ: `words[0]`",
-          "Tên: `words[-1]`",
-          "Tên đệm: `' '.join(words[1:-1])` (nếu không có thì in `Khong co`)."
+          "Họ: `words[0]`; Tên: `words[-1]`",
+          "Tên đệm: `' '.join(words[1:-1])` (không có → in `Khong co`)"
         ],
         conceptIllustration: {
           type: "syntax",

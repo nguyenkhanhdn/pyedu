@@ -18,10 +18,10 @@ export const TOPIC_12_COMPREHENSIVE: Module = {
       durationMin: 30,
       xpReward: 80,
       theory: {
-        summary: "Quy trình xử lý bảng điểm tổng hợp:\n1. Nhập số lượng học sinh $n$.\n2. Với mỗi học sinh: Nhập họ tên và 5 điểm số (Toán, Văn, Anh, Lý, Hóa).\n3. Tính `dtb = sum(diem) / 5`.\n4. Xếp loại: Xuất sắc (>= 9.0), Giỏi (8.0 - <9.0), Khá (6.5 - <8.0), Trung bình (5.0 - <6.5), Yếu (< 5.0).",
+        summary: "**Bảng điểm**: nhập **n** học sinh → nhập 5 điểm → tính **`dtb = sum(diem) / 5`** → **xếp loại**.",
         keyPoints: [
-          "Xếp loại dựa trên thang điểm chuẩn.",
-          "Căn lề hiển thị bằng f-string: `f\"{dtb:.2f}\"`."
+          "Xuất sắc **≥ 9.0**; Giỏi **≥ 8.0**; Khá **≥ 6.5**; Trung bình **≥ 5.0**; Yếu **< 5.0**",
+          "In điểm 2 số lẻ: `f\"{dtb:.2f}\"`"
         ],
         conceptIllustration: {
           type: "variables",
@@ -106,12 +106,11 @@ n = int(input())
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Công thức lãi kép: Mỗi năm, tiền lãi sinh ra được cộng dồn vào tiền vốn đầu kỳ tiếp theo: `Lai = Vốn * (r / 100)`, `Vốn_mới = Vốn + Lai`.",
+        summary: "**Lãi kép**: lãi mỗi năm được **cộng vào vốn** cho năm sau.",
         keyPoints: [
-          "Khởi tạo `current = P` (tiền vốn ban đầu).",
-          "Lặp qua từng năm từ 1 đến `t`.",
-          "Mỗi năm: `interest = current * (r / 100)`, `current += interest`.",
-          "In bảng và số lượng ký tự `#` đại diện cho giá trị làm tròn."
+          "`current = P` (vốn ban đầu)",
+          "Mỗi năm: `interest = current * (r / 100)`, rồi `current += interest`",
+          "In bảng và số ký tự `#` tương ứng giá trị đã làm tròn."
         ],
         conceptIllustration: {
           type: "loops",

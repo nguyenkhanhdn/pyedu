@@ -37,15 +37,12 @@ export const TOPIC_4_BRANCHING: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Câu lệnh if cho phép chương trình chỉ thực hiện một khối lệnh khi điều kiện đưa ra là đúng (True). Nếu điều kiện sai (False), khối lệnh đó sẽ bị bỏ qua.",
+        summary: "**`if`** chỉ chạy khối lệnh khi điều kiện **đúng** (`True`); sai thì **bỏ qua**.",
         keyPoints: [
-          "Cú pháp: `if dieu_kien:` (luôn có dấu hai chấm `:` ở cuối dòng lệnh if).",
-          "Khối lệnh thụt lề: Các dòng lệnh bên trong if **bắt buộc phải thụt vào 4 dấu cách**.",
-          "Các toán tử so sánh trả về `True` hoặc `False`:",
-          "  - `==`: So sánh bằng nhau (chú ý khác với `=` là phép gán biến).",
-          "  - `!=`: So sánh khác nhau.",
-          "  - `>`, `<`: Lớn hơn, nhỏ hơn.",
-          "  - `>=`, `<=`: Lớn hơn hoặc bằng, nhỏ hơn hoặc bằng."
+          "Cú pháp: `if dieu_kien:` — nhớ dấu **`:`** cuối dòng.",
+          "Lệnh bên trong `if` phải **thụt lề 4 dấu cách**.",
+          "So sánh: `==` (bằng), `!=` (khác), `>`, `<`, `>=`, `<=`",
+          "Lưu ý: `==` là **so sánh**, `=` là **gán**."
         ],
         conceptIllustration: {
           type: "branching",
@@ -208,17 +205,11 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Cấu trúc if-else cho phép chọn thực hiện một trong hai nhánh lệnh: nếu điều kiện Đúng thì chạy khối lệnh if, nếu điều kiện Sai thì chạy khối lệnh else.",
+        summary: "**`if ... else`** chọn **1 trong 2** nhánh: đúng → `if`, sai → `else`.",
         keyPoints: [
-          "Cú pháp:",
-          "  ```python",
-          "  if dieu_kien:",
-          "      # Khối lệnh khi điều kiện True",
-          "  else:",
-          "      # Khối lệnh khi điều kiện False",
-          "  ```",
-          "Từ khóa `else:` không kèm theo điều kiện nào và luôn có dấu hai chấm `:`.",
-          "Toán tử chia lấy dư `%`: `n % 2 == 0` nghĩa là số chẵn, ngược lại là số lẻ."
+          "Cú pháp: `if dieu_kien:` … `else:`",
+          "`else:` **không có điều kiện**, vẫn có dấu `:`.",
+          "Số chẵn: `n % 2 == 0`; ngược lại là số lẻ."
         ],
         conceptIllustration: {
           type: "branching",
@@ -386,19 +377,11 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Cấu trúc if-elif-else cho phép kiểm tra tuần tự nhiều điều kiện. Ngay khi một điều kiện Đúng, khối lệnh tương ứng sẽ thực thi và chương trình kết thúc toàn bộ cấu trúc rẽ nhánh.",
+        summary: "**`if ... elif ... else`** kiểm tra **lần lượt** nhiều điều kiện; **đúng nhánh nào dừng ở nhánh đó**.",
         keyPoints: [
-          "Cú pháp:",
-          "  ```python",
-          "  if dieu_kien_1:",
-          "      # lệnh 1",
-          "  elif dieu_kien_2:",
-          "      # lệnh 2",
-          "  else:",
-          "      # lệnh mặc định",
-          "  ```",
-          "Có thể có nhiều mệnh đề `elif` nằm giữa `if` và `else`.",
-          "Thứ tự điều kiện rất quan trọng: điều kiện chặt chẽ hoặc cụ thể cần được kiểm tra trước."
+          "Cú pháp: `if` → nhiều `elif` → `else`",
+          "Có thể có **nhiều `elif`**.",
+          "**Thứ tự điều kiện quan trọng**: kiểm tra điều kiện cụ thể trước."
         ],
         conceptIllustration: {
           type: "branching",
@@ -573,17 +556,12 @@ n = int(input())
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Trong thực tế, các quyết định thường phụ thuộc vào nhiều điều kiện kết hợp bằng các toán tử logic `and` (và), `or` (hoặc), `not` (phủ định), hoặc cấu trúc `if` lồng nhau.",
+        summary: "Kết hợp điều kiện bằng **`and`**, **`or`**, **`not`** hoặc **`if` lồng nhau**.",
         keyPoints: [
-          "`and`: Đúng khi TẤT CẢ các điều kiện con đều Đúng.",
-          "`or`: Đúng khi CÓ ÍT NHẤT MỘT điều kiện con Đúng.",
-          "`not`: Đảo ngược giá trị logic (`not True` là `False`).",
-          "Ứng dụng tính chỉ số BMI: `BMI = weight / (height ** 2)`.",
-          "Phân loại BMI:",
-          "  - `BMI < 18.5`: `Thieu can`",
-          "  - `18.5 <= BMI < 25`: `Binh thuong`",
-          "  - `25 <= BMI < 30`: `Thua can`",
-          "  - `BMI >= 30`: `Beo phi`"
+          "`and`: **tất cả** cùng đúng.",
+          "`or`: **ít nhất một** đúng.",
+          "`not`: **đảo** True ↔ False.",
+          "BMI = `weight / (height ** 2)`: `< 18.5` Thieu can; `< 25` Binh thuong; `< 30` Thua can; còn lại Beo phi."
         ],
         conceptIllustration: {
           type: "branching",

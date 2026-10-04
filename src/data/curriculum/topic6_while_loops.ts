@@ -34,11 +34,11 @@ export const TOPIC_6_WHILE_LOOPS: Module = {
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Vòng lặp `while` thực thi khối lệnh lặp đi lặp lại khi điều kiện kiểm tra vẫn còn `True`. Rất hữu ích để kiểm tra tính hợp lệ của dữ liệu người dùng nhập vào.",
+        summary: "**`while`** lặp **khi điều kiện còn `True`** — hợp để **kiểm tra dữ liệu nhập**.",
         keyPoints: [
           "Cú pháp: `while dieu_kien:`",
-          "Kỹ thuật kiểm tra đầu vào: lặp khi `n < 1 or n > 20`.",
-          "Khi nhập đúng số hợp lệ, vòng lặp kết thúc và in kết quả."
+          "Nhập lại khi sai: `while n < 1 or n > 20:`",
+          "Nhập đúng → vòng lặp **kết thúc**."
         ],
         conceptIllustration: {
           type: "loops",
@@ -193,13 +193,12 @@ export const TOPIC_6_WHILE_LOOPS: Module = {
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Thuật toán tìm kiếm nhị phân cho phép đoán đúng một số từ 1 đến 100 trong tối đa $\\log_2(100) \\approx 7$ lần bằng cách so sánh lớn hơn / nhỏ hơn.",
+        summary: "Đoán số 1–100 trong **tối đa 7 lượt** bằng cách **chia đôi** khoảng tìm kiếm (tìm kiếm nhị phân).",
         keyPoints: [
-          "Mỗi lượt đoán: so sánh số đoán `guess` với số bí mật `target`.",
-          "Nếu `guess < target`: in `LON HON` (số cần tìm lớn hơn số bạn đoán).",
-          "Nếu `guess > target`: in `NHO HON` (số cần tìm nhỏ hơn số bạn đoán).",
-          "Nếu `guess == target`: in `CHUC MUNG` và dừng cuộc chơi.",
-          "Nếu sau 7 lượt vẫn chưa trúng: in `THUA CUOC`."
+          "`guess < target` → in `LON HON`",
+          "`guess > target` → in `NHO HON`",
+          "`guess == target` → in `CHUC MUNG` và **dừng**.",
+          "Hết 7 lượt chưa trúng → `THUA CUOC`."
         ],
         conceptIllustration: {
           type: "loops",
@@ -296,11 +295,11 @@ target = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kết hợp vòng lặp while để xác thực số nguyên dương và vòng lặp for để tìm và tính tổng tất cả các ước số dương của n.",
+        summary: "**`while`** để nhập số hợp lệ + **`for`** để tính tổng các **ước** của `n`.",
         keyPoints: [
-          "Lặp đọc số khi `n <= 0`.",
-          "Sau khi có `n > 0`, duyệt `i` từ 1 đến `n` để cộng dồn các `i` thỏa mãn `n % i == 0`.",
-          "In ra: `Tong cac uoc cua {n} la: {tong_uoc}`."
+          "Nhập lại khi `n <= 0`.",
+          "Duyệt `i` từ 1 đến `n`, cộng `i` nếu **`n % i == 0`**.",
+          "In: `Tong cac uoc cua {n} la: {tong_uoc}`"
         ],
         conceptIllustration: {
           type: "loops",

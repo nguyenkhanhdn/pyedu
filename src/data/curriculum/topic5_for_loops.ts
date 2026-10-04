@@ -37,16 +37,13 @@ export const TOPIC_5_FOR_LOOPS: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Vòng lặp for được dùng để lặp lại một khối lệnh với số lần xác định trước. Hàm range() là công cụ chủ lực để sinh ra một dãy số nguyên tuần tự.",
+        summary: "**`for`** lặp số lần **xác định trước**; **`range()`** sinh dãy số nguyên.",
         keyPoints: [
-          "**3 dạng của hàm range()**:",
-          "  1. `range(stop)`: Sinh dãy từ `0` đến `stop - 1` (ví dụ `range(5)` -> 0, 1, 2, 3, 4).",
-          "  2. `range(start, stop)`: Sinh dãy từ `start` đến `stop - 1` (ví dụ `range(1, n + 1)` để chạy từ 1 đến n).",
-          "  3. `range(start, stop, step)`: Sinh dãy với bước nhảy `step`:",
-          "     - `range(2, n + 1, 2)`: Duyệt các số chẵn 2, 4, 6, ...",
-          "     - `range(1, n + 1, 2)`: Duyệt các số lẻ 1, 3, 5, ...",
-          "     - `range(n, 0, -1)`: Đếm ngược từ n về 1 với bước nhảy âm (-1).",
-          "Tham số `end=' '` trong lệnh `print()` giúp in các giá trị trên cùng một dòng cách nhau bởi dấu cách."
+          "`range(stop)`: từ **0** đến `stop - 1`",
+          "`range(start, stop)`: từ `start` đến `stop - 1`",
+          "`range(start, stop, step)`: có **bước nhảy** `step`",
+          "Chẵn: `range(2, n + 1, 2)`; lẻ: `range(1, n + 1, 2)`; ngược: `range(n, 0, -1)`",
+          "`print(i, end=' ')` để in **cùng một dòng**."
         ],
         conceptIllustration: {
           type: "loops",
@@ -288,14 +285,12 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật tích lũy là mẫu hình thuật toán cốt lõi: khởi tạo biến tích lũy (ví dụ total = 0 hoặc count = 0) trước vòng lặp, cập nhật giá trị sau mỗi bước lặp và in kết quả ở cuối chương trình.",
+        summary: "**Tích lũy**: khởi tạo biến **trước** vòng lặp, cập nhật **trong** vòng lặp, in kết quả **sau** vòng lặp.",
         keyPoints: [
-          "**Các bước của kỹ thuật tích lũy**:",
-          "  1. Khởi tạo: `tong = 0` (hoặc `tich = 1` nếu tính tích, `dem = 0` nếu đếm).",
-          "  2. Lặp: `for i in range(1, n + 1):`",
-          "  3. Cập nhật: `tong += i` (tương đương `tong = tong + i`).",
-          "  4. Xuất kết quả sau vòng lặp: `print(tong)` (lưu ý không thụt lề lệnh print).",
-          "In bảng cửu chương: Dùng vòng lặp `for i in range(1, 11): print(f'{k} x {i} = {k * i}')`."
+          "Khởi tạo: `tong = 0` (tích: `tich = 1`, đếm: `dem = 0`)",
+          "Cập nhật: `tong += i`",
+          "`print(tong)` đặt **ngoài** vòng lặp (không thụt lề).",
+          "Bảng cửu chương: `print(f'{k} x {i} = {k * i}')`"
         ],
         conceptIllustration: {
           type: "loops",
@@ -482,17 +477,12 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Đặt câu lệnh if bên trong thân vòng lặp for cho phép kiểm tra từng phần tử khi duyệt qua, từ đó lọc ra các giá trị thỏa mãn điều kiện xác định.",
+        summary: "Đặt **`if` trong `for`** để **lọc** hoặc **phân loại** từng phần tử.",
         keyPoints: [
-          "Cấu trúc cơ bản:",
-          "  ```python",
-          "  for i in range(1, n + 1):",
-          "      if i % 2 == 0:     # Kiểm tra điều kiện",
-          "          print(i)       # Chỉ xử lý khi điều kiện True",
-          "  ```",
-          "Đếm số thỏa điều kiện: `if dieu_kien: count += 1`.",
-          "Cộng dồn có điều kiện: `if dieu_kien: tong += i`.",
-          "Bài toán FizzBuzz kinh điển: Kiểm tra chia hết cho cả 3 và 5 (`i % 15 == 0`), rồi mới đến chia hết cho 3, chia hết cho 5."
+          "Mẫu: `for i in range(1, n + 1):` → `if i % 2 == 0:` → `print(i)`",
+          "Đếm: `if dieu_kien: count += 1`",
+          "Cộng dồn: `if dieu_kien: tong += i`",
+          "**FizzBuzz**: kiểm tra `i % 15 == 0` **trước**, rồi mới `% 3`, `% 5`."
         ],
         conceptIllustration: {
           type: "loops",
@@ -598,15 +588,12 @@ for i in range(1, 51):
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Câu lệnh break dùng để thoát ngay lập tức khỏi vòng lặp khi điều kiện thỏa mãn. Câu lệnh continue dùng để bỏ qua phần còn lại của lượt lặp hiện tại và nhảy sang lượt kế tiếp. Vòng lặp lồng nhau giúp xử lý dữ liệu ma trận và vẽ hình.",
+        summary: "**`break`** thoát vòng lặp; **`continue`** bỏ qua lượt hiện tại; **vòng lặp lồng nhau** để in hình.",
         keyPoints: [
-          "`break`: Dừng vòng lặp ngay tại thời điểm gọi. Rất hữu ích khi tìm kiếm hoặc kiểm tra tính chất (ví dụ kiểm tra số nguyên tố).",
-          "`continue`: Bỏ qua các lệnh phía sau và tiếp tục với giá trị kế tiếp của vòng lặp.",
-          "**Kiểm tra số nguyên tố**:",
-          "  - Nếu `n < 2` -> Không phải số nguyên tố.",
-          "  - Duyệt `i` từ 2 đến `int(n**0.5)`: Nếu `n % i == 0` -> Có ước số -> Không nguyên tố, dùng `break` dừng sớm.",
-          "  - Nếu không gặp ước số nào -> Là số nguyên tố (YES).",
-          "Vòng lặp lồng nhau (2 tầng): Vòng ngoài duyệt hàng, vòng trong duyệt cột/kí tự để in hình sao, hình vuông, kim cương."
+          "`break`: **dừng hẳn** vòng lặp.",
+          "`continue`: **nhảy sang lượt kế**.",
+          "Số nguyên tố: `n < 2` → không; duyệt `i` từ 2 đến `int(n ** 0.5)`, nếu `n % i == 0` → **`break`**.",
+          "Lồng nhau: vòng **ngoài = hàng**, vòng **trong = cột**."
         ],
         conceptIllustration: {
           type: "loops",

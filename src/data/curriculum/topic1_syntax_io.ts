@@ -18,11 +18,11 @@ export const TOPIC_1_SYNTAX_IO: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Trong Python, hàm input() dùng để nhận dữ liệu nhập vào từ bàn phím dưới dạng chuỗi, và hàm print() dùng để hiển thị thông tin ra màn hình.",
+        summary: "**`input()`** nhận dữ liệu từ bàn phím (luôn là chuỗi). **`print()`** hiển thị ra màn hình.",
         keyPoints: [
-          "Cú pháp nhập: `ten_bien = input()`",
-          "Hàm `print()` có thể in chuỗi kết hợp biến bằng f-string: `f\"Xin chao {name}!\"` hoặc nối chuỗi bằng dấu phẩy `,`.",
-          "Mỗi lệnh `print()` mặc định sẽ tự động xuống dòng mới."
+          "Nhập: `ten = input()`",
+          "In kèm biến bằng **f-string**: `print(f\"Xin chao {ten}!\")`",
+          "Mỗi `print()` **tự xuống dòng**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -112,10 +112,10 @@ truong = input()
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Lệnh print() có thể in các ký tự đặc biệt và hoa văn trang trí bằng cách in các chuỗi ký tự cố định.",
+        summary: "Dùng `print()` in các **chuỗi cố định** để tạo hình trang trí.",
         keyPoints: [
-          "Hình vuông 5x5 gồm 5 dòng, mỗi dòng có 5 dấu sao cách nhau bởi dấu cách: `* * * * *`.",
-          "Có thể dùng 5 lệnh `print(\"* * * * *\")` hoặc dùng vòng lặp."
+          "Hình vuông 5x5 = **5 dòng** `* * * * *`",
+          "Lặp lại 5 lệnh `print(\"* * * * *\")`."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -192,11 +192,11 @@ print("* * * * *")
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Để in hình tam giác cân, ta cần căn chỉnh chính xác số lượng khoảng trắng thụt vào ở đầu mỗi dòng.",
+        summary: "Tam giác cân: mỗi dòng gồm **khoảng trắng** thụt đầu dòng + **dấu sao**.",
         keyPoints: [
-          "Dòng 1: 2 khoảng trắng + 1 dấu sao: `  *`",
-          "Dòng 2: 1 khoảng trắng + 3 dấu sao: ` ***`",
-          "Dòng 3: 0 khoảng trắng + 5 dấu sao: `*****`"
+          "Dòng 1: 2 cách + 1 sao → `  *`",
+          "Dòng 2: 1 cách + 3 sao → ` ***`",
+          "Dòng 3: 0 cách + 5 sao → `*****`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -269,11 +269,11 @@ print("  *")
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Hàm print() có hai tham số đặc biệt là sep (ký tự ngăn cách giữa các phần tử) và end (ký tự kết thúc sau khi in).",
+        summary: "`print()` có 2 tham số: **`sep`** (ký tự ngăn cách) và **`end`** (ký tự kết thúc).",
         keyPoints: [
-          "`sep`: Mặc định là khoảng trắng `' '`. Có thể đổi thành `sep='/'`, `sep=':'`, `sep=' - '`, v.v.",
-          "`end`: Mặc định là ký tự xuống dòng `'\\n'`. Có thể đổi thành `end=' '` để in tiếp trên cùng 1 dòng.",
-          "Ví dụ: `print(2, 9, 2026, sep='/', end=' ')` -> in `2/9/2026 ` không xuống dòng."
+          "`sep` mặc định là dấu cách: `sep='/'`, `sep=' - '`",
+          "`end` mặc định là xuống dòng `'\\n'`; `end=' '` để **in tiếp cùng dòng**.",
+          "Ví dụ: `print(2, 9, 2026, sep='/')` → `2/9/2026`"
         ],
         conceptIllustration: {
           type: "syntax",

@@ -18,11 +18,11 @@ export const TOPIC_13_APPLIED_PROJECTS: Module = {
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Chương trình tính hóa đơn bán lẻ tính tổng tiền các món đồ, áp dụng bậc chiết khấu phần trăm (discount rate) và tính số tiền thực thanh toán.",
+        summary: "**Hóa đơn**: tính **tổng tiền** → áp dụng **chiết khấu** → ra **số tiền thanh toán**.",
         keyPoints: [
-          "Tổng tiền gốc: $T = \\sum (SL_i \\times DG_i)$.",
-          "Nếu $T \\ge 500000$: Giảm 10%. Nếu $200000 \\le T < 500000$: Giảm 5%. Ngược lại giảm 0%.",
-          "Số tiền thanh toán: $ThanhToan = T - GiamGia$."
+          "Tổng gốc: **T = Σ (SL × Đơn giá)**",
+          "T ≥ 500000: giảm **10%**; 200000 ≤ T < 500000: giảm **5%**; còn lại **0%**",
+          "Thanh toán = T − Giảm giá"
         ],
         conceptIllustration: {
           type: "variables",
@@ -106,10 +106,10 @@ k = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật phòng thủ dữ liệu đầu vào: Liên tục đọc từng dòng, nếu ép kiểu `float(line)` thành công thì bổ sung vào danh sách cho đến khi đủ $N$ số hợp lệ.",
+        summary: "**Phòng thủ dữ liệu**: đọc từng dòng, ép `float(line)`; **thành công** mới thêm vào danh sách, đủ **N** số thì dừng.",
         keyPoints: [
-          "Bắt lỗi `ValueError` để loại bỏ các dòng chứa chuỗi không phải số.",
-          "Khi đủ $N$ phần tử, tính trung bình cộng của danh sách."
+          "Bắt **`ValueError`** để bỏ dòng không phải số.",
+          "Đủ N số → tính **trung bình cộng**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -193,11 +193,11 @@ n = int(input())
       durationMin: 30,
       xpReward: 80,
       theory: {
-        summary: "Phân tích thống kê dữ liệu bao gồm các chỉ số cơ bản (Min, Max, Sum, Count) và các giải thuật xử lý (Sorting, Searching).",
+        summary: "**Thống kê** danh sách số: **Min, Max, Sum, Count** + **sắp xếp**, **tìm kiếm**.",
         keyPoints: [
-          "Tìm kiếm tuyến tính: `x in a` hoặc tìm vị trí chỉ số `a.index(x)`.",
-          "Sắp xếp Bubble Sort tăng dần.",
-          "Đếm số lượng chẵn và lẻ."
+          "Tìm kiếm: `x in a` hoặc `a.index(x)`",
+          "Sắp xếp: **Bubble Sort** tăng dần.",
+          "Đếm số **chẵn** và số **lẻ**."
         ],
         conceptIllustration: {
           type: "arrays",
@@ -281,12 +281,12 @@ x = int(input())
       durationMin: 35,
       xpReward: 100,
       theory: {
-        summary: "Dự án tổng hợp đỉnh cao: Kết hợp xử lý chuỗi (chuẩn hóa tên), danh sách, cấu trúc rẽ nhánh xếp loại và tìm kiếm học sinh thủ khoa (Max ĐTB).",
+        summary: "**Dự án tổng hợp**: chuẩn hóa tên + danh sách + xếp loại + tìm **thủ khoa** (ĐTB cao nhất).",
         keyPoints: [
-          "Hàm `chuan_hoa(name)`: xóa khoảng trắng thừa, viết hoa đầu từ.",
-          "Hàm `tinh_dtb(toan, van, anh)`: tính trung bình làm tròn 2 chữ số.",
-          "Xếp loại: Gioi (>= 8.0), Kha (6.5 - <8.0), Trung binh (5.0 - <6.5), Yeu (< 5.0).",
-          "Thủ khoa: Học sinh có ĐTB cao nhất lớp."
+          "`chuan_hoa(name)`: bỏ khoảng trắng thừa, **viết hoa đầu từ**.",
+          "`tinh_dtb(toan, van, anh)`: trung bình, làm tròn **2 số lẻ**.",
+          "Xếp loại: Gioi **≥ 8.0**; Kha **≥ 6.5**; Trung binh **≥ 5.0**; Yeu **< 5.0**",
+          "**Thủ khoa** = học sinh có ĐTB cao nhất."
         ],
         conceptIllustration: {
           type: "variables",

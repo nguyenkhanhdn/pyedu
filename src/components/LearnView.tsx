@@ -41,17 +41,27 @@ interface LearnViewProps {
   }) => void;
 }
 
-const renderFormattedText = (text: string) => {
-  const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+// **từ khóa** → tô nổi; `code` → ô mã. Cho phép lồng `code` trong **từ khóa**.
+const renderFormattedText = (text: string, inBold = false): React.ReactNode => {
+  const parts = text.split(/(\*\*.+?\*\*|`[^`]+`)/g);
   return (
     <>
       {parts.map((part, i) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
-        }
-        if (part.startsWith('`') && part.endsWith('`')) {
+        if (part.length > 4 && part.startsWith('**') && part.endsWith('**')) {
           return (
-            <code key={i} className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-xs font-semibold border border-indigo-100">
+            <strong key={i} className="font-bold text-slate-900 bg-amber-100/80 px-1 rounded">
+              {renderFormattedText(part.slice(2, -2), true)}
+            </strong>
+          );
+        }
+        if (part.length > 2 && part.startsWith('`') && part.endsWith('`')) {
+          return (
+            <code
+              key={i}
+              className={`px-1.5 py-0.5 rounded font-mono text-xs font-semibold border ${
+                inBold ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+              }`}
+            >
               {part.slice(1, -1)}
             </code>
           );
@@ -507,7 +517,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   <Info className="h-4 w-4" />
                   <span>Tổng quan kiến thức</span>
                 </div>
-                <p className="text-sm text-slate-700 leading-relaxed font-medium">{selectedLesson.theory.summary}</p>
+                <p className="text-sm text-slate-700 leading-relaxed font-medium">{renderFormattedText(selectedLesson.theory.summary)}</p>
                 <div className="pt-2">
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                     Điểm cốt lõi cần nhớ:

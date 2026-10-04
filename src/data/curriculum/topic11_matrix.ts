@@ -18,10 +18,10 @@ export const TOPIC_11_MATRIX: Module = {
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Ma trận trong Python được biểu diễn bằng danh sách các danh sách (Nested List): `matrix = [list(map(int, input().split())) for _ in range(n)]`.",
+        summary: "**Ma trận** = list của các list: `matrix = [list(map(int, input().split())) for _ in range(n)]`.",
         keyPoints: [
-          "`matrix[i][j]`: Phần tử ở hàng `i`, cột `j`.",
-          "In ma trận: Duyệt từng hàng `row` trong `matrix` và in `print(*row)`."
+          "`matrix[i][j]`: hàng **i**, cột **j**.",
+          "In: duyệt từng `row` và `print(*row)`."
         ],
         conceptIllustration: {
           type: "arrays",
@@ -103,10 +103,9 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Đường chéo chính của ma trận vuông cấp $n$ tập hợp các phần tử có chỉ số hàng bằng chỉ số cột: $A[i][i]$ với $0 \\le i < n$.",
+        summary: "**Đường chéo chính**: các phần tử có **hàng = cột**, tức `A[i][i]`.",
         keyPoints: [
-          "Công thức: $S_{chinh} = \\sum_{i=0}^{n-1} A[i][i]$.",
-          "Duyệt: `tong = sum(matrix[i][i] for i in range(n))`."
+          "`tong = sum(matrix[i][i] for i in range(n))`"
         ],
         conceptIllustration: {
           type: "arrays",
@@ -189,10 +188,9 @@ matrix = [list(map(int, input().split())) for _ in range(n)]
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Đường chéo phụ của ma trận vuông cấp $n$ tập hợp các phần tử có tổng chỉ số hàng và cột thỏa mãn: $i + j = n - 1$, hay phần tử $A[i][n - 1 - i]$.",
+        summary: "**Đường chéo phụ**: các phần tử có **i + j = n - 1**, tức `A[i][n-1-i]`.",
         keyPoints: [
-          "Công thức: $S_{phu} = \\sum_{i=0}^{n-1} A[i][n - 1 - i]$.",
-          "Duyệt: `tong = sum(matrix[i][n - 1 - i] for i in range(n))`."
+          "`tong = sum(matrix[i][n - 1 - i] for i in range(n))`"
         ],
         conceptIllustration: {
           type: "arrays",
@@ -276,10 +274,10 @@ matrix = [list(map(int, input().split())) for _ in range(n)]
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Duyệt qua tất cả các phần tử của ma trận bằng 2 vòng lặp `for i in range(m): for j in range(n):` để tìm giá trị cực đại và lưu lại tọa độ `(r, c)`.",
+        summary: "**Hai vòng `for`** duyệt toàn bộ ma trận để tìm **giá trị lớn nhất** và **tọa độ** của nó.",
         keyPoints: [
-          "Khởi tạo `max_val = matrix[0][0]`, `row_idx = 0`, `col_idx = 0`.",
-          "Nếu `matrix[i][j] > max_val`: cập nhật `max_val = matrix[i][j]`, `row_idx = i`, `col_idx = j`."
+          "Khởi tạo: `max_val = matrix[0][0]`, `row_idx = 0`, `col_idx = 0`",
+          "Nếu `matrix[i][j] > max_val` → cập nhật `max_val`, `row_idx = i`, `col_idx = j`."
         ],
         conceptIllustration: {
           type: "arrays",

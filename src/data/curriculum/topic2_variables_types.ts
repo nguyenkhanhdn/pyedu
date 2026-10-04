@@ -18,10 +18,10 @@ export const TOPIC_2_VARIABLES_TYPES: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Biến là vùng nhớ dùng để lưu trữ giá trị trong chương trình. Python tự động nhận diện kiểu dữ liệu của biến khi gán giá trị.",
+        summary: "**Biến** là vùng nhớ lưu giá trị. Python **tự nhận kiểu** khi gán.",
         keyPoints: [
-          "Quy tắc đặt tên biến: bắt đầu bằng chữ cái hoặc dấu gạch dưới `_`, không chứa dấu cách, không trùng từ khóa.",
-          "Các kiểu dữ liệu cơ bản: `str` (chuỗi), `int` (số nguyên), `float` (số thực), `bool` (logic True/False)."
+          "Tên biến: bắt đầu bằng **chữ cái** hoặc `_`, **không có dấu cách**, không trùng từ khóa.",
+          "Kiểu cơ bản: `str` (chuỗi), `int` (nguyên), `float` (thực), `bool` (True/False)."
         ],
         conceptIllustration: {
           type: "variables",
@@ -106,11 +106,11 @@ diem_van = float(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Mặc định `input()` luôn trả về kiểu chuỗi ký tự (`str`). Để thực hiện tính toán số học, ta phải dùng hàm `int()` để ép kiểu sang số nguyên.",
+        summary: "`input()` luôn trả về **chuỗi** (`str`). Muốn tính toán phải **ép kiểu** bằng `int()`.",
         keyPoints: [
-          "`s = input()` -> `s` có kiểu `str`.",
-          "`age = int(s)` -> `age` có kiểu `int`.",
-          "Hàm `type(x)` trả về kiểu dữ liệu của biến `x`."
+          "`s = input()` → `s` là `str`",
+          "`age = int(s)` → `age` là `int`",
+          "`type(x)` cho biết **kiểu** của `x`."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -190,10 +190,10 @@ s = input()
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Điểm số thường là số thực (`float`). Để tính điểm trung bình hai môn Toán và Văn, ta áp dụng công thức: `(toan + van) / 2`.",
+        summary: "Điểm thường là **số thực** (`float`). Trung bình hai môn: **`(toan + van) / 2`**.",
         keyPoints: [
-          "Dùng `float(input())` để nhận điểm số có phần thập phân.",
-          "Làm tròn điểm số bằng hàm `round(dtb, 2)` hoặc định dạng f-string `f\"{dtb:.2f}\"`."
+          "Nhập số thực: `float(input())`",
+          "Làm tròn: `round(dtb, 2)` hoặc `f\"{dtb:.2f}\"`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -281,11 +281,11 @@ van = float(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Ép kiểu dữ liệu (Type Casting) là quá trình chuyển đổi một giá trị từ kiểu dữ liệu này sang kiểu dữ liệu khác bằng các hàm int(), float(), str(), bool().",
+        summary: "**Ép kiểu** = đổi giá trị sang kiểu khác bằng `int()`, `float()`, `str()`, `bool()`.",
         keyPoints: [
-          "`float(n)`: Chuyển số nguyên thành số thực có phần thập phân (ví dụ 10 -> 10.0).",
-          "`str(n)`: Chuyển số thành chuỗi ký tự (ví dụ 10 -> '10').",
-          "Có thể in giá trị kèm `type(bien)` để kiểm tra kiểu."
+          "`float(10)` → `10.0`",
+          "`str(10)` → `'10'`",
+          "`type(bien)` để **kiểm tra kiểu**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -365,10 +365,10 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Sử dụng các ký tự đặc biệt như `#` nhân với một số (ví dụ `'#' * 30`) để tạo viền bảng báo cáo trực quan và chuyên nghiệp.",
+        summary: "**Nhân chuỗi** với số để tạo viền: **`'#' * 30`** → 30 ký tự `#`.",
         keyPoints: [
-          "Phép nhân chuỗi trong Python: `'#' * 30` sẽ tạo ra 30 ký tự `#` liên tiếp.",
-          "Kết hợp viền trên, viền dưới và nội dung ở giữa để tạo khung thông tin."
+          "`'#' * 30` lặp ký tự `#` 30 lần.",
+          "Khung = **viền trên** + **nội dung** + **viền dưới**."
         ],
         conceptIllustration: {
           type: "syntax",

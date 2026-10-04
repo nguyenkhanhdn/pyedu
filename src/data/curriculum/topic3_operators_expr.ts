@@ -18,10 +18,10 @@ export const TOPIC_3_OPERATORS_EXPR: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Phép trừ số học `-` dùng để tính toán khoảng thời gian hoặc độ tuổi: `tuoi = nam_hien_tai - nam_sinh`.",
+        summary: "Tính tuổi bằng **phép trừ**: **`tuoi = nam_hien_tai - nam_sinh`**.",
         keyPoints: [
-          "Dùng `int(input())` để đọc năm sinh dạng số nguyên.",
-          "Công thức: `tuoi = 2025 - nam_sinh`."
+          "Đọc năm sinh: `int(input())`",
+          "Công thức: `tuoi = 2025 - nam_sinh`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -108,11 +108,10 @@ y = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Phép nhân `*` và phép cộng `+` kết hợp tạo thành công thức tính tổng chi phí mua sắm: `tong = so_luong_1 * gia_1 + so_luong_2 * gia_2`.",
+        summary: "Tổng tiền = **số lượng × đơn giá**, rồi **cộng** các món lại.",
         keyPoints: [
-          "Giá vở: 8.000 đ/quyển.",
-          "Giá bút: 5.000 đ/cây.",
-          "Tổng tiền = `x * 8000 + y * 5000`."
+          "Vở: **8000đ**/quyển; bút: **5000đ**/cây.",
+          "`tong = x * 8000 + y * 5000`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -205,12 +204,12 @@ y = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Toán tử chia lấy nguyên `//` và chia lấy dư `%` rất hữu ích khi đổi đơn vị thời gian (1 giờ = 3600 giây, 1 phút = 60 giây).",
+        summary: "Đổi giây sang giờ:phút:giây bằng **`//`** (chia lấy nguyên) và **`%`** (chia lấy dư).",
         keyPoints: [
-          "`gio = s // 3600` (lấy số giờ nguyên).",
-          "`s_du = s % 3600` (số giây còn lại sau khi trừ đi các giờ chẵn).",
-          "`phut = s_du // 60` (lấy số phút).",
-          "`giay = s_du % 60` (lấy số giây cuối cùng)."
+          "`gio = s // 3600`",
+          "`s_du = s % 3600`",
+          "`phut = s_du // 60`",
+          "`giay = s_du % 60`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -304,12 +303,12 @@ s = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Thư viện `math` trong Python cung cấp hằng số `math.pi` (số Pi xấp xỉ 3.14159...). Công thức: Chu vi $C = 2 \\times \\pi \\times r$, Diện tích $S = \\pi \\times r^2$.",
+        summary: "Dùng **`math.pi`** của thư viện `math` để tính chu vi, diện tích hình tròn.",
         keyPoints: [
-          "Import thư viện: `import math`.",
-          "Chu vi: `c = 2 * math.pi * r`.",
-          "Diện tích: `s = math.pi * (r ** 2)`.",
-          "Định dạng làm tròn 2 chữ số thập phân: `f\"{c:.2f}\"`."
+          "`import math`",
+          "Chu vi: `c = 2 * math.pi * r`",
+          "Diện tích: `s = math.pi * r ** 2`",
+          "Làm tròn 2 số lẻ: `f\"{c:.2f}\"`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -400,11 +399,11 @@ r = float(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Để định dạng số nguyên có dấu phẩy phân cách hàng nghìn trong Python, ta dùng f-string với cú pháp `f\"{so:,}\"` (ví dụ `2500000` -> `'2,500,000'`).",
+        summary: "In số có **dấu phẩy ngăn hàng nghìn** bằng **`f\"{so:,}\"`**.",
         keyPoints: [
-          "Tỷ giá: 1 USD = 25.000 VND.",
-          "`vnd = usd * 25000`.",
-          "Cú pháp định dạng dấu phẩy hàng nghìn: `f\"{vnd:,}\"`."
+          "Tỷ giá: **1 USD = 25000 VND**",
+          "`vnd = usd * 25000`",
+          "In: `f\"{vnd:,}\"` → `2,500,000`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -496,10 +495,10 @@ usd = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Toán tử so sánh `==` khi kết hợp với phép chia lấy dư `%` sẽ trả về trực tiếp giá trị boolean `True` hoặc `False` mà không cần dùng câu lệnh điều kiện `if`.",
+        summary: "**`==`** kết hợp **`%`** cho kết quả **`True`/`False`** mà không cần `if`.",
         keyPoints: [
-          "Biểu thức `n % 2 == 0` trả về `True` nếu `n` là số chẵn, `False` nếu `n` là số lẻ.",
-          "Có thể in trực tiếp biểu thức logic: `print(n % 2 == 0)`."
+          "`n % 2 == 0` → `True` nếu **chẵn**, `False` nếu **lẻ**.",
+          "In trực tiếp: `print(n % 2 == 0)`"
         ],
         conceptIllustration: {
           type: "syntax",

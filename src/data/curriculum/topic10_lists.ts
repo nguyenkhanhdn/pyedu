@@ -18,12 +18,11 @@ export const TOPIC_10_LISTS: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Kỹ thuật nhập một dòng chứa nhiều số nguyên trong Python: `a = list(map(int, input().split()))`.",
+        summary: "Nhập nhiều số trên **một dòng**: **`a = list(map(int, input().split()))`**.",
         keyPoints: [
-          "`input().split()`: Tách chuỗi theo dấu cách.",
-          "`map(int, ...)`: Ép kiểu từng phần tử thành số nguyên.",
-          "`a[0]`: Phần tử đầu tiên; `a[-1]`: Phần tử cuối cùng.",
-          "`len(a)`: Số lượng phần tử."
+          "`input().split()`: **tách** theo dấu cách.",
+          "`map(int, ...)`: **ép** từng phần tử sang `int`.",
+          "`a[0]` đầu; `a[-1]` cuối; `len(a)` số phần tử."
         ],
         conceptIllustration: {
           type: "arrays",
@@ -107,11 +106,12 @@ a = list(map(int, input().split()))
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Thuật toán tìm Min/Max duyệt qua từng phần tử và cập nhật giá trị lớn nhất/nhỏ nhất tìm thấy.",
+        summary: "**Min/Max**: duyệt từng phần tử, **cập nhật** khi gặp giá trị lớn/nhỏ hơn.",
         keyPoints: [
-          "Gán `max_val = min_val = a[0]`.",
-          "Duyệt `for x in a:` nếu `x > max_val: max_val = x`, nếu `x < min_val: min_val = x`.",
-          "Độ phức tạp thời gian: $O(N)$."
+          "Khởi tạo: `max_val = min_val = a[0]`",
+          "`if x > max_val: max_val = x`",
+          "`if x < min_val: min_val = x`",
+          "Độ phức tạp: **O(N)**."
         ],
         conceptIllustration: {
           type: "arrays",
@@ -194,11 +194,11 @@ a = list(map(int, input().split()))
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật lọc (filtering) phần tử trong danh sách thỏa mãn điều kiện `x % 2 == 0` bằng List Comprehension: `chan = [x for x in a if x % 2 == 0]`.",
+        summary: "**Lọc** phần tử bằng **list comprehension**: `[x for x in a if x % 2 == 0]`.",
         keyPoints: [
-          "Lọc số chẵn: `evens = [x for x in a if x % 2 == 0]`.",
-          "Số lượng: `len(evens)`.",
-          "In ra: `print(*evens)` (in các số cách nhau bởi dấu cách)."
+          "Lọc chẵn: `evens = [x for x in a if x % 2 == 0]`",
+          "Đếm: `len(evens)`",
+          "In cách nhau dấu cách: `print(*evens)`"
         ],
         conceptIllustration: {
           type: "arrays",
@@ -292,13 +292,11 @@ a = list(map(int, input().split()))
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Thuật toán sắp xếp nổi bọt (Bubble Sort) lặp qua danh sách, so sánh hai phần tử liền kề `a[j]` và `a[j+1]`. Nếu `a[j] > a[j+1]`, ta hoán đổi vị trí của chúng để phần tử lớn nhất dần nổi về cuối.",
+        summary: "**Bubble Sort**: so sánh **hai phần tử liền kề**, sai thứ tự thì **hoán đổi** — số lớn nhất **nổi về cuối**.",
         keyPoints: [
-          "2 vòng lặp lồng nhau:",
-          "  - `for i in range(n):`",
-          "  - `for j in range(0, n - i - 1):`",
-          "Nếu `a[j] > a[j + 1]`: `a[j], a[j + 1] = a[j + 1], a[j]`",
-          "Độ phức tạp thời gian: $O(N^2)$."
+          "2 vòng `for`: `i in range(n)` và `j in range(0, n - i - 1)`",
+          "`if a[j] > a[j + 1]: a[j], a[j + 1] = a[j + 1], a[j]`",
+          "Độ phức tạp: **O(N²)**."
         ],
         conceptIllustration: {
           type: "arrays",
@@ -388,10 +386,10 @@ a = list(map(int, input().split()))
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Để sắp xếp giảm dần, ta chỉ cần đổi dấu so sánh trong Bubble Sort: Nếu `a[j] < a[j + 1]` thì thực hiện hoán đổi.",
+        summary: "Sắp xếp **giảm dần**: chỉ cần **đổi dấu so sánh** trong Bubble Sort.",
         keyPoints: [
-          "Điều kiện hoán đổi giảm dần: `if a[j] < a[j + 1]: a[j], a[j + 1] = a[j + 1], a[j]`.",
-          "Phần tử nhỏ nhất sẽ dần nổi về phía cuối danh sách."
+          "`if a[j] < a[j + 1]:` hoán đổi.",
+          "Số nhỏ nhất **nổi về cuối**."
         ],
         conceptIllustration: {
           type: "arrays",

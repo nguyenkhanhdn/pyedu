@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { HighlightedCode } from "./CodeBlock";
 
 interface CodeEditorProps {
@@ -26,6 +26,15 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, placeho
   const preRef = useRef<HTMLPreElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const pendingCaret = useRef<number | null>(null);
+
+  // Đặt lại vị trí con trỏ ngay sau khi React cập nhật giá trị (tránh nhảy con trỏ khi gõ nhanh)
+  useLayoutEffect(() => {
+    if (pendingCaret.current !== null && taRef.current) {
+      taRef.current.selectionStart = taRef.current.selectionEnd = pendingCaret.current;
+      pendingCaret.current = null;
+    }
+  }, [value]);
 
   const syncScroll = () => {
     if (preRef.current && taRef.current) {
@@ -38,10 +47,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, placeho
   };
 
   const insert = (start: number, end: number, text: string, caret: number) => {
+    pendingCaret.current = caret;
     onChange(value.slice(0, start) + text + value.slice(end));
-    requestAnimationFrame(() => {
-      if (taRef.current) taRef.current.selectionStart = taRef.current.selectionEnd = caret;
-    });
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -65,7 +72,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, placeho
   const textStyle = lineNumbers ? { ...FONT, paddingLeft: 56 } : FONT;
   const lineCount = value.split("\n").length;
   return (
-    <div className={`relative w-full h-full bg-slate-950 overflow-hidden ${className}`}>
+    <div className={`absolute inset-0 bg-slate-950 overflow-hidden ${className}`}>
       <pre ref={preRef} aria-hidden="true" className="absolute inset-0 overflow-hidden pointer-events-none text-slate-100" style={textStyle}>
         <HighlightedCode code={value} />
         {"\n"}

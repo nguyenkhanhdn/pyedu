@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { User, UserRole, UserStatus } from "../types";
 import {
@@ -63,6 +63,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
     adminResetUserProgress,
     adminBatchAddXp,
     adminApproveUser,
+    refreshUsers,
     adminRejectUser,
     adminBlockUser,
     adminUnblockUser,
@@ -78,6 +79,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  // Vai trò admin chọn lại cho tài khoản chờ duyệt (nếu người dùng đăng ký sai)
+  const [pendingRoles, setPendingRoles] = useState<Record<string, "student" | "teacher" | "admin">>({});
+
+  useEffect(() => {
+    refreshUsers();
+  }, []);
+
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "active" | "blocked">("all");
   const [sortBy, setSortBy] = useState<"xp" | "name" | "streak" | "lessons">("xp");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -308,7 +316,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
   // Handle Approve User
   const handleApproveUser = async (user: User) => {
     setIsProcessing(true);
-    const ok = await adminApproveUser(user.id);
+    const ok = await adminApproveUser(user.id, pendingRoles[user.id] ?? user.role);
     setIsProcessing(false);
     if (ok) {
       showAlert("success", `Đã phê duyệt tài khoản @${user.username} (${user.fullName}) thành công! Học sinh đã có thể đăng nhập.`);
@@ -1278,6 +1286,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                                 {/* PENDING USER ACTIONS: Approve & Reject */}
                                 {isPending && (
                                   <>
+                                    <select
+                                      value={pendingRoles[user.id] ?? user.role}
+                                      onChange={(e) =>
+                                        setPendingRoles((prev) => ({ ...prev, [user.id]: e.target.value as any }))
+                                      }
+                                      disabled={isProcessing}
+                                      className="px-2 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-600 cursor-pointer"
+                                      title="Đổi vai trò nếu người dùng đăng ký sai trước khi duyệt"
+                                    >
+                                      <option value="student">🎓 Học sinh</option>
+                                      <option value="teacher">👨‍🏫 Giáo viên</option>
+                                      <option value="admin">🛡️ Admin</option>
+                                    </select>
                                     <button
                                       onClick={() => handleApproveUser(user)}
                                       disabled={isProcessing}

@@ -42,7 +42,8 @@ interface AppContextType {
   adminBatchDeleteUsers: (userIds: string[]) => Promise<boolean>;
   adminResetUserProgress: (userId: string) => Promise<boolean>;
   adminBatchAddXp: (userIds: string[], xpAmount: number) => Promise<void>;
-  adminApproveUser: (userId: string) => Promise<boolean>;
+  refreshUsers: () => Promise<void>;
+  adminApproveUser: (userId: string, role?: 'student' | 'teacher' | 'admin') => Promise<boolean>;
   adminRejectUser: (userId: string, username?: string, email?: string, fullName?: string) => Promise<boolean>;
   adminBlockUser: (userId: string, reason?: string) => Promise<boolean>;
   adminUnblockUser: (userId: string) => Promise<boolean>;
@@ -273,6 +274,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     fetchInitialData();
   }, []);
+
+  // Admin: tự động làm mới danh sách người dùng để thấy tài khoản mới đăng ký chờ duyệt
+  useEffect(() => {
+    if (currentUser?.role !== 'admin') return;
+    const timer = setInterval(() => {
+      ApiService.fetchUsers().then(users => { if (users) setAllUsers(users); }).catch(() => {});
+    }, 20000);
+    return () => clearInterval(timer);
+  }, [currentUser?.role]);
 
   // Sync Current User changes to LocalStorage
   useEffect(() => {
@@ -591,7 +601,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }): Promise<boolean> => {
     setAuthErrorMessage(null);
     try {
-      const user = await ApiService.register(userData);
+      // Đăng ký công khai không được tự chọn quyền admin
+      const user = await ApiService.register({ ...userData, role: userData.role === 'teacher' ? 'teacher' : 'student' });
       if (user) {
         const users = await ApiService.fetchUsers();
         setAllUsers(users);
@@ -749,11 +760,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const adminApproveUser = async (userId: string): Promise<boolean> => {
+  const refreshUsers = async (): Promise<void> => {
     try {
-      const updated = await ApiService.adminApproveUser(userId);
+      const users = await ApiService.fetchUsers();
+      if (users) setAllUsers(users);
+    } catch (e) {
+      console.warn("Refresh users notice:", e);
+    }
+  };
+
+  const adminApproveUser = async (userId: string, role?: 'student' | 'teacher' | 'admin'): Promise<boolean> => {
+    try {
+      const updated = await ApiService.adminApproveUser(userId, role);
       if (updated) {
-        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active', approvedAt: updated.approvedAt } : u));
+        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'active', approvedAt: updated.approvedAt, ...(role ? { role } : {}) } : u));
         return true;
       }
       return false;
@@ -1136,6 +1156,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminResetUserProgress,
         adminBatchAddXp,
         adminApproveUser,
+        refreshUsers,
         adminRejectUser,
         adminBlockUser,
         adminUnblockUser,

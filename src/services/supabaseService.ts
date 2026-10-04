@@ -218,7 +218,14 @@ export class SupabaseService {
 
       if (error) {
         console.error("Supabase createUser error:", error);
-        return null;
+        const msg = (error.message || "").toLowerCase();
+        if (error.code === "23505" || msg.includes("duplicate")) {
+          throw new Error("Tên đăng nhập hoặc Email đã tồn tại trong CSDL.");
+        }
+        if (error.code === "PGRST204" || error.code === "42703" || msg.includes("column")) {
+          throw new Error("CSDL Supabase thiếu cột duyệt tài khoản (status...). Admin cần chạy lại Script SQL ở mục Supabase.");
+        }
+        throw new Error("Không thể lưu tài khoản lên Supabase: " + error.message);
       }
 
       // Add default starter badge
@@ -232,6 +239,17 @@ export class SupabaseService {
     } catch (e) {
       console.error("Supabase createUser exception:", e);
       return null;
+    }
+  }
+
+  public static async batchUpdateUsers(userIds: string[], updates: Record<string, any>): Promise<boolean> {
+    const supabase = getSupabase();
+    if (!supabase || userIds.length === 0) return false;
+    try {
+      const { error } = await supabase.from("users").update(updates).in("id", userIds);
+      return !error;
+    } catch {
+      return false;
     }
   }
 
@@ -325,7 +343,11 @@ export class SupabaseService {
       if (updates.reminderEnabled !== undefined) dbUpdates.reminder_enabled = updates.reminderEnabled;
 
       if (Object.keys(dbUpdates).length > 0) {
-        await supabase.from("users").update(dbUpdates).eq("id", userId);
+        const { error } = await supabase.from("users").update(dbUpdates).eq("id", userId);
+        if (error) {
+          console.warn("Supabase updateUserProfile error:", error);
+          return null;
+        }
       }
 
       if (updates.completedLessons) {

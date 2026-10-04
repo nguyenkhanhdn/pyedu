@@ -859,22 +859,20 @@ export const ApiService = {
     const requireApproval = LocalDataManager.getRequireApprovalSetting();
     const initialStatus: "active" | "pending" = userData.role === 'admin' ? 'active' : (requireApproval ? 'pending' : 'active');
 
-    // 1. Direct Supabase Creation
+    // 1. Direct Supabase Creation (lưu lỗi thật thay vì âm thầm chuyển sang bộ nhớ cục bộ,
+    //    để tài khoản chờ duyệt luôn xuất hiện trong danh sách của Admin)
     if (SupabaseService.isAvailable()) {
-      try {
-        const suUser = await SupabaseService.createUser({
-          ...userData,
-          status: initialStatus
-        });
-        if (suUser) {
-          const users = LocalDataManager.getUsers();
-          users.push(suUser);
-          LocalDataManager.saveUsers(users);
-          return suUser;
-        }
-      } catch (err) {
-        console.warn("Supabase direct createUser notice:", err);
+      const suUser = await SupabaseService.createUser({
+        ...userData,
+        status: initialStatus
+      });
+      if (suUser) {
+        const users = LocalDataManager.getUsers().filter(u => u.id !== suUser.id);
+        users.push(suUser);
+        LocalDataManager.saveUsers(users);
+        return suUser;
       }
+      throw new Error("Không thể lưu tài khoản lên Supabase. Vui lòng thử lại sau.");
     }
 
     // 2. Direct SQLite backend creation
@@ -932,11 +930,16 @@ export const ApiService = {
     return newUser;
   },
 
-  async adminApproveUser(userId: string): Promise<User | null> {
+  async adminApproveUser(userId: string, role?: User["role"]): Promise<User | null> {
+    const approvedAt = new Date().toISOString().split("T")[0];
+    const updates: Partial<User> = { status: "active", approvedAt };
+    if (role) updates.role = role;
     if (SupabaseService.isAvailable()) {
-      await SupabaseService.updateUserProfile(userId, { status: "active", approvedAt: new Date().toISOString().split("T")[0] });
+      const saved = await SupabaseService.updateUserProfile(userId, updates);
+      if (!saved) return null;
     }
-    return LocalDataManager.approveUser(userId);
+    // Admin có thể đang dùng trình duyệt chưa có bản sao cục bộ của người dùng này
+    return LocalDataManager.updateUser(userId, updates) || ({ id: userId, ...updates } as User);
   },
 
   async adminRejectUser(userId: string, username?: string, email?: string, fullName?: string): Promise<boolean> {
@@ -960,10 +963,23 @@ export const ApiService = {
   },
 
   async adminBatchApproveUsers(userIds: string[]): Promise<boolean> {
-    return LocalDataManager.batchApproveUsers(userIds);
+    const now = new Date().toISOString().split("T")[0];
+    if (SupabaseService.isAvailable()) {
+      const ok = await SupabaseService.batchUpdateUsers(userIds, { status: "active", approved_at: now });
+      if (!ok) return false;
+    }
+    LocalDataManager.batchApproveUsers(userIds);
+    return true;
   },
 
   async adminBatchBlockUsers(userIds: string[], reason?: string): Promise<boolean> {
+    if (SupabaseService.isAvailable()) {
+      await SupabaseService.batchUpdateUsers(userIds, {
+        status: "blocked",
+        ban_reason: reason || "Khóa hàng loạt",
+        banned_at: new Date().toISOString().split("T")[0]
+      });
+    }
     return LocalDataManager.batchBlockUsers(userIds, reason);
   },
 

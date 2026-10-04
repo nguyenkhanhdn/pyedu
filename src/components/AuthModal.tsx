@@ -257,7 +257,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Tài khoản dùng thử nhanh:
             </p>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={() => handleQuickSwitch("admin", "admin@password")}
@@ -279,18 +279,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-slate-800 truncate">Học sinh Khánh</p>
                   <p className="text-[9px] text-slate-500 truncate">Lớp 10A1</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickSwitch("thaynam_tin", "123456")}
-                className="p-2 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 rounded-xl text-left transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Shield className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 truncate">Thầy Nam (GV)</p>
-                  <p className="text-[9px] text-slate-500 truncate">Toàn quyền bài</p>
                 </div>
               </button>
             </div>

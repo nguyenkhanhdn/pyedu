@@ -59,6 +59,24 @@ export const TOPIC_6_WHILE_LOOPS: Module = {
             explanation: "Lặp khi điểm chưa nằm trong khoảng [0, 10].",
             code: "score = -1\n# while score < 0 or score > 10:\n#     score = float(input())",
             output: "Du lieu hop le: 8.5"
+          },
+          {
+            title: "Ví dụ: Vòng lặp đếm",
+            explanation: "`while` lặp khi điều kiện còn đúng.",
+            code: "i = 1\nwhile i <= 5:\n    print(i, end=' ')\n    i += 1\nprint()",
+            output: "1 2 3 4 5 "
+          },
+          {
+            title: "Ví dụ: Kiểm tra dữ liệu nhập",
+            explanation: "Lặp lại cho tới khi nhập hợp lệ (mô phỏng dãy nhập).",
+            code: "du_lieu = [30, -2, 15]\nvi_tri = 0\nn = du_lieu[vi_tri]\nwhile n < 1 or n > 20:\n    vi_tri += 1\n    n = du_lieu[vi_tri]\nprint('So hop le:', n)",
+            output: "So hop le: 15"
+          },
+          {
+            title: "Ví dụ: Lệnh break trong while",
+            explanation: "Thoát vòng lặp vô hạn khi đủ điều kiện.",
+            code: "i = 0\nwhile True:\n    i += 1\n    if i * i > 50:\n        break\nprint(i)",
+            output: "8"
           }
         ],
         multipleChoice: {
@@ -219,6 +237,18 @@ export const TOPIC_6_WHILE_LOOPS: Module = {
             explanation: "Đoán 50 -> NHO HON, Đoán 40 -> CHUC MUNG.",
             code: "# Target = 40, Guesses: [50, 40]\n# Output: NHO HON\n# CHUC MUNG",
             output: "NHO HON\nCHUC MUNG"
+          },
+          {
+            title: "Ví dụ: Chia đôi khoảng tìm kiếm",
+            explanation: "Mỗi lượt đoán số giữa khoảng.",
+            code: "target = 40\nlo, hi = 1, 100\nluot = 0\nwhile lo <= hi:\n    guess = (lo + hi) // 2\n    luot += 1\n    if guess == target:\n        print('CHUC MUNG sau', luot, 'luot')\n        break\n    elif guess < target:\n        lo = guess + 1\n    else:\n        hi = guess - 1",
+            output: "CHUC MUNG sau 5 luot"
+          },
+          {
+            title: "Ví dụ: So sánh số đoán",
+            explanation: "Ba trường hợp: nhỏ hơn, lớn hơn, bằng.",
+            code: "target = 40\nguess = 25\nif guess < target:\n    print('LON HON')\nelif guess > target:\n    print('NHO HON')\nelse:\n    print('CHUC MUNG')",
+            output: "LON HON"
           }
         ],
         multipleChoice: {
@@ -319,6 +349,18 @@ target = int(input())
             explanation: "Ước của 6 là 1, 2, 3, 6. Tổng = 12.",
             code: "n = 6\n# 1 + 2 + 3 + 6 = 12\nprint('Tong cac uoc cua 6 la: 12')",
             output: "Tong cac uoc cua 6 la: 12"
+          },
+          {
+            title: "Ví dụ: Tìm ước của 12",
+            explanation: "`n % i == 0` nghĩa là `i` là ước của `n`.",
+            code: "n = 12\nfor i in range(1, n + 1):\n    if n % i == 0:\n        print(i, end=' ')\nprint()",
+            output: "1 2 3 4 6 12 "
+          },
+          {
+            title: "Ví dụ: Tổng các ước",
+            explanation: "Cộng dồn các ước.",
+            code: "n = 12\ntong_uoc = 0\nfor i in range(1, n + 1):\n    if n % i == 0:\n        tong_uoc += i\nprint(f'Tong cac uoc cua {n} la: {tong_uoc}')",
+            output: "Tong cac uoc cua 12 la: 28"
           }
         ],
         multipleChoice: {

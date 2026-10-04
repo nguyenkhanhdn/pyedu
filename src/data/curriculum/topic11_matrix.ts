@@ -41,6 +41,24 @@ export const TOPIC_11_MATRIX: Module = {
             explanation: "Nhập n = 2 và in ra 2 dòng.",
             code: "n = 2\nm = [[1, 2], [3, 4]]\nfor row in m:\n    print(*row)",
             output: "1 2\n3 4"
+          },
+          {
+            title: "Ví dụ: Tạo ma trận",
+            explanation: "List của các list.",
+            code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nprint(matrix)",
+            output: "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]"
+          },
+          {
+            title: "Ví dụ: Truy cập phần tử",
+            explanation: "`matrix[i][j]` là hàng i, cột j (tính từ 0).",
+            code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nprint(matrix[0][0], matrix[1][2], matrix[2][1])",
+            output: "1 6 8"
+          },
+          {
+            title: "Ví dụ: In ma trận",
+            explanation: "Duyệt từng hàng và in.",
+            code: "matrix = [[1, 2], [3, 4]]\nfor row in matrix:\n    print(*row)",
+            output: "1 2\n3 4"
           }
         ],
         multipleChoice: {
@@ -124,6 +142,18 @@ n = int(input())
             title: "Ví dụ: Ma trận 3x3",
             explanation: "[[1, 2, 3], [4, 5, 6], [7, 8, 9]] -> Đường chéo chính: 1 + 5 + 9 = 15.",
             code: "m = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nprint(sum(m[i][i] for i in range(3)))",
+            output: "15"
+          },
+          {
+            title: "Ví dụ: Đường chéo chính",
+            explanation: "Phần tử `matrix[i][i]`.",
+            code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nn = 3\nfor i in range(n):\n    print(matrix[i][i], end=' ')\nprint()",
+            output: "1 5 9 "
+          },
+          {
+            title: "Ví dụ: Tổng đường chéo chính",
+            explanation: "Dùng `sum()` kết hợp vòng lặp.",
+            code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nprint(sum(matrix[i][i] for i in range(3)))",
             output: "15"
           }
         ],
@@ -211,6 +241,18 @@ matrix = [list(map(int, input().split())) for _ in range(n)]
             explanation: "[[1, 2], [3, 4]] -> Đường chéo phụ: 2 + 3 = 5.",
             code: "m = [[1, 2], [3, 4]]\nprint(m[0][1] + m[1][0])",
             output: "5"
+          },
+          {
+            title: "Ví dụ: Đường chéo phụ",
+            explanation: "Phần tử `matrix[i][n - 1 - i]`.",
+            code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nn = 3\nfor i in range(n):\n    print(matrix[i][n - 1 - i], end=' ')\nprint()",
+            output: "3 5 7 "
+          },
+          {
+            title: "Ví dụ: Tổng đường chéo phụ",
+            explanation: "Dùng `sum()`.",
+            code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nprint(sum(matrix[i][3 - 1 - i] for i in range(3)))",
+            output: "15"
           }
         ],
         multipleChoice: {
@@ -296,6 +338,12 @@ matrix = [list(map(int, input().split())) for _ in range(n)]
             explanation: "[[2, 8, 4], [1, 9, 3]] -> Max = 9 tại hàng 1, cột 1.",
             code: "m = [[2, 8, 4], [1, 9, 3]]\n# Max: 9\n# Hang: 1, Cot: 1",
             output: "Max: 9\nVi tri: hang 1, cot 1"
+          },
+          {
+            title: "Ví dụ: Tìm max và tọa độ",
+            explanation: "Hai vòng `for` và cập nhật tọa độ.",
+            code: "matrix = [[3, 8, 1], [9, 2, 4]]\nmax_val = matrix[0][0]\nrow_idx = col_idx = 0\nfor i in range(2):\n    for j in range(3):\n        if matrix[i][j] > max_val:\n            max_val = matrix[i][j]\n            row_idx, col_idx = i, j\nprint(max_val, row_idx, col_idx)",
+            output: "9 1 0"
           }
         ],
         multipleChoice: {

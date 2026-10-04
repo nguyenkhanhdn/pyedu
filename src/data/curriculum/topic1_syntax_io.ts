@@ -40,6 +40,24 @@ export const TOPIC_1_SYNTAX_IO: Module = {
             explanation: "Nhập tên và xuất lời chào.",
             code: 'ten = input()\nprint(f"Xin chao {ten}!")',
             output: "Xin chao Nguyen Van An!"
+          },
+          {
+            title: "Ví dụ: Nhập và in lại",
+            explanation: "`input()` nhận chuỗi, lưu vào biến rồi `print()` ra.",
+            code: "ten = 'An'  # thay bằng input() khi chạy thật\nprint(ten)",
+            output: "An"
+          },
+          {
+            title: "Ví dụ: Dùng dấu phẩy",
+            explanation: "In nhiều giá trị bằng dấu `,` (tự thêm dấu cách).",
+            code: "ten = 'An'\nlop = '10A1'\nprint('Xin chao', ten, '- lop', lop)",
+            output: "Xin chao An - lop 10A1"
+          },
+          {
+            title: "Ví dụ: Hai lệnh print",
+            explanation: "Mỗi `print()` tự xuống dòng.",
+            code: "print('Dong 1')\nprint('Dong 2')",
+            output: "Dong 1\nDong 2"
           }
         ],
         multipleChoice: {
@@ -133,6 +151,18 @@ truong = input()
             explanation: "In một dòng gồm 5 dấu sao.",
             code: 'print("* * * * *")',
             output: "* * * * *"
+          },
+          {
+            title: "Ví dụ: Hình vuông 3x3",
+            explanation: "In 3 dòng, mỗi dòng 3 dấu `*`.",
+            code: "print('* * *')\nprint('* * *')\nprint('* * *')",
+            output: "* * *\n* * *\n* * *"
+          },
+          {
+            title: "Ví dụ: Dùng vòng lặp",
+            explanation: "Dùng `for` thay cho việc viết lặp lại.",
+            code: "for i in range(3):\n    print('* * *')",
+            output: "* * *\n* * *\n* * *"
           }
         ],
         multipleChoice: {
@@ -214,6 +244,18 @@ print("* * * * *")
             explanation: "In 3 dòng tạo thành hình tam giác cân.",
             code: 'print("  *")\nprint(" ***")\nprint("*****")',
             output: "  *\n ***\n*****"
+          },
+          {
+            title: "Ví dụ: Tam giác 4 dòng",
+            explanation: "Số khoảng trắng giảm dần, số sao tăng 2 mỗi dòng.",
+            code: "print('   *')\nprint('  ***')\nprint(' *****')\nprint('*******')",
+            output: "   *\n  ***\n *****\n*******"
+          },
+          {
+            title: "Ví dụ: Bằng vòng lặp",
+            explanation: "Dòng i có `n - i` cách và `2*i - 1` sao.",
+            code: "n = 4\nfor i in range(1, n + 1):\n    print(' ' * (n - i) + '*' * (2 * i - 1))",
+            output: "   *\n  ***\n *****\n*******"
           }
         ],
         multipleChoice: {
@@ -291,6 +333,24 @@ print("  *")
             explanation: "Dùng sep='/' để in ngày tháng.",
             code: "d = 2\nm = 9\ny = 2026\nprint(d, m, y, sep='/')",
             output: "2/9/2026"
+          },
+          {
+            title: "Ví dụ: Tham số sep",
+            explanation: "`sep` đổi ký tự ngăn cách giữa các giá trị.",
+            code: "print(2, 9, 2026, sep='/')\nprint('a', 'b', 'c', sep=' - ')",
+            output: "2/9/2026\na - b - c"
+          },
+          {
+            title: "Ví dụ: Tham số end",
+            explanation: "`end=' '` giúp in tiếp **cùng một dòng**.",
+            code: "print('Xin', end=' ')\nprint('chao', end='!')\nprint()",
+            output: "Xin chao!"
+          },
+          {
+            title: "Ví dụ: Kết hợp sep và end",
+            explanation: "Dùng cả hai tham số trong một lệnh.",
+            code: "print(1, 2, 3, sep=', ', end='.\\n')",
+            output: "1, 2, 3."
           }
         ],
         multipleChoice: {

@@ -60,6 +60,24 @@ export const TOPIC_4_BRANCHING: Module = {
             explanation: "Nhập một số nguyên n, nếu n lớn hơn 0 thì in 'So duong'.",
             code: "n = int(input())\nif n > 0:\n    print('So duong')",
             output: "Đầu vào: 5 -> Đầu ra: So duong"
+          },
+          {
+            title: "Ví dụ: Điều kiện sai",
+            explanation: "Điều kiện `False` thì khối lệnh bị bỏ qua.",
+            code: "n = -3\nif n > 0:\n    print('So duong')\nprint('Het')",
+            output: "Het"
+          },
+          {
+            title: "Ví dụ: Các toán tử so sánh",
+            explanation: "`==`, `!=`, `>`, `<`, `>=`, `<=`.",
+            code: "a = 5\nprint(a == 5, a != 5)\nprint(a > 3, a < 3)\nprint(a >= 5, a <= 4)",
+            output: "True False\nTrue False\nTrue False"
+          },
+          {
+            title: "Ví dụ: Nhiều lệnh trong if",
+            explanation: "Mọi lệnh thụt lề 4 dấu cách đều thuộc `if`.",
+            code: "diem = 9\nif diem >= 8:\n    print('Gioi')\n    print('Chuc mung!')",
+            output: "Gioi\nChuc mung!"
           }
         ],
         multipleChoice: {
@@ -227,6 +245,18 @@ n = int(input())
             explanation: "Nếu n chia hết cho 2 in 'So chan', ngược lại in 'So le'.",
             code: "n = int(input())\nif n % 2 == 0:\n    print('So chan')\nelse:\n    print('So le')",
             output: "Đầu vào: 4 -> Đầu ra: So chan\nĐầu vào: 7 -> Đầu ra: So le"
+          },
+          {
+            title: "Ví dụ: Đỗ hay trượt",
+            explanation: "Điểm ≥ 5 là đỗ, ngược lại là trượt.",
+            code: "diem = 4\nif diem >= 5:\n    print('Do')\nelse:\n    print('Truot')",
+            output: "Truot"
+          },
+          {
+            title: "Ví dụ: Số lớn hơn",
+            explanation: "So sánh hai số và in số lớn hơn.",
+            code: "a = 7\nb = 12\nif a > b:\n    print(a)\nelse:\n    print(b)",
+            output: "12"
           }
         ],
         multipleChoice: {
@@ -399,6 +429,18 @@ n = int(input())
             explanation: "Kiểm tra 3 trường hợp của một số nguyên n.",
             code: "n = int(input())\nif n > 0:\n    print('So duong')\nelif n < 0:\n    print('So am')\nelse:\n    print('Bang 0')",
             output: "Đầu vào: -4 -> Đầu ra: So am"
+          },
+          {
+            title: "Ví dụ: Xếp loại điểm",
+            explanation: "Kiểm tra từ điều kiện cao đến thấp.",
+            code: "diem = 7.2\nif diem >= 8:\n    print('Gioi')\nelif diem >= 6.5:\n    print('Kha')\nelif diem >= 5:\n    print('Trung binh')\nelse:\n    print('Yeu')",
+            output: "Kha"
+          },
+          {
+            title: "Ví dụ: Thứ tự điều kiện quan trọng",
+            explanation: "Sai thứ tự sẽ cho kết quả sai: 9 vẫn khớp `>= 5` trước.",
+            code: "diem = 9\nif diem >= 5:\n    print('Trung binh')  # sai thu tu!\nelif diem >= 8:\n    print('Gioi')",
+            output: "Trung binh"
           }
         ],
         multipleChoice: {
@@ -579,6 +621,30 @@ n = int(input())
             explanation: "Cân nặng 60kg, cao 1.70m -> BMI = 20.76 -> Binh thuong.",
             code: "w = 60\nh = 1.70\nbmi = w / (h * h)\nif bmi < 18.5:\n    print('Thieu can')\nelif bmi < 25:\n    print('Binh thuong')\nelif bmi < 30:\n    print('Thua can')\nelse:\n    print('Beo phi')",
             output: "Binh thuong"
+          },
+          {
+            title: "Ví dụ: Toán tử and",
+            explanation: "Cần **cả hai** điều kiện cùng đúng.",
+            code: "tuoi = 16\nif tuoi >= 15 and tuoi <= 18:\n    print('Hoc sinh THPT')",
+            output: "Hoc sinh THPT"
+          },
+          {
+            title: "Ví dụ: Toán tử or",
+            explanation: "Chỉ cần **một** điều kiện đúng.",
+            code: "thu = 'Chu nhat'\nif thu == 'Thu bay' or thu == 'Chu nhat':\n    print('Nghi hoc')",
+            output: "Nghi hoc"
+          },
+          {
+            title: "Ví dụ: Toán tử not",
+            explanation: "`not` đảo ngược kết quả.",
+            code: "troi_mua = False\nif not troi_mua:\n    print('Di da bong')",
+            output: "Di da bong"
+          },
+          {
+            title: "Ví dụ: if lồng nhau",
+            explanation: "Kiểm tra điều kiện thứ hai bên trong `if` thứ nhất.",
+            code: "n = 12\nif n > 0:\n    if n % 2 == 0:\n        print('Duong va chan')",
+            output: "Duong va chan"
           }
         ],
         multipleChoice: {

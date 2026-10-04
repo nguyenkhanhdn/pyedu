@@ -41,6 +41,18 @@ export const TOPIC_12_COMPREHENSIVE: Module = {
             explanation: "Nguyen An, điểm [9, 8, 9, 8, 9] -> DTB = 8.60 -> Gioi.",
             code: "# Nguyen An: DTB = 8.60 - Gioi",
             output: "Nguyen An | DTB: 8.60 | Xep loai: Gioi"
+          },
+          {
+            title: "Ví dụ: Tính điểm trung bình 5 môn",
+            explanation: "`sum(diem) / 5`.",
+            code: "diem = [8, 7.5, 9, 6, 8.5]\ndtb = sum(diem) / 5\nprint(f'{dtb:.2f}')",
+            output: "7.80"
+          },
+          {
+            title: "Ví dụ: Xếp loại",
+            explanation: "Dùng chuỗi `if / elif / else`.",
+            code: "dtb = 7.8\nif dtb >= 9:\n    print('Xuat sac')\nelif dtb >= 8:\n    print('Gioi')\nelif dtb >= 6.5:\n    print('Kha')\nelif dtb >= 5:\n    print('Trung binh')\nelse:\n    print('Yeu')",
+            output: "Kha"
           }
         ],
         multipleChoice: {
@@ -130,6 +142,12 @@ n = int(input())
             explanation: "Năm 1: Lãi 1tr, Dư 11tr. Năm 2: Lãi 1.1tr, Dư 12.1tr.",
             code: "# Nam 1: 11.00tr\n# Nam 2: 12.10tr",
             output: "Nam 1 | Lai: 1.00 | Du: 11.00\nNam 2 | Lai: 1.10 | Du: 12.10"
+          },
+          {
+            title: "Ví dụ: Lãi kép từng năm",
+            explanation: "Lãi được cộng vào vốn mỗi năm.",
+            code: "current = 10000000\nr = 10\nfor nam in range(1, 4):\n    interest = current * (r / 100)\n    current += interest\n    print(f'Nam {nam}: {current:,.0f}')",
+            output: "Nam 1: 11,000,000\nNam 2: 12,100,000\nNam 3: 13,310,000"
           }
         ],
         multipleChoice: {

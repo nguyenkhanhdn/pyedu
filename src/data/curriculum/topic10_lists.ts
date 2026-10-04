@@ -42,6 +42,24 @@ export const TOPIC_10_LISTS: Module = {
             explanation: "Đầu: 5, Cuối: 1, Số lượng: 4.",
             code: "a = [5, 2, 9, 1]\nprint(a)\nprint('Dau:', a[0])\nprint('Cuoi:', a[-1])\nprint('So luong:', len(a))",
             output: "[5, 2, 9, 1]\nDau: 5\nCuoi: 1\nSo luong: 4"
+          },
+          {
+            title: "Ví dụ: split() và map()",
+            explanation: "Từng bước biến chuỗi thành list số.",
+            code: "s = '5 2 9 1'\nparts = s.split()\nprint(parts)\na = list(map(int, parts))\nprint(a)",
+            output: "['5', '2', '9', '1']\n[5, 2, 9, 1]"
+          },
+          {
+            title: "Ví dụ: Truy cập phần tử",
+            explanation: "`a[0]` đầu, `a[-1]` cuối, `len(a)` số phần tử.",
+            code: "a = [5, 2, 9, 1]\nprint(a[0], a[-1], len(a))",
+            output: "5 1 4"
+          },
+          {
+            title: "Ví dụ: Thêm và duyệt list",
+            explanation: "`append()` thêm phần tử; `for` duyệt từng phần tử.",
+            code: "a = [5, 2]\na.append(9)\nfor x in a:\n    print(x, end=' ')\nprint()",
+            output: "5 2 9 "
           }
         ],
         multipleChoice: {
@@ -131,6 +149,24 @@ a = list(map(int, input().split()))
             explanation: "Max = 28, Min = 3.",
             code: "a = [12, 5, 28, 3]\nprint('Max:', max(a))\nprint('Min:', min(a))",
             output: "Max: 28\nMin: 3"
+          },
+          {
+            title: "Ví dụ: Tìm max thủ công",
+            explanation: "Duyệt và cập nhật khi gặp số lớn hơn.",
+            code: "a = [12, 5, 28, 3]\nmax_val = a[0]\nfor x in a:\n    if x > max_val:\n        max_val = x\nprint(max_val)",
+            output: "28"
+          },
+          {
+            title: "Ví dụ: Tìm min thủ công",
+            explanation: "Tương tự nhưng so sánh nhỏ hơn.",
+            code: "a = [12, 5, 28, 3]\nmin_val = a[0]\nfor x in a:\n    if x < min_val:\n        min_val = x\nprint(min_val)",
+            output: "3"
+          },
+          {
+            title: "Ví dụ: Hàm có sẵn min() và max()",
+            explanation: "Python có sẵn hàm cho trường hợp đơn giản.",
+            code: "a = [12, 5, 28, 3]\nprint(min(a), max(a), sum(a))",
+            output: "3 28 48"
           }
         ],
         multipleChoice: {
@@ -219,6 +255,24 @@ a = list(map(int, input().split()))
             explanation: "Có 3 số chẵn là 4, 2, 8.",
             code: "a = [4, 7, 2, 9, 8]\ne = [x for x in a if x % 2 == 0]\nprint('So luong so chan:', len(e))\nprint('Cac so chan:', *e)",
             output: "So luong so chan: 3\nCac so chan: 4 2 8"
+          },
+          {
+            title: "Ví dụ: Lọc số chẵn",
+            explanation: "List comprehension với điều kiện.",
+            code: "a = [4, 7, 2, 9, 8]\nevens = [x for x in a if x % 2 == 0]\nprint(evens)",
+            output: "[4, 2, 8]"
+          },
+          {
+            title: "Ví dụ: Đếm và in",
+            explanation: "`len()` đếm; `print(*evens)` in cách nhau dấu cách.",
+            code: "a = [4, 7, 2, 9, 8]\nevens = [x for x in a if x % 2 == 0]\nprint(len(evens))\nprint(*evens)",
+            output: "3\n4 2 8"
+          },
+          {
+            title: "Ví dụ: Lọc bằng vòng lặp",
+            explanation: "Cách viết tương đương với `for` và `if`.",
+            code: "a = [4, 7, 2, 9, 8]\nevens = []\nfor x in a:\n    if x % 2 == 0:\n        evens.append(x)\nprint(evens)",
+            output: "[4, 2, 8]"
           }
         ],
         multipleChoice: {
@@ -316,6 +370,18 @@ a = list(map(int, input().split()))
             explanation: "Sau Bubble Sort thu được [1, 2, 5, 9].",
             code: "a = [5, 2, 9, 1]\nn = len(a)\nfor i in range(n):\n    for j in range(n - i - 1):\n        if a[j] > a[j + 1]:\n            a[j], a[j + 1] = a[j + 1], a[j]\nprint(*a)",
             output: "1 2 5 9"
+          },
+          {
+            title: "Ví dụ: Hoán đổi hai phần tử",
+            explanation: "`a, b = b, a` không cần biến tạm.",
+            code: "a = [5, 2]\na[0], a[1] = a[1], a[0]\nprint(a)",
+            output: "[2, 5]"
+          },
+          {
+            title: "Ví dụ: Bubble Sort đầy đủ",
+            explanation: "Hai vòng `for` lồng nhau.",
+            code: "a = [5, 2, 9, 1]\nn = len(a)\nfor i in range(n):\n    for j in range(0, n - i - 1):\n        if a[j] > a[j + 1]:\n            a[j], a[j + 1] = a[j + 1], a[j]\nprint(a)",
+            output: "[1, 2, 5, 9]"
           }
         ],
         multipleChoice: {
@@ -409,6 +475,12 @@ a = list(map(int, input().split()))
             explanation: "Kết quả: 8 5 2 1.",
             code: "a = [2, 5, 1, 8]\nn = len(a)\nfor i in range(n):\n    for j in range(n - i - 1):\n        if a[j] < a[j + 1]:\n            a[j], a[j + 1] = a[j + 1], a[j]\nprint(*a)",
             output: "8 5 2 1"
+          },
+          {
+            title: "Ví dụ: Bubble Sort giảm dần",
+            explanation: "Đổi dấu so sánh thành `<`.",
+            code: "a = [2, 5, 1, 8]\nn = len(a)\nfor i in range(n):\n    for j in range(0, n - i - 1):\n        if a[j] < a[j + 1]:\n            a[j], a[j + 1] = a[j + 1], a[j]\nprint(a)",
+            output: "[8, 5, 2, 1]"
           }
         ],
         multipleChoice: {

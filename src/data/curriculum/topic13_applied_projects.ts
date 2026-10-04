@@ -42,6 +42,18 @@ export const TOPIC_13_APPLIED_PROJECTS: Module = {
             explanation: ">= 500,000 -> Giảm 10% (60,000) -> Còn 540,000.",
             code: "# Tong: 600000\n# Giam: 60000\n# Thanh toan: 540000",
             output: "Tong: 600000\nGiam: 60000\nThanh toan: 540000"
+          },
+          {
+            title: "Ví dụ: Tổng hóa đơn nhiều món",
+            explanation: "Cộng số lượng × đơn giá cho từng món.",
+            code: "mon = [(2, 150000), (1, 300000)]\ntong = 0\nfor sl, gia in mon:\n    tong += sl * gia\nprint(f'{tong:,}')",
+            output: "600,000"
+          },
+          {
+            title: "Ví dụ: Chiết khấu theo bậc",
+            explanation: "Chọn mức giảm bằng `if / elif / else`.",
+            code: "T = 600000\nif T >= 500000:\n    giam = T * 0.10\nelif T >= 200000:\n    giam = T * 0.05\nelse:\n    giam = 0\nprint(f'{T - giam:,.0f}')",
+            output: "540,000"
           }
         ],
         multipleChoice: {
@@ -127,6 +139,18 @@ k = int(input())
             explanation: "Nhập 'xyz', 4, 'err', 6 -> Thu được [4.0, 6.0], TBC = 5.00.",
             code: "# Valid: [4.0, 6.0] -> TBC = 5.00",
             output: "TBC: 5.00"
+          },
+          {
+            title: "Ví dụ: Chuyển chuỗi sang số an toàn",
+            explanation: "Dòng không phải số sẽ bị bỏ qua.",
+            code: "dong = ['abc', '4.5', 'x1', '6']\nso = []\nfor line in dong:\n    try:\n        so.append(float(line))\n    except ValueError:\n        pass\nprint(so)",
+            output: "[4.5, 6.0]"
+          },
+          {
+            title: "Ví dụ: Trung bình cộng",
+            explanation: "Chia tổng cho số phần tử.",
+            code: "so = [4.5, 6.0]\nprint(sum(so) / len(so))",
+            output: "5.25"
           }
         ],
         multipleChoice: {
@@ -217,6 +241,24 @@ n = int(input())
             explanation: "Max=9, Min=1, Tong=25, Chan=2, Le=3, Sap xep=1 2 5 8 9, Tim 8: Co.",
             code: "# Output 6 dòng thống kê",
             output: "Max: 9\nMin: 1\nTong: 25\nChan: 2, Le: 3\nSap xep: 1 2 5 8 9\nTim 8: Co"
+          },
+          {
+            title: "Ví dụ: Thống kê cơ bản",
+            explanation: "Min, Max, Sum, Count.",
+            code: "a = [5, 2, 8, 1, 9]\nprint(min(a), max(a), sum(a), len(a))",
+            output: "1 9 25 5"
+          },
+          {
+            title: "Ví dụ: Tìm kiếm",
+            explanation: "`x in a` kiểm tra tồn tại; `a.index(x)` trả về vị trí.",
+            code: "a = [5, 2, 8, 1, 9]\nprint(8 in a)\nprint(a.index(8))",
+            output: "True\n2"
+          },
+          {
+            title: "Ví dụ: Đếm chẵn và lẻ",
+            explanation: "Dùng hai biến đếm.",
+            code: "a = [5, 2, 8, 1, 9]\nchan = 0\nle = 0\nfor x in a:\n    if x % 2 == 0:\n        chan += 1\n    else:\n        le += 1\nprint(chan, le)",
+            output: "2 3"
           }
         ],
         multipleChoice: {
@@ -305,6 +347,18 @@ x = int(input())
             explanation: "An (9.0), Binh (7.0) -> Thủ khoa: Nguyen Van An (9.00).",
             code: "# Thu khoa: Nguyen Van An (9.00)",
             output: "Thu khoa: Nguyen Van An (9.00)"
+          },
+          {
+            title: "Ví dụ: Hàm tính ĐTB",
+            explanation: "Làm tròn 2 chữ số thập phân.",
+            code: "def tinh_dtb(toan, van, anh):\n    return round((toan + van + anh) / 3, 2)\n\nprint(tinh_dtb(8, 7.5, 9))",
+            output: "8.17"
+          },
+          {
+            title: "Ví dụ: Tìm thủ khoa",
+            explanation: "Duyệt và giữ học sinh có ĐTB lớn nhất.",
+            code: "ds = [('An', 8.1), ('Binh', 9.2), ('Chi', 7.5)]\nbest = ds[0]\nfor ten, dtb in ds:\n    if dtb > best[1]:\n        best = (ten, dtb)\nprint(best[0], best[1])",
+            output: "Binh 9.2"
           }
         ],
         multipleChoice: {

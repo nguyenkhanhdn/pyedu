@@ -41,6 +41,18 @@ export const TOPIC_2_VARIABLES_TYPES: Module = {
             explanation: "Tạo các biến và in ra màn hình.",
             code: 'ten = "Le Binh"\ntuoi = 15\nprint(f"Hoc sinh: {ten}, {tuoi} tuoi")',
             output: "Hoc sinh: Le Binh, 15 tuoi"
+          },
+          {
+            title: "Ví dụ: Bốn kiểu dữ liệu",
+            explanation: "Mỗi giá trị có một kiểu: `str`, `int`, `float`, `bool`.",
+            code: "ten = 'An'\ntuoi = 16\ndiem = 8.5\ngioi = True\nprint(ten, tuoi, diem, gioi)",
+            output: "An 16 8.5 True"
+          },
+          {
+            title: "Ví dụ: Đặt tên biến",
+            explanation: "Tên hợp lệ: chữ cái hoặc `_` đầu tiên, không có dấu cách.",
+            code: "ho_ten = 'Nguyen Van An'\n_lop = '10A1'\ndiem1 = 9\nprint(ho_ten, _lop, diem1)",
+            output: "Nguyen Van An 10A1 9"
           }
         ],
         multipleChoice: {
@@ -128,6 +140,24 @@ diem_van = float(input())
             explanation: "Chuyển chuỗi sang số nguyên và cộng thêm 1.",
             code: 's = "2026"\nyear = int(s)\nprint("Nam sau:", year + 1)',
             output: "Nam sau: 2027"
+          },
+          {
+            title: "Ví dụ: Ép kiểu chuỗi sang số",
+            explanation: "`int()` đổi chuỗi sang số nguyên để tính toán.",
+            code: "s = '15'\nn = int(s)\nprint(n + 5)",
+            output: "20"
+          },
+          {
+            title: "Ví dụ: Kiểm tra kiểu bằng type()",
+            explanation: "`type(x)` cho biết kiểu của `x`.",
+            code: "s = '15'\nn = int(s)\nprint(type(s))\nprint(type(n))",
+            output: "<class 'str'>\n<class 'int'>"
+          },
+          {
+            title: "Ví dụ: Quên ép kiểu",
+            explanation: "Cộng hai chuỗi sẽ **nối chuỗi**, không phải cộng số.",
+            code: "a = '3'\nb = '4'\nprint(a + b)\nprint(int(a) + int(b))",
+            output: "34\n7"
           }
         ],
         multipleChoice: {
@@ -211,6 +241,24 @@ s = input()
             explanation: "Nhập 2 số thực và tính trung bình cộng.",
             code: "toan = 9.0\nvan = 8.0\ndtb = (toan + van) / 2\nprint(f\"Diem trung binh: {dtb:.2f}\")",
             output: "Diem trung binh: 8.50"
+          },
+          {
+            title: "Ví dụ: Trung bình hai môn",
+            explanation: "Công thức `(toan + van) / 2` cho kết quả số thực.",
+            code: "toan = 8.5\nvan = 7.0\ndtb = (toan + van) / 2\nprint(dtb)",
+            output: "7.75"
+          },
+          {
+            title: "Ví dụ: Làm tròn bằng round()",
+            explanation: "`round(x, 2)` làm tròn 2 chữ số thập phân.",
+            code: "dtb = 7.8333\nprint(round(dtb, 2))",
+            output: "7.83"
+          },
+          {
+            title: "Ví dụ: Làm tròn bằng f-string",
+            explanation: "`:.2f` luôn hiển thị đúng 2 chữ số thập phân.",
+            code: "dtb = 8\nprint(f'{dtb:.2f}')",
+            output: "8.00"
           }
         ],
         multipleChoice: {
@@ -303,6 +351,18 @@ van = float(input())
             explanation: "Chuyển số nguyên 25 sang float và chuỗi.",
             code: "x = 25\nprint(float(x), type(float(x)))\nprint(str(x), type(str(x)))",
             output: "25.0 <class 'float'>\n25 <class 'str'>"
+          },
+          {
+            title: "Ví dụ: int() và float()",
+            explanation: "Đổi qua lại giữa số nguyên và số thực.",
+            code: "print(float(10))\nprint(int(7.9))\nprint(int('25'))",
+            output: "10.0\n7\n25"
+          },
+          {
+            title: "Ví dụ: str() và bool()",
+            explanation: "`str()` đổi sang chuỗi; `bool()` đổi sang True/False.",
+            code: "print(str(10) + 'cm')\nprint(bool(0), bool(5), bool(''))",
+            output: "10cm\nFalse True False"
           }
         ],
         multipleChoice: {
@@ -386,6 +446,18 @@ n = int(input())
             explanation: "Tạo viền bao quanh chuỗi văn bản.",
             code: "print('#' * 20)\nprint('# Xin chao Python  #')\nprint('#' * 20)",
             output: "####################\n# Xin chao Python  #\n####################"
+          },
+          {
+            title: "Ví dụ: Nhân chuỗi",
+            explanation: "`'#' * n` lặp ký tự `#` n lần.",
+            code: "print('#' * 10)\nprint('-' * 5)",
+            output: "##########\n-----"
+          },
+          {
+            title: "Ví dụ: Khung thông tin",
+            explanation: "Viền trên, nội dung, viền dưới.",
+            code: "print('#' * 20)\nprint('# Ten: An')\nprint('# Lop: 10A1')\nprint('#' * 20)",
+            output: "####################\n# Ten: An\n# Lop: 10A1\n####################"
           }
         ],
         multipleChoice: {

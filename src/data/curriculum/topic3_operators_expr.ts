@@ -39,6 +39,18 @@ export const TOPIC_3_OPERATORS_EXPR: Module = {
             explanation: "Nhập năm sinh 2010 và tính tuổi.",
             code: "y = 2010\nprint(f\"Tuoi vao nam 2025: {2025 - y}\")",
             output: "Tuoi vao nam 2025: 15"
+          },
+          {
+            title: "Ví dụ: Phép trừ",
+            explanation: "`tuoi = nam_hien_tai - nam_sinh`.",
+            code: "nam_sinh = 2009\ntuoi = 2025 - nam_sinh\nprint(tuoi)",
+            output: "16"
+          },
+          {
+            title: "Ví dụ: Câu trả lời đầy đủ",
+            explanation: "Kết hợp phép tính và f-string.",
+            code: "nam_sinh = 2009\nprint(f'Ban {2025 - nam_sinh} tuoi')",
+            output: "Ban 16 tuoi"
           }
         ],
         multipleChoice: {
@@ -129,6 +141,18 @@ y = int(input())
             explanation: "10 * 8000 + 2 * 5000 = 90.000 VND.",
             code: "x = 10\ny = 2\nprint(x * 8000 + y * 5000)",
             output: "90000"
+          },
+          {
+            title: "Ví dụ: Tổng hóa đơn",
+            explanation: "Số lượng × đơn giá, rồi cộng các món.",
+            code: "x = 3  # so vo\ny = 2  # so but\nprint(x * 8000 + y * 5000)",
+            output: "34000"
+          },
+          {
+            title: "Ví dụ: Các toán tử số học",
+            explanation: "`+`, `-`, `*`, `/`, `**`.",
+            code: "print(7 + 2, 7 - 2, 7 * 2)\nprint(7 / 2)\nprint(7 ** 2)",
+            output: "9 5 14\n3.5\n49"
           }
         ],
         multipleChoice: {
@@ -227,6 +251,18 @@ y = int(input())
             explanation: "75 giây = 0 giờ 1 phút 15 giây.",
             code: "s = 75\nprint(s // 60, \"phut\", s % 60, \"giay\")",
             output: "1 phut 15 giay"
+          },
+          {
+            title: "Ví dụ: Chia lấy nguyên và chia lấy dư",
+            explanation: "`//` lấy phần nguyên, `%` lấy phần dư.",
+            code: "print(17 // 5)\nprint(17 % 5)",
+            output: "3\n2"
+          },
+          {
+            title: "Ví dụ: Đổi 3725 giây",
+            explanation: "Tách giờ, phút, giây bằng `//` và `%`.",
+            code: "s = 3725\ngio = s // 3600\ns_du = s % 3600\nphut = s_du // 60\ngiay = s_du % 60\nprint(gio, phut, giay)",
+            output: "1 2 5"
           }
         ],
         multipleChoice: {
@@ -326,6 +362,18 @@ s = int(input())
             explanation: "r = 3 -> C = 18.85, S = 28.27.",
             code: "import math\nr = 3.0\nprint(f\"{2 * math.pi * r:.2f}\")\nprint(f\"{math.pi * r * r:.2f}\")",
             output: "18.85\n28.27"
+          },
+          {
+            title: "Ví dụ: Dùng math.pi",
+            explanation: "Nhập thư viện `math` rồi dùng `math.pi`.",
+            code: "import math\nprint(math.pi)",
+            output: "3.141592653589793"
+          },
+          {
+            title: "Ví dụ: Chu vi và diện tích",
+            explanation: "Dùng `**` để bình phương.",
+            code: "import math\nr = 2\nc = 2 * math.pi * r\ns = math.pi * r ** 2\nprint(f'{c:.2f}')\nprint(f'{s:.2f}')",
+            output: "12.57\n12.57"
           }
         ],
         multipleChoice: {
@@ -421,6 +469,18 @@ r = float(input())
             explanation: "50 * 25.000 = 1,250,000 VND.",
             code: "usd = 50\nvnd = usd * 25000\nprint(f\"{vnd:,} VND\")",
             output: "1,250,000 VND"
+          },
+          {
+            title: "Ví dụ: Dấu phẩy hàng nghìn",
+            explanation: "`:,` thêm dấu phẩy ngăn cách hàng nghìn.",
+            code: "so = 2500000\nprint(f'{so:,}')",
+            output: "2,500,000"
+          },
+          {
+            title: "Ví dụ: Đổi 100 USD",
+            explanation: "Nhân với tỷ giá rồi in có định dạng.",
+            code: "usd = 100\nvnd = usd * 25000\nprint(f'{vnd:,} VND')",
+            output: "2,500,000 VND"
           }
         ],
         multipleChoice: {
@@ -516,6 +576,18 @@ usd = int(input())
             explanation: "In kết quả True/False không dùng if.",
             code: "n = 11\nprint(n % 2 == 0)",
             output: "False"
+          },
+          {
+            title: "Ví dụ: Biểu thức trả về bool",
+            explanation: "So sánh cho kết quả `True`/`False`.",
+            code: "print(5 > 3)\nprint(5 == 3)\nprint(5 != 3)",
+            output: "True\nFalse\nTrue"
+          },
+          {
+            title: "Ví dụ: Số chẵn hay lẻ",
+            explanation: "`n % 2 == 0` là `True` khi `n` chẵn.",
+            code: "print(10 % 2 == 0)\nprint(7 % 2 == 0)",
+            output: "True\nFalse"
           }
         ],
         multipleChoice: {

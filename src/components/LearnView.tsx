@@ -691,12 +691,12 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                         <ArrowRight className="h-3 w-3" />
                       </button>
                     </div>
-                    <p className="text-xs text-slate-500">{ex.explanation}</p>
+                    <p className="text-xs text-slate-500">{renderFormattedText(ex.explanation)}</p>
                     <div className="rounded-2xl bg-slate-900 p-3.5 border border-slate-800 font-mono text-xs text-emerald-300 overflow-x-auto">
                       <pre>{ex.code}</pre>
                     </div>
                     {ex.output && (
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700">
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 whitespace-pre-wrap">
                         <span className="text-slate-400 mr-2">Output:</span>
                         <span>{ex.output}</span>
                       </div>

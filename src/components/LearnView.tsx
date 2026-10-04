@@ -208,7 +208,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
     setUserCodeForLesson(practiceStorageKey, editorCode);
     setIsRunning(false);
-    setConsoleOutput(result.output || "(Chương trình không in gì ra màn hình)");
+    setConsoleOutput((result.output || "(Chương trình không in gì ra màn hình)") + (result.warning ? `\n\n⚠ ${result.warning}` : ""));
     if (result.error) {
       setConsoleError(result.error);
     }

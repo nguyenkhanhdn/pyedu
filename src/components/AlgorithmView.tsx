@@ -147,6 +147,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
       const res = await PythonRunner.runCode(userCode, inputToUse);
       setRunResult({
         ...res,
+        output: (res.output || "") + (res.warning ? `\n\n⚠ ${res.warning}` : ""),
         inputUsed: inputToUse,
         expectedOutput: selectedProblem.sampleCases?.[0]?.output || ""
       });
@@ -300,7 +301,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   const isPrivileged = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
   const canViewSolution = !!selectedProblem && (solvedProblemIds.includes(selectedProblem.id) || attemptsOfSelected >= 3 || isPrivileged);
 
-  const toggleNode = (id: string) => setExpanded({ ...expandedNodes, [id]: !(expandedNodes[id] ?? ALGO_TREE.some(n => n.id === id)) });
+  const toggleNode = (id: string) => setExpanded({ ...expandedNodes, [id]: !expandedNodes[id] });
   const expandAllNodes = (open: boolean) => {
     const next: Record<string, boolean> = {};
     const walk = (nodes: AlgoNode[]) => nodes.forEach(n => { if (n.children?.length) { next[n.id] = open; walk(n.children); } });
@@ -425,14 +426,12 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                     onSelect={(id) => {
                       setSelectedNode(id);
                       setTreeOpen(false);
-                      if (id !== 'all') {
-                        // mở các nút cha và chính nút được chọn để thấy các mục con
-                        const next = { ...expandedNodes };
-                        (nodePath(id) || []).forEach(n => { next[n.id] = true; });
-                        setExpanded(next);
-                      }
+                      // Kiểu accordion: chỉ mở nhánh chứa nút được chọn, các chủ đề khác tự thu gọn
+                      const next: Record<string, boolean> = {};
+                      if (id !== 'all') (nodePath(id) || []).forEach(n => { next[n.id] = true; });
+                      setExpanded(next);
                     }}
-                    expanded={Object.fromEntries(ALGO_TREE.map(n => [n.id, true]).concat(Object.entries(expandedNodes)))}
+                    expanded={expandedNodes}
                     onToggle={toggleNode}
                     onExpandAll={expandAllNodes}
                   />

@@ -82,7 +82,12 @@ print(kiem_tra_chan_le(n))
     solutionExplanation: `Hàm trả về kết quả của phép so sánh n % 2 == 0.`,
     testCases: [
       { id: "cd6-b2-t1", input: "14", expectedOutput: "True", isHidden: false },
-      { id: "cd6-b2-t2", input: "9", expectedOutput: "False", isHidden: false }
+      { id: "cd6-b2-t2", input: "9", expectedOutput: "False", isHidden: false },
+      { id: "cd6-b2-t3", input: "0", expectedOutput: "True", isHidden: true, explanation: "0 là số chẵn." },
+      { id: "cd6-b2-t4", input: "-3", expectedOutput: "False", isHidden: true, explanation: "Số lẻ âm: -3 % 2 trong Python bằng 1." },
+      { id: "cd6-b2-t5", input: "-8", expectedOutput: "True", isHidden: true, explanation: "Số chẵn âm." },
+      { id: "cd6-b2-t6", input: "1000000000", expectedOutput: "True", isHidden: true, explanation: "Giá trị lớn nhất, số chẵn." },
+      { id: "cd6-b2-t7", input: "-999999999", expectedOutput: "False", isHidden: true, explanation: "Giá trị biên, số lẻ." }
     ]
   },
   {

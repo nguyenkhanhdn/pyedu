@@ -5,6 +5,8 @@ import { PythonRunner } from "../utils/pythonRunner";
 import { RichInline, RichText } from "./RichText";
 import { CodeBlock } from "./CodeBlock";
 import { CodeEditor } from "./CodeEditor";
+import { AlgoTree, AlgoNodeStat } from "./AlgoTree";
+import { ALGO_TREE, AlgoNode, classifyProblem, flattenLeaves, nodePath } from "../data/problems/algoTree";
 import {
   Target,
   Trophy,
@@ -41,7 +43,8 @@ import {
   CheckCheck,
   Lock,
   Unlock,
-  Lightbulb
+  Lightbulb,
+  FolderTree
 } from "lucide-react";
 
 interface AlgorithmViewProps {
@@ -68,7 +71,19 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Filters for Problem Bank
   const [selectedLevel, setSelectedLevel] = useState<AlgorithmLevel | 'all'>('all');
-  const [selectedTopic, setSelectedTopic] = useState<string>('all');
+  const [selectedNode, setSelectedNode] = useState<string>('all');   // 'all' hoặc id nút trong cây chủ đề
+  const [treeOpen, setTreeOpen] = useState(false);                      // mở cây chủ đề trên màn hình nhỏ
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('pyedu_algo_tree_open');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {};
+  });
+  const setExpanded = (next: Record<string, boolean>) => {
+    setExpandedNodes(next);
+    try { localStorage.setItem('pyedu_algo_tree_open', JSON.stringify(next)); } catch {}
+  };
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'solved' | 'unsolved'>('all');
   const [sortMode, setSortMode] = useState<'path' | 'easy' | 'points'>('path');
@@ -199,15 +214,46 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
     }
   };
 
-  // Extract all unique topics (theo thứ tự lộ trình học)
+  // ===== Cây chủ đề: mỗi bài thuộc một nút lá =====
   const DIFF_RANK: Record<string, number> = { 'Dễ': 0, 'Trung bình': 1, 'Khó': 2, 'HSG': 3 };
-  const topicNo = (t: string) => {
-    const m = (t || '').match(/Chủ đề\s*(\d+)/);
-    return m ? parseInt(m[1], 10) : 100;   // đề tổng hợp / nâng cao xếp sau các chủ đề
+  const leafOf = new Map<string, string>(algorithmProblems.map(p => [p.id, classifyProblem(p)] as [string, string]));
+  const leafOrder = new Map<string, number>(flattenLeaves().map((n, i) => [n.id, i] as [string, number]));
+  const leavesUnder = (node: AlgoNode): string[] => (node.children?.length ? node.children.flatMap(leavesUnder) : [node.id]);
+  const findNode = (id: string, nodes: AlgoNode[] = ALGO_TREE): AlgoNode | null => {
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      const r = n.children ? findNode(id, n.children) : null;
+      if (r) return r;
+    }
+    return null;
   };
+
+  // Thống kê (tổng / đã giải) cho mọi nút của cây
+  const nodeStats: Record<string, AlgoNodeStat> = {};
+  const collectStats = (nodes: AlgoNode[]) => {
+    nodes.forEach(n => {
+      const leaves = new Set(leavesUnder(n));
+      const inNode = algorithmProblems.filter(p => leaves.has(leafOf.get(p.id) || 'other'));
+      nodeStats[n.id] = { total: inNode.length, solved: inNode.filter(p => solvedProblemIds.includes(p.id)).length };
+      if (n.children) collectStats(n.children);
+    });
+  };
+  collectStats(ALGO_TREE);
+  const rootStat: AlgoNodeStat = { total: algorithmProblems.length, solved: algorithmProblems.filter(p => solvedProblemIds.includes(p.id)).length };
+
+  const selectedLeaves = selectedNode === 'all' ? null : new Set(leavesUnder(findNode(selectedNode) || { id: selectedNode, label: '' }));
+  const selectedPath = selectedNode === 'all' ? [] : (nodePath(selectedNode) || []);
+
+  // Nhãn nhóm: bỏ cấp "Nhóm" cao nhất, nối các cấp còn lại bằng ›
+  const leafLabel = (leafId: string) => {
+    const path = nodePath(leafId) || [];
+    const parts = path.length > 1 ? path.slice(1) : path;
+    return parts.map(n => n.label).join(' › ') || 'Khác';
+  };
+
   const originalIndex = new Map<string, number>(algorithmProblems.map((p, i) => [p.id, i] as [string, number]));
   const byPath = (a: AlgorithmProblem, b: AlgorithmProblem) =>
-    topicNo(a.topic) - topicNo(b.topic) ||
+    (leafOrder.get(leafOf.get(a.id) || '') ?? 99) - (leafOrder.get(leafOf.get(b.id) || '') ?? 99) ||
     (DIFF_RANK[a.difficulty] ?? 9) - (DIFF_RANK[b.difficulty] ?? 9) ||
     (originalIndex.get(a.id) ?? 0) - (originalIndex.get(b.id) ?? 0);
   const compareProblems = (a: AlgorithmProblem, b: AlgorithmProblem) => {
@@ -217,14 +263,13 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
     if (sortMode === 'points') return b.points - a.points || byPath(a, b);
     return byPath(a, b);
   };
-  const allTopics = Array.from(new Set([...algorithmProblems].sort(byPath).map(p => p.topic).filter(Boolean)));
   const stripMarkup = (t: string) => (t || '').replace(/\*\*|`/g, '').replace(/\n+/g, ' ').replace(/\s+-\s+/g, ' · ');
 
   // Filter problems for Problem Bank
   const q = searchQuery.trim().toLowerCase();
   const filteredProblems = algorithmProblems.filter(p => {
     const matchLevel = selectedLevel === 'all' || p.level === selectedLevel;
-    const matchTopic = selectedTopic === 'all' || p.topic === selectedTopic;
+    const matchTopic = !selectedLeaves || selectedLeaves.has(leafOf.get(p.id) || 'other');
     const matchDifficulty = difficultyFilter === 'all' || p.difficulty === difficultyFilter;
     const matchSearch = !q ||
       (p.title || '').toLowerCase().includes(q) ||
@@ -236,10 +281,10 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
     return matchLevel && matchTopic && matchDifficulty && matchSearch && matchStatus;
   }).sort(compareProblems);
 
-  // Nhóm theo chủ đề khi xem theo "Lộ trình học"
+  // Nhóm theo nút lá của cây khi xem theo "Lộ trình học"
   const groupedProblems: { label: string; items: AlgorithmProblem[] }[] = sortMode === 'path'
     ? filteredProblems.reduce((acc: { label: string; items: AlgorithmProblem[] }[], p) => {
-        const label = topicNo(p.topic) < 100 ? p.topic : 'Đề tổng hợp & nâng cao';
+        const label = leafLabel(leafOf.get(p.id) || 'other');
         const last = acc[acc.length - 1];
         if (last && last.label === label) last.items.push(p);
         else acc.push({ label, items: [p] });
@@ -254,6 +299,14 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   const attemptsOfSelected = selectedProblem ? algorithmSubmissions.filter(s => s.problemId === selectedProblem.id).length : 0;
   const isPrivileged = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
   const canViewSolution = !!selectedProblem && (solvedProblemIds.includes(selectedProblem.id) || attemptsOfSelected >= 3 || isPrivileged);
+
+  const toggleNode = (id: string) => setExpanded({ ...expandedNodes, [id]: !(expandedNodes[id] ?? ALGO_TREE.some(n => n.id === id)) });
+  const expandAllNodes = (open: boolean) => {
+    const next: Record<string, boolean> = {};
+    const walk = (nodes: AlgoNode[]) => nodes.forEach(n => { if (n.children?.length) { next[n.id] = open; walk(n.children); } });
+    walk(ALGO_TREE);
+    setExpanded(next);
+  };
 
   // Filter leaderboard
   const filteredLeaderboard = algorithmLeaderboard.filter(entry => {
@@ -353,94 +406,57 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
         {/* TAB 1: PROBLEM BANK */}
         {activeSubTab === 'bank' && (
           <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-            {/* Level Selector Cards (Tiểu học & THCS) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Primary Level Card */}
-              <div
-                onClick={() => setSelectedLevel(selectedLevel === 'primary' ? 'all' : 'primary')}
-                className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
-                  selectedLevel === 'primary'
-                    ? 'border-emerald-500 bg-emerald-50/50 shadow-md shadow-emerald-500/10'
-                    : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-xs'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-emerald-100 text-emerald-700">
-                      <GraduationCap className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 text-base">Cấp Độ Tiểu Học</span>
-                        <span className="px-2 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full">
-                          Khối 3 - 5
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Tư duy số học, tính toán cơ bản, quy luật dãy số, vòng lặp & vẽ hình
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
-                    {primarySolved}/{primaryTotal} Hoàn thành
-                  </span>
+            {/* Khu vực chính: cây chủ đề bên trái + danh sách bài bên phải */}
+            <div className="flex flex-col lg:flex-row gap-5 items-start">
+              <aside className="w-full lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-3 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+                <button
+                  onClick={() => setTreeOpen(!treeOpen)}
+                  className="lg:hidden w-full mb-2 flex items-center justify-between px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  <span className="flex items-center gap-2"><FolderTree className="h-4 w-4 text-indigo-600" /> Chủ đề: {selectedNode === 'all' ? 'Tất cả' : (selectedPath[selectedPath.length - 1]?.label || '')}</span>
+                  {treeOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+                <div className={`${treeOpen ? 'block' : 'hidden'} lg:block`}>
+                  <AlgoTree
+                    nodes={ALGO_TREE}
+                    stats={nodeStats}
+                    rootStat={rootStat}
+                    selected={selectedNode}
+                    onSelect={(id) => {
+                      setSelectedNode(id);
+                      setTreeOpen(false);
+                      if (id !== 'all') {
+                        // mở các nút cha và chính nút được chọn để thấy các mục con
+                        const next = { ...expandedNodes };
+                        (nodePath(id) || []).forEach(n => { next[n.id] = true; });
+                        setExpanded(next);
+                      }
+                    }}
+                    expanded={Object.fromEntries(ALGO_TREE.map(n => [n.id, true]).concat(Object.entries(expandedNodes)))}
+                    onToggle={toggleNode}
+                    onExpandAll={expandAllNodes}
+                  />
                 </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${primaryTotal > 0 ? (primarySolved / primaryTotal) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-600">
-                    {primaryTotal > 0 ? Math.round((primarySolved / primaryTotal) * 100) : 0}%
-                  </span>
-                </div>
-              </div>
+              </aside>
 
-              {/* Secondary Level Card */}
-              <div
-                onClick={() => setSelectedLevel(selectedLevel === 'secondary' ? 'all' : 'secondary')}
-                className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden ${
-                  selectedLevel === 'secondary'
-                    ? 'border-indigo-500 bg-indigo-50/50 shadow-md shadow-indigo-500/10'
-                    : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-xs'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-indigo-100 text-indigo-700">
-                      <Cpu className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 text-base">Cấp Độ THCS</span>
-                        <span className="px-2 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full">
-                          Khối 6 - 9
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Số nguyên tố, UCLN/BCNN, Fibonacci, Giai thừa, Two Sum, Xâu & Mảng HSG Tin học trẻ
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-100/80 px-2.5 py-1 rounded-lg">
-                    {secondarySolved}/{secondaryTotal} Hoàn thành
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${secondaryTotal > 0 ? (secondarySolved / secondaryTotal) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-600">
-                    {secondaryTotal > 0 ? Math.round((secondarySolved / secondaryTotal) * 100) : 0}%
-                  </span>
-                </div>
+              <div className="flex-1 min-w-0 space-y-5">
+            {/* Breadcrumb của nút đang chọn */}
+            {selectedPath.length > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 flex-wrap">
+                <button onClick={() => setSelectedNode('all')} className="hover:text-indigo-600 font-semibold cursor-pointer">Tất cả</button>
+                {selectedPath.map((n, i) => (
+                  <React.Fragment key={n.id}>
+                    <ChevronRight className="h-3 w-3 text-slate-300" />
+                    <button
+                      onClick={() => setSelectedNode(n.id)}
+                      className={`cursor-pointer ${i === selectedPath.length - 1 ? 'font-bold text-slate-800' : 'hover:text-indigo-600 font-semibold'}`}
+                    >
+                      {n.label}
+                    </button>
+                  </React.Fragment>
+                ))}
               </div>
-            </div>
+            )}
 
             {/* Filter & Search Bar */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
@@ -454,33 +470,6 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-              </div>
-
-              {/* Topic Select */}
-              <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-                <button
-                  onClick={() => setSelectedTopic('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                    selectedTopic === 'all'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Tất cả chủ đề
-                </button>
-                {allTopics.map(topic => (
-                  <button
-                    key={topic}
-                    onClick={() => setSelectedTopic(topic)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                      selectedTopic === topic
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {topic}
-                  </button>
-                ))}
               </div>
 
               {/* Status filter: All / Solved / Unsolved */}
@@ -514,7 +503,25 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
             {/* Độ khó, sắp xếp và gợi ý bài tiếp theo */}
             <div className="flex flex-wrap items-center gap-2 -mt-2">
-              <span className="text-xs font-bold text-slate-500">Độ khó:</span>
+              <span className="text-xs font-bold text-slate-500">Cấp độ:</span>
+              {([
+                { id: 'all', label: 'Tất cả', stat: `${userSolvedCount}/${totalProblemsCount}` },
+                { id: 'primary', label: 'Tiểu học (Khối 3–5)', stat: `${primarySolved}/${primaryTotal}` },
+                { id: 'secondary', label: 'THCS (Khối 6–9)', stat: `${secondarySolved}/${secondaryTotal}` }
+              ] as const).map((lv) => (
+                <button
+                  key={lv.id}
+                  onClick={() => setSelectedLevel(lv.id as AlgorithmLevel | 'all')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
+                    selectedLevel === lv.id
+                      ? lv.id === 'primary' ? 'bg-emerald-600 text-white border-emerald-600' : lv.id === 'secondary' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  {lv.label} <span className="opacity-70 font-bold">{lv.stat}</span>
+                </button>
+              ))}
+              <span className="text-xs font-bold text-slate-500 ml-2">Độ khó:</span>
               {(['all', 'Dễ', 'Trung bình', 'Khó', 'HSG'] as const).map((d) => (
                 <button
                   key={d}
@@ -658,13 +665,15 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn lại cấp độ/chủ đề trên thanh lọc.
                 </p>
                 <button
-                  onClick={() => { setSelectedLevel('all'); setSelectedTopic('all'); setSearchQuery(''); setStatusFilter('all'); setDifficultyFilter('all'); }}
+                  onClick={() => { setSelectedLevel('all'); setSelectedNode('all'); setSearchQuery(''); setStatusFilter('all'); setDifficultyFilter('all'); }}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-indigo-700 transition-colors cursor-pointer"
                 >
                   Xóa bộ lọc
                 </button>
               </div>
             )}
+              </div>
+            </div>
           </div>
         )}
 

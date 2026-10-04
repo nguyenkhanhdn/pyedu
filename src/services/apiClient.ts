@@ -757,7 +757,7 @@ export const ApiService = {
     return LocalDataManager.getGroups(userId);
   },
 
-  async login(usernameOrEmail: string, password?: string): Promise<User | null> {
+  async login(usernameOrEmail: string, password?: string, skipPassword = false): Promise<User | null> {
     const rawQuery = (usernameOrEmail || "").trim();
     const query = rawQuery.toLowerCase();
     const pwd = (password || "").trim();
@@ -765,7 +765,7 @@ export const ApiService = {
     // 1. Direct Supabase Cloud Authentication & User retrieval
     if (SupabaseService.isAvailable()) {
       try {
-        const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined);
+        const suUser = await SupabaseService.getUserByCredentials(rawQuery, pwd || undefined, skipPassword);
         if (suUser) {
           if (suUser.status === 'blocked') {
             const err: any = new Error(`Tài khoản @${suUser.username} đã bị KHÓA bởi Quản trị viên!\nLý do: ${suUser.banReason || 'Vi phạm quy định sử dụng hệ thống'}`);
@@ -783,7 +783,7 @@ export const ApiService = {
           return suUser;
         }
       } catch (err: any) {
-        if (err.code === 'USER_BLOCKED' || err.code === 'USER_PENDING') {
+        if (['USER_BLOCKED', 'USER_PENDING', 'INVALID_PASSWORD', 'SUPABASE_ERROR'].includes(err.code)) {
           throw err;
         }
         console.warn("Supabase login notice:", err);

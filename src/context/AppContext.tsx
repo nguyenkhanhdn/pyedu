@@ -28,7 +28,7 @@ import confetti from "canvas-confetti";
 interface AppContextType {
   currentUser: User | null;
   allUsers: User[];
-  login: (usernameOrEmail: string, password?: string) => Promise<boolean>;
+  login: (usernameOrEmail: string, password?: string, options?: { impersonate?: boolean }) => Promise<boolean>;
   register: (userData: { username: string; email: string; fullName: string; grade: string; role: 'student' | 'teacher' | 'admin'; school?: string; password?: string }) => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (updates: Partial<User>) => Promise<void>;
@@ -565,10 +565,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Login via Supabase Direct / Auth
-  const login = async (usernameOrEmail: string, password?: string): Promise<boolean> => {
+  const login = async (usernameOrEmail: string, password?: string, options?: { impersonate?: boolean }): Promise<boolean> => {
     setAuthErrorMessage(null);
     try {
-      const user = await ApiService.login(usernameOrEmail, password);
+      // Chỉ admin đang đăng nhập mới được chuyển tài khoản không cần mật khẩu
+      const user = await ApiService.login(usernameOrEmail, password, Boolean(options?.impersonate) && currentUser?.role === 'admin');
       if (user) {
         setCurrentUser(user);
         if (user.role === 'admin') {

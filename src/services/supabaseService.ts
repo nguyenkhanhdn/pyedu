@@ -148,33 +148,46 @@ export class SupabaseService {
     }
   }
 
-  public static async getUserByCredentials(usernameOrEmail: string, password?: string): Promise<User | null> {
+  /**
+   * Trả về null nếu không tìm thấy tài khoản. Ném lỗi có `code`:
+   * - INVALID_PASSWORD: sai mật khẩu
+   * - SUPABASE_ERROR: truy vấn CSDL thất bại (không được phép bỏ qua để đăng nhập bằng bản sao cục bộ)
+   */
+  public static async getUserByCredentials(usernameOrEmail: string, password?: string, skipPassword = false): Promise<User | null> {
     const supabase = getSupabase();
     if (!supabase) return null;
 
+    const makeError = (message: string, code: string) => {
+      const err: any = new Error(message);
+      err.code = code;
+      return err;
+    };
+
+    // Tránh chèn cú pháp bộ lọc PostgREST qua tên đăng nhập
+    if (/[,()*%\\]/.test(usernameOrEmail)) return null;
+
+    let u: any;
     try {
-      const { data: u, error } = await supabase
+      const { data, error } = await supabase
         .from("users")
         .select("*")
         .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
         .limit(1)
         .maybeSingle();
-
-      if (error || !u) return null;
-
-      // If password provided and user has password, check if it matches
-      if (password && u.password && u.password !== password) {
-        // For default admin account
-        if (u.username === "admin" && password !== "admin@password") {
-          return null;
-        }
-      }
-
-      return await this.getUserById(u.id);
+      if (error) throw error;
+      u = data;
     } catch (e) {
       console.warn("Supabase getUserByCredentials error:", e);
-      return null;
+      throw makeError("Không thể kết nối CSDL Supabase để xác thực tài khoản. Vui lòng thử lại sau.", "SUPABASE_ERROR");
     }
+
+    if (!u) return null;
+
+    if (!skipPassword && u.password && u.password !== password) {
+      throw makeError("Tên đăng nhập hoặc mật khẩu không chính xác.", "INVALID_PASSWORD");
+    }
+
+    return await this.getUserById(u.id);
   }
 
   public static async createUser(userData: {

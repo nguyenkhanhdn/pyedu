@@ -528,7 +528,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
   const handleImpersonate = async (user: User) => {
     if (user.id === currentUser?.id) return;
     setIsProcessing(true);
-    await login(user.username, user.password);
+    await login(user.username, undefined, { impersonate: true });
     setIsProcessing(false);
     showAlert("success", `Đang chuyển hướng sang tài khoản ${user.fullName} (${user.role}).`);
   };

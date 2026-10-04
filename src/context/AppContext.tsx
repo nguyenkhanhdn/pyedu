@@ -67,7 +67,9 @@ interface AppContextType {
   // Code & Submissions
   userCodes: Record<string, string>;
   setUserCodeForLesson: (lessonId: string, code: string) => void;
-  submitLessonCode: (lessonId: string, result: SubmissionResult) => Promise<void>;
+  submitLessonCode: (lessonId: string, result: SubmissionResult, completesLesson?: boolean) => Promise<void>;
+  passedPractices: string[];
+  markPracticePassed: (practiceKey: string) => void;
   lessonSubmissions: Record<string, SubmissionResult[]>;
 
   // Algorithm / Problem Solving Module
@@ -164,6 +166,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 3. User code per lesson
   const [userCodes, setUserCodes] = useState<Record<string, string>>({});
+
+  // Các bài tập (khởi động / luyện tập / chính) đã vượt qua, lưu theo từng người dùng
+  const [passedPractices, setPassedPractices] = useState<string[]>([]);
+  const practiceStoreKey = `pyedu_passed_practices_${currentUser?.id || "guest"}`;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(practiceStoreKey);
+      setPassedPractices(raw ? JSON.parse(raw) : []);
+    } catch {
+      setPassedPractices([]);
+    }
+  }, [practiceStoreKey]);
+  const markPracticePassed = (practiceKey: string) => {
+    setPassedPractices(prev => {
+      if (prev.includes(practiceKey)) return prev;
+      const next = [...prev, practiceKey];
+      try {
+        localStorage.setItem(practiceStoreKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // 4. Submissions per lesson
   const [lessonSubmissions, setLessonSubmissions] = useState<Record<string, SubmissionResult[]>>({});
@@ -325,7 +349,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isLessonCompleted = (lessonId: string): boolean => {
     if (currentUser?.completedLessons?.includes(lessonId)) return true;
     if (guestCompletedLessons.includes(lessonId)) return true;
-    if (lessonSubmissions[lessonId]?.some(s => s.passed)) return true;
+    if (lessonSubmissions[lessonId]?.some(s => s.passed && s.lessonId === lessonId)) return true;
     return false;
   };
 
@@ -367,7 +391,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const submitLessonCode = async (lessonId: string, result: SubmissionResult) => {
+  const submitLessonCode = async (lessonId: string, result: SubmissionResult, completesLesson: boolean = true) => {
+    // Đạt một bài tập nhưng chưa đủ điều kiện hoàn thành cả bài học
+    const completes = result.passed && completesLesson;
     // Update local state immediately
     setLessonSubmissions(prev => ({
       ...prev,
@@ -378,7 +404,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const lessonObj = allLessons.find(l => l.id === lessonId);
     const xpEarned = lessonObj?.xpReward || 50;
 
-    if (result.passed) {
+    if (completes) {
       // Đánh dấu hoàn thành cho guest
       setGuestCompletedLessons(prev => {
         if (!prev.includes(lessonId)) {
@@ -421,7 +447,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const updatedUser = await ApiService.recordSubmission(currentUser.id, {
         lessonId,
-        passed: result.passed,
+        passed: completes,
         score: result.score,
         totalTests: result.totalTests,
         passedTests: result.passedTests,
@@ -1211,6 +1237,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         userCodes,
         setUserCodeForLesson,
         submitLessonCode,
+        passedPractices,
+        markPracticePassed,
         lessonSubmissions,
 
         // Algorithm Problem Solving

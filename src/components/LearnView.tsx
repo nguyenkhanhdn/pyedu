@@ -82,6 +82,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     userCodes,
     setUserCodeForLesson,
     submitLessonCode,
+    passedPractices,
+    markPracticePassed,
     lessonSubmissions,
     addNote,
     teacherMode,
@@ -130,9 +132,26 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     ? `${selectedLesson.id}_p${activePracticeIndex}`
     : selectedLesson.id;
 
+  // Bài học hoàn thành khi vượt qua mọi bài tập bắt buộc (bài "Nâng cao" chỉ là thử thách thêm)
+  const practiceKeyAt = (i: number) =>
+    availablePractices.length > 1 ? `${selectedLesson.id}_p${i}` : selectedLesson.id;
+  const requiredPracticeIdx = (() => {
+    const idx = availablePractices.map((_, i) => i).filter(i => availablePractices[i].difficulty !== 'Nâng cao');
+    return idx.length > 0 ? idx : [availablePractices.length - 1];
+  })();
+  const requiredPassedCount = requiredPracticeIdx.filter(i => passedPractices.includes(practiceKeyAt(i))).length;
+
+  // Code đã lưu trước khi bài có thêm bài khởi động nằm ở khóa theo id bài học
+  const savedCodeFor = (key: string, practice: typeof selectedLesson.practice) =>
+    userCodes[key] !== undefined
+      ? userCodes[key]
+      : practice === selectedLesson.practice
+      ? userCodes[selectedLesson.id]
+      : undefined;
+
   // Code editor state for current lesson and active practice
-  const currentCode = userCodes[practiceStorageKey] !== undefined
-    ? userCodes[practiceStorageKey]
+  const currentCode = savedCodeFor(practiceStorageKey, currentPractice) !== undefined
+    ? savedCodeFor(practiceStorageKey, currentPractice)
     : currentPractice.starterCode;
 
   const [editorCode, setEditorCode] = useState<string>(currentCode);
@@ -176,8 +195,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
       ? `${selectedLesson.id}_p${activePracticeIndex}`
       : selectedLesson.id;
     const activePrac = (selectedLesson.practices && selectedLesson.practices[activePracticeIndex]) || selectedLesson.practice;
-    const saved = userCodes[key] !== undefined
-      ? userCodes[key]
+    const saved = savedCodeFor(key, activePrac) !== undefined
+      ? savedCodeFor(key, activePrac)!
       : activePrac.starterCode;
     setEditorCode(saved);
     setConsoleOutput("");
@@ -241,8 +260,16 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
       timestamp: new Date().toISOString()
     };
 
+    // Chỉ hoàn thành bài học khi đã vượt qua tất cả bài tập bắt buộc
+    let lessonDone = false;
+    if (evaluation.passed) {
+      markPracticePassed(practiceStorageKey);
+      const passedNow = new Set([...passedPractices, practiceStorageKey]);
+      lessonDone = requiredPracticeIdx.every(i => passedNow.has(practiceKeyAt(i)));
+    }
+
     setLatestSubmission(submissionResult);
-    submitLessonCode(selectedLesson.id, submissionResult);
+    submitLessonCode(selectedLesson.id, submissionResult, lessonDone);
     setIsGrading(false);
 
     if (!evaluation.passed) {
@@ -866,16 +893,21 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 {availablePractices.length > 1 && (
                   <div className="space-y-1.5 pb-2 border-b border-slate-200">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-700">Danh sách bài tập ôn tập:</span>
+                      <span className="font-bold text-slate-700">Bài tập từ dễ đến khó:</span>
                       <span className="text-xs text-indigo-600 font-semibold">
                         Bài {activePracticeIndex + 1} / {availablePractices.length}
                       </span>
                     </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Làm lần lượt từ trái sang phải. Hoàn thành bài học khi vượt qua{" "}
+                      <strong>{requiredPassedCount}/{requiredPracticeIdx.length}</strong> bài bắt buộc
+                      {availablePractices.some(p => p.difficulty === 'Nâng cao') ? " (bài Nâng cao là thử thách thêm)" : ""}.
+                    </p>
                     <div className="flex items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 overflow-x-auto">
                       {availablePractices.map((prac, pIdx) => {
                         const isPActive = activePracticeIndex === pIdx;
                         const pKey = `${selectedLesson.id}_p${pIdx}`;
-                        const isSubPassed = lessonSubmissions[pKey]?.[0]?.passed || (pIdx === 0 && isCompleted);
+                        const isSubPassed = passedPractices.includes(pKey) || isCompleted;
 
                         return (
                           <button

@@ -15,8 +15,27 @@ import { TOPIC_10_LISTS } from "./curriculum/topic10_lists";
 import { TOPIC_11_MATRIX } from "./curriculum/topic11_matrix";
 import { TOPIC_12_COMPREHENSIVE } from "./curriculum/topic12_comprehensive";
 import { TOPIC_13_APPLIED_PROJECTS } from "./curriculum/topic13_applied_projects";
+import { WARMUP_PRACTICES } from "./curriculum/warmups";
 
 export { BADGES_DATA, INITIAL_LEADERBOARD, INITIAL_STUDY_GROUPS, OFFLINE_HANDBOOK_TOPICS, ALGORITHM_PROBLEMS, INITIAL_ALGORITHM_LEADERBOARD };
+
+// Chèn bài tập khởi động dễ TRƯỚC bài tập chính, rồi sắp xếp ổn định theo độ khó (dễ → khó)
+const DIFFICULTY_RANK: Record<string, number> = { "Cơ bản": 0, "Trung bình": 1, "Nâng cao": 2 };
+
+const withWarmups = (mod: Module): Module => ({
+  ...mod,
+  lessons: mod.lessons.map((lesson) => {
+    const list =
+      lesson.practices && lesson.practices.length > 0
+        ? lesson.practices
+        : WARMUP_PRACTICES[lesson.id]
+        ? [...WARMUP_PRACTICES[lesson.id], lesson.practice]
+        : null;
+    if (!list) return lesson;
+    const sorted = [...list].sort((a, b) => DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty]);
+    return { ...lesson, practices: sorted };
+  })
+});
 
 export const CURRICULUM_MODULES: Module[] = [
   TOPIC_1_SYNTAX_IO,
@@ -32,5 +51,5 @@ export const CURRICULUM_MODULES: Module[] = [
   TOPIC_11_MATRIX,
   TOPIC_12_COMPREHENSIVE,
   TOPIC_13_APPLIED_PROJECTS
-];
+].map(withWarmups);
 

@@ -16,6 +16,7 @@ import { TOPIC_11_MATRIX } from "./curriculum/topic11_matrix";
 import { TOPIC_12_COMPREHENSIVE } from "./curriculum/topic12_comprehensive";
 import { TOPIC_13_APPLIED_PROJECTS } from "./curriculum/topic13_applied_projects";
 import { WARMUP_PRACTICES } from "./curriculum/warmups";
+import { polishPractice } from "../utils/problemText";
 
 export { BADGES_DATA, INITIAL_LEADERBOARD, INITIAL_STUDY_GROUPS, OFFLINE_HANDBOOK_TOPICS, ALGORITHM_PROBLEMS, INITIAL_ALGORITHM_LEADERBOARD };
 
@@ -31,9 +32,9 @@ const withWarmups = (mod: Module): Module => ({
         : WARMUP_PRACTICES[lesson.id]
         ? [...WARMUP_PRACTICES[lesson.id], lesson.practice]
         : null;
-    if (!list) return lesson;
+    if (!list) return { ...lesson, practice: polishPractice(lesson.practice) };
     const sorted = [...list].sort((a, b) => DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty]);
-    return { ...lesson, practices: sorted };
+    return { ...lesson, practice: polishPractice(lesson.practice), practices: sorted.map(polishPractice) };
   })
 });
 

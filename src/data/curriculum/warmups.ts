@@ -855,9 +855,9 @@ export const WARMUP_PRACTICES: Record<string, LessonPractice[]> = {
       id: "t9-l1-w2",
       title: "Luyện tập: Đệ quy tính lũy thừa 2",
       difficulty: "Cơ bản",
-      problemStatement: "Viết hàm đệ quy `luy_thua2(n)` trả về 2^n (n >= 0). Chương trình chính nhập `n` và in kết quả.",
+      problemStatement: "Viết hàm đệ quy `luy_thua2(n)` trả về 2ⁿ (n >= 0). Chương trình chính nhập `n` và in kết quả.",
       inputFormat: "Một dòng chứa số nguyên n (0 <= n <= 30).",
-      outputFormat: "Một số nguyên: 2^n",
+      outputFormat: "Một số nguyên: 2ⁿ",
       constraints: "Không có ràng buộc đặc biệt.",
       sampleCases: [
         { input: "0", output: "1", explanation: "Ví dụ mẫu 1." },

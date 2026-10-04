@@ -60,7 +60,7 @@ export const AuthGateView: React.FC = () => {
           grade,
           role,
           school,
-          password: password.trim() || (role === "admin" ? "admin@password" : "123456")
+          password: password.trim() || "123456"
         });
 
         if (success) {
@@ -394,7 +394,6 @@ export const AuthGateView: React.FC = () => {
                         >
                           <option value="student">🎓 Học sinh</option>
                           <option value="teacher">👨‍🏫 Giáo viên</option>
-                          <option value="admin">🛡️ Quản trị viên (Admin)</option>
                         </select>
                       </div>
                     </div>

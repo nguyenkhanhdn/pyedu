@@ -29,8 +29,21 @@ CREATE TABLE IF NOT EXISTS public.users (
     daily_goal INTEGER NOT NULL DEFAULT 20,
     reminder_time TEXT NOT NULL DEFAULT '19:30',
     reminder_enabled BOOLEAN NOT NULL DEFAULT true,
+    status TEXT NOT NULL DEFAULT 'active', -- 'pending' | 'active' | 'blocked'
+    ban_reason TEXT,
+    banned_at TEXT,
+    approved_at TEXT,
+    registered_at TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Bổ sung cột duyệt tài khoản cho CSDL đã tạo từ trước (chạy lại an toàn)
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS ban_reason TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS banned_at TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS approved_at TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS registered_at TEXT;
+NOTIFY pgrst, 'reload schema';
 
 -- 2. BẢNG HUY HIỆU ĐÃ MỞ KHÓA (USER BADGES)
 CREATE TABLE IF NOT EXISTS public.user_badges (

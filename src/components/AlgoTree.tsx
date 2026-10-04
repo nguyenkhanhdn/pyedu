@@ -34,7 +34,7 @@ const NodeRow: React.FC<{ node: AlgoNode; depth: number } & Omit<AlgoTreeProps, 
   node, depth, stats, selected, onSelect, expanded, onToggle
 }) => {
   const hasChildren = !!node.children?.length;
-  const open = expanded[node.id] ?? depth === 0;
+  const open = expanded[node.id] ?? false;
   const isSelected = selected === node.id;
   const stat = stats[node.id] || { total: 0, solved: 0 };
   if (stat.total === 0) return null;

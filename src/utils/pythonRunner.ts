@@ -10,59 +10,99 @@ export interface ExecutionResult {
   output: string;
   error?: string;
   executionTimeMs: number;
+  /** Cảnh báo khi phải dùng chế độ mô phỏng (kết quả có thể khác Python thật). */
+  warning?: string;
 }
+
+// Nguồn tải Pyodide (Python thật chạy trong trình duyệt), thử lần lượt nếu nguồn trước bị chặn
+const PYODIDE_SOURCES = [
+  { script: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js", indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/" },
+  { script: "https://unpkg.com/pyodide@0.26.2/pyodide.js", indexURL: "https://unpkg.com/pyodide@0.26.2/" }
+];
+
+export const PYODIDE_UNAVAILABLE_MESSAGE =
+  "Không tải được trình chạy Python (Pyodide). Hãy kiểm tra kết nối mạng, tải lại trang rồi thử lại. " +
+  "Hệ thống không chấm bài bằng chế độ mô phỏng để tránh chấm sai lời giải đúng.";
+
+const EMULATOR_WARNING =
+  "Đang dùng chế độ mô phỏng vì chưa tải được Python thật — kết quả có thể khác Python. Nút Nộp bài chỉ chấm khi có Python thật.";
 
 export class PythonRunner {
   private static pyodideInstance: any = null;
-  private static isLoadingPyodide = false;
+  private static loadingPromise: Promise<any> | null = null;
+  private static lastFailureAt = 0;
 
-  /**
-   * Initialize Pyodide if available from CDN
-   */
-  public static async initPyodide(): Promise<any> {
-    if (this.pyodideInstance) return this.pyodideInstance;
-    if (this.isLoadingPyodide) {
-      // wait until loaded
-      let tries = 0;
-      while (this.isLoadingPyodide && tries < 30) {
-        await new Promise((r) => setTimeout(r, 100));
-        tries++;
-      }
-      return this.pyodideInstance;
-    }
-
-    if (typeof window !== 'undefined' && (window as any).loadPyodide) {
-      try {
-        this.isLoadingPyodide = true;
-        this.pyodideInstance = await (window as any).loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/",
-        });
-        this.isLoadingPyodide = false;
-        return this.pyodideInstance;
-      } catch (err) {
-        console.warn("Pyodide CDN load failed, using fast JS-Python engine:", err);
-        this.isLoadingPyodide = false;
-      }
-    }
-    return null;
+  private static loadScript(src: string, timeoutMs = 25000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement("script");
+      const timer = setTimeout(() => {
+        el.remove();
+        reject(new Error("timeout"));
+      }, timeoutMs);
+      el.src = src;
+      el.async = true;
+      el.onload = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      el.onerror = () => {
+        clearTimeout(timer);
+        el.remove();
+        reject(new Error("load error"));
+      };
+      document.head.appendChild(el);
+    });
   }
 
   /**
-   * Run Python code with a given stdin input string
+   * Nạp Pyodide: dùng bản đã có trên trang, nếu chưa có thì thử lần lượt các nguồn dự phòng.
+   * Trả về null nếu không nạp được (khi đó chấm điểm bị từ chối thay vì chấm bằng bộ mô phỏng).
    */
-  public static async runCode(code: string, stdinInput: string = ""): Promise<ExecutionResult> {
+  public static async initPyodide(): Promise<any> {
+    if (this.pyodideInstance) return this.pyodideInstance;
+    if (typeof window === "undefined") return null;
+    if (this.loadingPromise) return this.loadingPromise;
+    // Vừa thất bại: không thử lại ngay để tránh treo giao diện mỗi lần bấm chạy
+    if (this.lastFailureAt && Date.now() - this.lastFailureAt < 20000) return null;
+
+    this.loadingPromise = (async () => {
+      const w = window as any;
+      for (const src of PYODIDE_SOURCES) {
+        try {
+          if (!w.loadPyodide) await this.loadScript(src.script);
+          if (!w.loadPyodide) continue;
+          this.pyodideInstance = await w.loadPyodide({ indexURL: src.indexURL });
+          return this.pyodideInstance;
+        } catch (err) {
+          console.warn("Pyodide load failed from", src.script, err);
+          w.loadPyodide = undefined;   // thử nguồn kế tiếp
+        }
+      }
+      this.lastFailureAt = Date.now();
+      return null;
+    })();
+    try {
+      return await this.loadingPromise;
+    } finally {
+      this.loadingPromise = null;
+    }
+  }
+
+  /**
+   * Run Python code with a given stdin input string.
+   * requireRealPython = true (dùng khi chấm điểm): không bao giờ dùng bộ mô phỏng.
+   */
+  public static async runCode(
+    code: string,
+    stdinInput: string = "",
+    opts: { requireRealPython?: boolean } = {}
+  ): Promise<ExecutionResult> {
     const startTime = performance.now();
 
-    // 1. Try Pyodide if available or initialize it
-    if (!this.pyodideInstance && typeof window !== "undefined" && (window as any).loadPyodide) {
-      try {
-        await this.initPyodide();
-      } catch {
-        // Fall back to JS engine
-      }
-    }
+    const py = await this.initPyodide();
 
-    if (this.pyodideInstance) {
+    if (py) {
+      let globals: any = null;
       try {
         const inputLines = stdinInput ? stdinInput.split("\n") : [];
         let inputIdx = 0;
@@ -70,29 +110,16 @@ export class PythonRunner {
         let stdoutBuffer = "";
         let stderrBuffer = "";
 
-        this.pyodideInstance.setStdout({
-          batched: (str: string) => {
-            stdoutBuffer += str + "\n";
-          },
-        });
-        this.pyodideInstance.setStderr({
-          batched: (str: string) => {
-            stderrBuffer += str + "\n";
-          },
+        py.setStdout({ batched: (str: string) => { stdoutBuffer += str + "\n"; } });
+        py.setStderr({ batched: (str: string) => { stderrBuffer += str + "\n"; } });
+        py.setStdin({
+          stdin: () => (inputIdx < inputLines.length ? inputLines[inputIdx++] : ""),
         });
 
-        // Set custom stdin
-        this.pyodideInstance.setStdin({
-          stdin: () => {
-            if (inputIdx < inputLines.length) {
-              const val = inputLines[inputIdx++];
-              return val;
-            }
-            return "";
-          },
-        });
-
-        await this.pyodideInstance.runPythonAsync(code);
+        // Mỗi lần chạy dùng một không gian biến mới để các lần chạy / test không ảnh hưởng nhau
+        globals = py.globals.get("dict")();
+        globals.set("__name__", "__main__");   // để `if __name__ == "__main__":` hoạt động như Python thật
+        await py.runPythonAsync(code, { globals });
         const executionTimeMs = Math.round(performance.now() - startTime);
 
         return {
@@ -109,17 +136,26 @@ export class PythonRunner {
           error: err?.message || String(err),
           executionTimeMs,
         };
+      } finally {
+        try { globals?.destroy?.(); } catch {}
       }
     }
 
-    // 2. High-performance Client-side Python Interpreter / Sandbox
+    // Không có Python thật
+    if (opts.requireRealPython) {
+      return {
+        success: false,
+        output: "",
+        error: PYODIDE_UNAVAILABLE_MESSAGE,
+        executionTimeMs: Math.round(performance.now() - startTime),
+      };
+    }
+
+    // Chỉ dùng cho "Chạy thử": bộ mô phỏng bằng JavaScript (không đầy đủ, có cảnh báo)
     try {
       const result = await this.executeWithJsEngine(code, stdinInput);
       const executionTimeMs = Math.round(performance.now() - startTime);
-      return {
-        ...result,
-        executionTimeMs,
-      };
+      return { ...result, executionTimeMs, warning: EMULATOR_WARNING };
     } catch (err: any) {
       const executionTimeMs = Math.round(performance.now() - startTime);
       return {
@@ -127,6 +163,7 @@ export class PythonRunner {
         output: "",
         error: err?.message || "Lỗi thực thi mã nguồn",
         executionTimeMs,
+        warning: EMULATOR_WARNING,
       };
     }
   }
@@ -447,7 +484,7 @@ export class PythonRunner {
 
     for (const test of testCases) {
       const startTime = performance.now();
-      const exec = await this.runCode(code, test.input);
+      const exec = await this.runCode(code, test.input, { requireRealPython: true });
       const duration = Math.round(performance.now() - startTime);
       totalTime += duration;
 

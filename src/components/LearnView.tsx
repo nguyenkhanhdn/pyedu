@@ -1,3 +1,4 @@
+import { RichInline, RichText } from "./RichText";
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { Lesson, TestCase, SubmissionResult } from "../types";
@@ -41,36 +42,7 @@ interface LearnViewProps {
   }) => void;
 }
 
-// **từ khóa** → tô nổi; `code` → ô mã. Cho phép lồng `code` trong **từ khóa**.
-const renderFormattedText = (text: string, inBold = false): React.ReactNode => {
-  const parts = text.split(/(\*\*.+?\*\*|`[^`]+`)/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.length > 4 && part.startsWith('**') && part.endsWith('**')) {
-          return (
-            <strong key={i} className="font-bold text-slate-900 bg-amber-100/80 px-1 rounded">
-              {renderFormattedText(part.slice(2, -2), true)}
-            </strong>
-          );
-        }
-        if (part.length > 2 && part.startsWith('`') && part.endsWith('`')) {
-          return (
-            <code
-              key={i}
-              className={`px-1.5 py-0.5 rounded font-mono text-xs font-semibold border ${
-                inBold ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-              }`}
-            >
-              {part.slice(1, -1)}
-            </code>
-          );
-        }
-        return part;
-      })}
-    </>
-  );
-};
+const renderFormattedText = (text: string) => <RichInline text={text} />;
 
 export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => {
   const {
@@ -145,7 +117,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   const savedCodeFor = (key: string, practice: typeof selectedLesson.practice) =>
     userCodes[key] !== undefined
       ? userCodes[key]
-      : practice === selectedLesson.practice
+      : practice.id === selectedLesson.practice.id
       ? userCodes[selectedLesson.id]
       : undefined;
 
@@ -961,24 +933,32 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                 <div>
                   <h2 className="text-base font-bold text-slate-900">{currentPractice.title}</h2>
-                  <div className="mt-2 text-xs text-slate-700 whitespace-pre-line leading-relaxed">
-                    {currentPractice.problemStatement}
-                  </div>
+                  <RichText className="mt-2 text-xs text-slate-700" text={currentPractice.problemStatement} />
                 </div>
 
                 {/* Input/Output Specifications */}
                 <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
                   <div>
                     <h4 className="font-semibold text-slate-700">Quy cách Đầu vào (Input):</h4>
-                    <p className="text-slate-600 whitespace-pre-line">{currentPractice.inputFormat}</p>
+                    <RichText className="mt-1 text-slate-600" text={currentPractice.inputFormat} />
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-700">Quy cách Đầu ra (Output):</h4>
-                    <p className="text-slate-600 whitespace-pre-line">{currentPractice.outputFormat}</p>
+                    <RichText className="mt-1 text-slate-600" text={currentPractice.outputFormat} />
                   </div>
                   <div>
                     <h4 className="font-semibold text-slate-700">Ràng buộc (Constraints):</h4>
-                    <p className="text-slate-500 font-mono">{currentPractice.constraints}</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {currentPractice.constraints
+                        .split(/;\s*/)
+                        .map((c) => c.trim())
+                        .filter(Boolean)
+                        .map((c, i) => (
+                          <span key={i} className="px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-mono">
+                            {c}
+                          </span>
+                        ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1004,7 +984,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                         </div>
                       </div>
                       {sample.explanation && (
-                        <p className="text-xs text-slate-600 italic">Giải thích: {sample.explanation}</p>
+                        <div className="text-xs text-slate-600">
+                          <span className="font-semibold text-slate-700">Giải thích: </span>
+                          <RichInline text={sample.explanation} />
+                        </div>
                       )}
                     </div>
                   ))}
@@ -1031,7 +1014,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       {currentPractice.hints.map((hint, idx) => (
                         <div key={idx} className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
                           <p className="text-indigo-700 font-semibold text-xs mb-1">Gợi ý bước {idx + 1}:</p>
-                          <p className="text-slate-700 font-mono text-xs">{hint}</p>
+                          <RichText className="text-slate-700 text-xs" text={hint} />
                         </div>
                       ))}
                       <div className="pt-1 space-y-1.5">

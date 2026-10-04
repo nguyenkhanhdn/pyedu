@@ -1,7 +1,8 @@
 import { AlgorithmProblem, AlgorithmLeaderboardEntry } from "../types";
 import { ALL_TOPIC_PROBLEMS } from "./problems";
+import { enrichAlgorithmProblems } from "./problems/algoEnrich";
 
-export const ALGORITHM_PROBLEMS: AlgorithmProblem[] = [
+export const RAW_ALGORITHM_PROBLEMS: AlgorithmProblem[] = [
   ...ALL_TOPIC_PROBLEMS,
   // ==========================================
   // CẤP ĐỘ 1: TIỂU HỌC (KHỐI 3 - 5 & BẢNG A TIN HỌC TRẺ)
@@ -917,6 +918,9 @@ denominations = [500, 200, 100, 50, 20, 10, 5, 2, 1]
     ]
   }
 ];
+
+// Bổ sung bài mẫu, mã khởi tạo dạng khung, làm sạch đề bài (xem scripts/algo/)
+export const ALGORITHM_PROBLEMS: AlgorithmProblem[] = enrichAlgorithmProblems(RAW_ALGORITHM_PROBLEMS);
 
 export const INITIAL_ALGORITHM_LEADERBOARD: AlgorithmLeaderboardEntry[] = [
   {

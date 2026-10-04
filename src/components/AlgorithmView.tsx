@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { AlgorithmProblem, AlgorithmLevel, AlgorithmSubmission } from "../types";
 import { PythonRunner } from "../utils/pythonRunner";
+import { RichInline, RichText } from "./RichText";
+import { CodeBlock } from "./CodeBlock";
+import { CodeEditor } from "./CodeEditor";
 import {
   Target,
   Trophy,
@@ -35,7 +38,10 @@ import {
   ChevronDown,
   ChevronUp,
   Tag,
-  CheckCheck
+  CheckCheck,
+  Lock,
+  Unlock,
+  Lightbulb
 } from "lucide-react";
 
 interface AlgorithmViewProps {
@@ -65,6 +71,9 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'solved' | 'unsolved'>('all');
+  const [sortMode, setSortMode] = useState<'path' | 'easy' | 'points'>('path');
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | AlgorithmProblem['difficulty']>('all');
+  const [revealedHints, setRevealedHints] = useState(0);
 
   // Filters for Leaderboard
   const [leaderboardLevel, setLeaderboardLevel] = useState<'all' | 'primary' | 'secondary'>('all');
@@ -81,7 +90,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
   const [customInput, setCustomInput] = useState<string>(() => {
     return algorithmProblems.length > 0 ? algorithmProblems[0].sampleCases?.[0]?.input || "" : "";
   });
-  const [workspaceTab, setWorkspaceTab] = useState<'statement' | 'tests' | 'hints'>('statement');
+  const [workspaceTab, setWorkspaceTab] = useState<'statement' | 'tests' | 'hints' | 'solution'>('statement');
   const [copiedCode, setCopiedCode] = useState(false);
   const [viewingSolutionCode, setViewingSolutionCode] = useState<AlgorithmSubmission | null>(null);
 
@@ -103,6 +112,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
     }
     setRunResult(null);
     setSubmissionOutcome(null);
+    setRevealedHints(0);
     setCustomInput(selectedProblem.sampleCases?.[0]?.input || "");
   }, [selectedProblem?.id, algorithmProblems]);
 
@@ -189,20 +199,61 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
     }
   };
 
-  // Extract all unique topics
-  const allTopics = Array.from(new Set(algorithmProblems.map(p => p.topic).filter(Boolean)));
+  // Extract all unique topics (theo thứ tự lộ trình học)
+  const DIFF_RANK: Record<string, number> = { 'Dễ': 0, 'Trung bình': 1, 'Khó': 2, 'HSG': 3 };
+  const topicNo = (t: string) => {
+    const m = (t || '').match(/Chủ đề\s*(\d+)/);
+    return m ? parseInt(m[1], 10) : 100;   // đề tổng hợp / nâng cao xếp sau các chủ đề
+  };
+  const originalIndex = new Map<string, number>(algorithmProblems.map((p, i) => [p.id, i] as [string, number]));
+  const byPath = (a: AlgorithmProblem, b: AlgorithmProblem) =>
+    topicNo(a.topic) - topicNo(b.topic) ||
+    (DIFF_RANK[a.difficulty] ?? 9) - (DIFF_RANK[b.difficulty] ?? 9) ||
+    (originalIndex.get(a.id) ?? 0) - (originalIndex.get(b.id) ?? 0);
+  const compareProblems = (a: AlgorithmProblem, b: AlgorithmProblem) => {
+    if (sortMode === 'easy') {
+      return (DIFF_RANK[a.difficulty] ?? 9) - (DIFF_RANK[b.difficulty] ?? 9) || byPath(a, b);
+    }
+    if (sortMode === 'points') return b.points - a.points || byPath(a, b);
+    return byPath(a, b);
+  };
+  const allTopics = Array.from(new Set([...algorithmProblems].sort(byPath).map(p => p.topic).filter(Boolean)));
+  const stripMarkup = (t: string) => (t || '').replace(/\*\*|`/g, '').replace(/\n+/g, ' ').replace(/\s+-\s+/g, ' · ');
 
   // Filter problems for Problem Bank
+  const q = searchQuery.trim().toLowerCase();
   const filteredProblems = algorithmProblems.filter(p => {
     const matchLevel = selectedLevel === 'all' || p.level === selectedLevel;
     const matchTopic = selectedTopic === 'all' || p.topic === selectedTopic;
-    const matchSearch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        (p.problemStatement || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        (p.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchDifficulty = difficultyFilter === 'all' || p.difficulty === difficultyFilter;
+    const matchSearch = !q ||
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.topic || '').toLowerCase().includes(q) ||
+      stripMarkup(p.problemStatement).toLowerCase().includes(q) ||
+      (p.tags || []).some(t => t.toLowerCase().includes(q));
     const isSolved = solvedProblemIds.includes(p.id);
     const matchStatus = statusFilter === 'all' || (statusFilter === 'solved' && isSolved) || (statusFilter === 'unsolved' && !isSolved);
-    return matchLevel && matchTopic && matchSearch && matchStatus;
-  });
+    return matchLevel && matchTopic && matchDifficulty && matchSearch && matchStatus;
+  }).sort(compareProblems);
+
+  // Nhóm theo chủ đề khi xem theo "Lộ trình học"
+  const groupedProblems: { label: string; items: AlgorithmProblem[] }[] = sortMode === 'path'
+    ? filteredProblems.reduce((acc: { label: string; items: AlgorithmProblem[] }[], p) => {
+        const label = topicNo(p.topic) < 100 ? p.topic : 'Đề tổng hợp & nâng cao';
+        const last = acc[acc.length - 1];
+        if (last && last.label === label) last.items.push(p);
+        else acc.push({ label, items: [p] });
+        return acc;
+      }, [])
+    : [{ label: '', items: filteredProblems }];
+
+  // Bài nên làm tiếp theo: bài chưa giải đầu tiên theo lộ trình
+  const nextProblem = [...algorithmProblems].sort(byPath).find(p => !solvedProblemIds.includes(p.id));
+
+  // Bài mẫu: mở khi đã giải được, đã thử ít nhất 3 lần, hoặc là giáo viên / quản trị
+  const attemptsOfSelected = selectedProblem ? algorithmSubmissions.filter(s => s.problemId === selectedProblem.id).length : 0;
+  const isPrivileged = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
+  const canViewSolution = !!selectedProblem && (solvedProblemIds.includes(selectedProblem.id) || attemptsOfSelected >= 3 || isPrivileged);
 
   // Filter leaderboard
   const filteredLeaderboard = algorithmLeaderboard.filter(entry => {
@@ -461,9 +512,56 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
               </div>
             </div>
 
+            {/* Độ khó, sắp xếp và gợi ý bài tiếp theo */}
+            <div className="flex flex-wrap items-center gap-2 -mt-2">
+              <span className="text-xs font-bold text-slate-500">Độ khó:</span>
+              {(['all', 'Dễ', 'Trung bình', 'Khó', 'HSG'] as const).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDifficultyFilter(d)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
+                    difficultyFilter === d ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  {d === 'all' ? 'Tất cả' : d}
+                </button>
+              ))}
+              <span className="text-xs font-bold text-slate-500 ml-2">Sắp xếp:</span>
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value as 'path' | 'easy' | 'points')}
+                className="px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              >
+                <option value="path">Lộ trình học (chủ đề, dễ → khó)</option>
+                <option value="easy">Dễ → Khó</option>
+                <option value="points">Điểm thưởng cao</option>
+              </select>
+              <span className="text-xs text-slate-500 ml-1">{filteredProblems.length} bài</span>
+              {nextProblem && (
+                <button
+                  onClick={() => handleSelectProblem(nextProblem)}
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer"
+                  title={nextProblem.title}
+                >
+                  <Play className="h-3.5 w-3.5" />
+                  <span>Làm bài tiếp theo</span>
+                </button>
+              )}
+            </div>
+
             {/* Problems Grid / List */}
+            {groupedProblems.map((group) => (
+            <div key={group.label || 'all'} className="space-y-3">
+              {group.label && (
+                <div className="flex items-center justify-between gap-2 pt-2">
+                  <h3 className="text-sm font-black text-slate-800">{group.label}</h3>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {group.items.filter(p => solvedProblemIds.includes(p.id)).length}/{group.items.length} bài đã giải
+                  </span>
+                </div>
+              )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProblems.map((problem) => {
+              {group.items.map((problem) => {
                 const isSolved = solvedProblemIds.includes(problem.id);
                 const isPrimary = problem.level === 'primary';
 
@@ -512,7 +610,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                           {problem.title}
                         </h3>
                         <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                          {problem.problemStatement}
+                          {stripMarkup(problem.problemStatement)}
                         </p>
                       </div>
 
@@ -549,6 +647,8 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                 );
               })}
             </div>
+            </div>
+            ))}
 
             {filteredProblems.length === 0 && (
               <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-3">
@@ -558,7 +658,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn lại cấp độ/chủ đề trên thanh lọc.
                 </p>
                 <button
-                  onClick={() => { setSelectedLevel('all'); setSelectedTopic('all'); setSearchQuery(''); setStatusFilter('all'); }}
+                  onClick={() => { setSelectedLevel('all'); setSelectedTopic('all'); setSearchQuery(''); setStatusFilter('all'); setDifficultyFilter('all'); }}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-indigo-700 transition-colors cursor-pointer"
                 >
                   Xóa bộ lọc
@@ -609,6 +709,15 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                       }`}
                     >
                       Gợi ý giải
+                    </button>
+                    <button
+                      onClick={() => setWorkspaceTab('solution')}
+                      className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                        workspaceTab === 'solution' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {canViewSolution ? <Unlock className="h-3 w-3 text-emerald-600" /> : <Lock className="h-3 w-3 text-slate-400" />}
+                      Bài mẫu
                     </button>
                   </div>
 
@@ -688,9 +797,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-400">
                           Mô tả bài toán
                         </h4>
-                        <div className="text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm font-sans">
-                          {selectedProblem.problemStatement}
-                        </div>
+                        <RichText className="text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm font-sans" text={selectedProblem.problemStatement} />
                       </div>
 
                       {/* Input / Output Formats */}
@@ -699,18 +806,14 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                           <span className="font-bold text-xs text-blue-900 flex items-center gap-1.5">
                             <Layers className="h-3.5 w-3.5 text-blue-600" /> Dữ liệu vào (Input)
                           </span>
-                          <p className="text-xs text-blue-800 leading-relaxed whitespace-pre-line">
-                            {selectedProblem.inputFormat}
-                          </p>
+                          <RichText className="text-xs text-blue-900" text={selectedProblem.inputFormat} />
                         </div>
 
                         <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 space-y-1">
                           <span className="font-bold text-xs text-emerald-900 flex items-center gap-1.5">
                             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Dữ liệu ra (Output)
                           </span>
-                          <p className="text-xs text-emerald-800 leading-relaxed whitespace-pre-line">
-                            {selectedProblem.outputFormat}
-                          </p>
+                          <RichText className="text-xs text-emerald-900" text={selectedProblem.outputFormat} />
                         </div>
                       </div>
 
@@ -719,9 +822,17 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         <span className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
                           <Info className="h-3.5 w-3.5 text-amber-600" /> Ràng buộc dữ liệu (Constraints)
                         </span>
-                        <p className="text-xs text-amber-800 font-mono">
-                          {selectedProblem.constraints}
-                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedProblem.constraints
+                            .split(/;\s*/)
+                            .map((c) => c.trim())
+                            .filter(Boolean)
+                            .map((c, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded-lg bg-white border border-amber-200 text-amber-900 text-[11px] font-mono">
+                                {c}
+                              </span>
+                            ))}
+                        </div>
                       </div>
 
                       {/* Sample Tests in Statement View */}
@@ -734,8 +845,8 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                             <div className="bg-slate-100 px-3 py-1.5 font-bold text-slate-700 border-b border-slate-200 flex items-center justify-between">
                               <span>Ví dụ {idx + 1}</span>
                               {sample.explanation && (
-                                <span className="text-xs font-normal text-slate-500 italic">
-                                  {sample.explanation}
+                                <span className="text-xs font-normal text-slate-500 text-right">
+                                  <RichInline text={sample.explanation} />
                                 </span>
                               )}
                             </div>
@@ -785,7 +896,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                             </div>
                           </div>
                           {sample.explanation && (
-                            <p className="text-slate-500 italic mt-1">{sample.explanation}</p>
+                            <p className="text-slate-500 mt-1"><RichInline text={sample.explanation} /></p>
                           )}
                         </div>
                       ))}
@@ -794,39 +905,93 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
                   {workspaceTab === 'hints' && (
                     <div className="space-y-4 text-xs">
-                      {(selectedProblem.hints || []).map((hint, idx) => (
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
+                        Tự suy nghĩ trước, rồi mở <strong>từng gợi ý một</strong>. Gợi ý cuối cùng nằm ở tab <strong>Bài mẫu</strong>.
+                      </div>
+                      {(selectedProblem.hints || []).slice(0, revealedHints).map((hint, idx) => (
                         <div key={idx} className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
                           <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
-                            <Sparkles className="h-4 w-4 text-amber-600" />
-                            <span>Gợi ý #{idx + 1}</span>
+                            <Lightbulb className="h-4 w-4 text-amber-600" />
+                            <span>Gợi ý {idx + 1}/{(selectedProblem.hints || []).length}</span>
                           </div>
-                          <p className="text-amber-800 leading-relaxed whitespace-pre-line">
-                            {hint}
-                          </p>
+                          <RichText className="text-amber-900" text={hint} />
                         </div>
                       ))}
-
-                      {selectedProblem.solutionExplanation && (
-                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
-                          <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
-                            <CheckCheck className="h-4 w-4 text-emerald-600" />
-                            <span>Hướng dẫn thuật toán chi tiết</span>
-                          </div>
-                          <p className="text-emerald-800 leading-relaxed whitespace-pre-line">
-                            {selectedProblem.solutionExplanation}
-                          </p>
-                        </div>
+                      {revealedHints < (selectedProblem.hints || []).length ? (
+                        <button
+                          onClick={() => setRevealedHints(revealedHints + 1)}
+                          className="w-full py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Lightbulb className="h-4 w-4" />
+                          <span>{revealedHints === 0 ? 'Xem gợi ý đầu tiên' : 'Xem gợi ý tiếp theo'} ({revealedHints}/{(selectedProblem.hints || []).length})</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setWorkspaceTab('solution')}
+                          className="w-full py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <CheckCheck className="h-4 w-4" />
+                          <span>Đã hết gợi ý — sang tab Bài mẫu</span>
+                        </button>
                       )}
 
                       <div className="p-4 bg-violet-50 border border-violet-200 rounded-2xl space-y-2">
                         <div className="flex items-center gap-2 text-violet-900 font-bold text-sm">
                           <GraduationCap className="h-4 w-4 text-violet-600" />
-                          <span>Lời khuyên từ giáo viên</span>
+                          <span>Lời khuyên</span>
                         </div>
-                        <p className="text-violet-800 leading-relaxed">
-                          Hãy đọc kỹ định dạng đầu vào (input), chú ý ép kiểu dữ liệu bằng <code>int()</code> hoặc <code>float()</code> khi nhập từ bàn phím. Sử dụng phương thức <code>split()</code> nếu đề bài nhập nhiều số trên cùng 1 dòng.
-                        </p>
+                        <RichText
+                          className="text-violet-900"
+                          text={"Đọc kỹ **định dạng input**. Nhập số bằng `int(input())`, nhiều số một dòng bằng `map(int, input().split())`. In kết quả đúng mẫu, không thừa dấu cách hay dòng trống."}
+                        />
                       </div>
+                    </div>
+                  )}
+
+                  {workspaceTab === 'solution' && (
+                    <div className="space-y-4 text-xs">
+                      {canViewSolution ? (
+                        <>
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center gap-2">
+                            <Unlock className="h-4 w-4 text-emerald-600" />
+                            <span>Bài mẫu đã kiểm thử đạt <strong>100% test</strong>. Hãy đọc hiểu rồi tự viết lại bằng cách của mình.</span>
+                          </div>
+                          {selectedProblem.solutionExplanation && (
+                            <div className="p-4 bg-white border border-slate-200 rounded-2xl space-y-1">
+                              <div className="font-bold text-slate-800 text-sm">Ý tưởng</div>
+                              <RichText className="text-slate-700" text={selectedProblem.solutionExplanation} />
+                            </div>
+                          )}
+                          {selectedProblem.sampleSolution ? (
+                            <CodeBlock code={selectedProblem.sampleSolution} title="bai_mau.py" />
+                          ) : (
+                            <p className="text-slate-500">Bài này chưa có bài mẫu.</p>
+                          )}
+                          {selectedProblem.sampleSolution && (
+                            <button
+                              onClick={() => { setUserCode(selectedProblem.sampleSolution || ''); }}
+                              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-semibold cursor-pointer"
+                            >
+                              Nạp bài mẫu vào trình soạn thảo để chạy thử
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <div className="p-6 text-center bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                          <Lock className="h-8 w-8 text-slate-400 mx-auto" />
+                          <h4 className="font-bold text-slate-800 text-sm">Bài mẫu đang khóa</h4>
+                          <p className="text-slate-600 leading-relaxed">
+                            Bài mẫu mở sau khi bạn <strong>giải đúng</strong> hoặc đã <strong>nộp thử 3 lần</strong>.
+                            <br />Hiện bạn đã nộp <strong>{attemptsOfSelected}/3</strong> lần.
+                          </p>
+                          <button
+                            onClick={() => setWorkspaceTab('hints')}
+                            className="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 font-bold cursor-pointer"
+                          >
+                            Xem gợi ý trước
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -874,26 +1039,8 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                 </div>
 
                 {/* Code Editor Area */}
-                <div className="flex-1 relative bg-slate-950 p-4 font-mono text-xs overflow-auto">
-                  <textarea
-                    value={userCode}
-                    onChange={(e) => setUserCode(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Tab') {
-                        e.preventDefault();
-                        const start = e.currentTarget.selectionStart;
-                        const end = e.currentTarget.selectionEnd;
-                        const newValue = userCode.substring(0, start) + '    ' + userCode.substring(end);
-                        setUserCode(newValue);
-                        setTimeout(() => {
-                          e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 4;
-                        }, 0);
-                      }
-                    }}
-                    className="w-full h-full bg-transparent text-emerald-400 focus:outline-none resize-none font-mono text-xs sm:text-sm leading-relaxed"
-                    placeholder="# Nhập code Python của bạn tại đây..."
-                    spellCheck={false}
-                  />
+                <div className="flex-1 relative bg-slate-950 min-h-[260px]">
+                  <CodeEditor value={userCode} onChange={setUserCode} lineNumbers placeholder="# Nhập code Python của bạn tại đây..." />
                 </div>
 
                 {/* Execution & Custom Input Controls */}
@@ -901,12 +1048,12 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   {/* Custom Input preview */}
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-slate-400 font-semibold whitespace-nowrap">Input thử:</span>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={Math.min(4, Math.max(1, customInput.split("\n").length))}
                       value={customInput}
                       onChange={(e) => setCustomInput(e.target.value)}
-                      placeholder="Dữ liệu đầu vào cho input()..."
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                      placeholder="Mỗi dòng ứng với một lần gọi input()..."
+                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 font-mono text-xs focus:outline-none focus:border-indigo-500 resize-none"
                     />
                   </div>
 

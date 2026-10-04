@@ -1,4 +1,5 @@
 import { RichInline, RichText } from "./RichText";
+import { CodeEditor } from "./CodeEditor";
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { Lesson, TestCase, SubmissionResult } from "../types";
@@ -1109,33 +1110,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 )}
 
                 {/* Python Code Editor Area */}
-                <div className="flex-1 relative flex bg-slate-950 font-mono text-xs sm:text-sm overflow-hidden">
-                  {/* Line numbers simulation */}
-                  <div className="py-3 px-2 bg-slate-900/80 text-slate-500 text-right select-none border-r border-slate-800 font-mono text-xs w-10">
-                    {editorCode.split("\n").map((_, i) => (
-                      <div key={i}>{i + 1}</div>
-                    ))}
-                  </div>
-
-                  <textarea
-                    value={editorCode}
-                    onChange={(e) => setEditorCode(e.target.value)}
-                    onKeyDown={(e) => {
-                      // Support tab indentation (4 spaces)
-                      if (e.key === "Tab") {
-                        e.preventDefault();
-                        const start = e.currentTarget.selectionStart;
-                        const end = e.currentTarget.selectionEnd;
-                        const newCode = editorCode.substring(0, start) + "    " + editorCode.substring(end);
-                        setEditorCode(newCode);
-                        setTimeout(() => {
-                          e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 4;
-                        }, 0);
-                      }
-                    }}
-                    spellCheck={false}
-                    className="flex-1 p-3 bg-transparent text-emerald-300 focus:outline-none resize-none overflow-y-auto leading-relaxed"
-                  />
+                <div className="flex-1 relative bg-slate-950 min-h-[260px] overflow-hidden">
+                  <CodeEditor value={editorCode} onChange={setEditorCode} lineNumbers />
                 </div>
 
                 {/* Editor Action Buttons */}

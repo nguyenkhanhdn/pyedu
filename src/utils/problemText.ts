@@ -44,7 +44,7 @@ const cleanPlain = (s: string): string =>
 
 // ---- Tô nổi biểu thức Python (chạy TRƯỚC khi đổi ký hiệu để mã giữ nguyên dạng ASCII) ----
 const IDENT = String.raw`[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*(?![\p{L}\p{N}_])`;
-const OPERAND = String.raw`(?:${IDENT}(?:\[[^\]\n]*\])?(?:\([^()\n]*\))?|\d+(?:\.\d+)?|'[^'\n]*'|"[^"\n]*")`;
+const OPERAND = String.raw`(?:${IDENT}(?:\[[^\]\n]*\])?(?:\((?:[^()\n]|\([^()\n]*\))*\))?|\d+(?:\.\d+)?|'[^'\n]*'|"[^"\n]*")`;
 const ARITH = String.raw`(?:[ \t]*(?:%|\*\*|//|\+|-|\*|/)[ \t]*${OPERAND})*`;
 const CMP = String.raw`(?:==|!=|>=|<=|>|<)`;
 const EXPR_C = String.raw`${OPERAND}${ARITH}[ \t]*${CMP}[ \t]*${OPERAND}${ARITH}`;
@@ -52,7 +52,7 @@ const NOT_AFTER_LETTER = String.raw`(?<![\p{L}\p{N}_.])`;
 
 const R_COND = new RegExp(`${NOT_AFTER_LETTER}(?:if|elif|while)\[ \t]+(?:not\[ \t]+)?${EXPR_C}(?:\[ \t]+(?:and|or)\[ \t]+${EXPR_C})*(?:\[ \t]*:)?`, "gu");
 const R_FOR = new RegExp(`${NOT_AFTER_LETTER}for\[ \t]+\\w+\[ \t]+in\[ \t]+${IDENT}(?:\\([^()\\n]*\\))?(?:\[ \t]*:)?`, "gu");
-const R_CALL = new RegExp(`${NOT_AFTER_LETTER}[A-Za-z_][\\w.]*\\([^()\\n]+\\)`, "gu");
+const R_CALL = new RegExp(`${NOT_AFTER_LETTER}[A-Za-z_][\\w.]*\\((?:[^()\\n]|\\([^()\\n]*\\))+\\)`, "gu");
 const R_COMPARE = new RegExp(`${NOT_AFTER_LETTER}${EXPR_C.replace(CMP, String.raw`(?:==|!=|>=|<=|\+=|-=|\*=|>|<)`)}`, "gu");
 const R_ASSIGN = new RegExp(`${NOT_AFTER_LETTER}${IDENT}(?:\\[[^\\]\\n]*\\])?\[ \t]*(?:=|\\+=|-=|\\*=)\[ \t]*${OPERAND}${ARITH}`, "gu");
 const R_KEYWORD = new RegExp(`(?<![\\p{L}\\p{N}_\`])(${PY_KEYWORDS})(:?)(?![\\p{L}\\p{N}_\`])`, "gu");
@@ -117,9 +117,14 @@ const markLiteralOutputLines = (text: string): string => {
 export const polishText = (text: string | undefined, opts?: { literalOutput?: boolean; level?: Level }): string => {
   if (!text) return "";
   let t = text
+    // `int(`float(x)`)` → `int(float(x))`; `a <=` b → `a <= b`
+    .replace(/([A-Za-z_][\w.]*)\(`([^`\n]+)`\)/g, "`$1($2)`")
+    .replace(/`([^`\n]*?(?:<=|>=|==|!=|<|>|\+|\*|%))`[ ]+([\w.\[\]]+)/g, "`$1 $2`")
     .replace(/\s*\(mặc định [^)]*thử nghiệm\)/g, "")
     .replace(/\(\*\)/g, "(`*`)")
     .replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  // Dòng chỉ gồm <...> (ví dụ <class 'str'>) là mẫu in nguyên văn → hiển thị dạng code
+  t = t.replace(/^[ \t]*(<[^<>\n`]+>)[ \t]*$/gm, "`$1`");
   if (opts?.literalOutput) t = markLiteralOutputLines(t);
   t = highlight(t, opts?.level ?? "text");
   t = mapOutsideCode(t, cleanPlain);

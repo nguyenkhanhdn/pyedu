@@ -18,11 +18,11 @@ export const TOPIC_13_APPLIED_PROJECTS: Module = {
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Chương trình tính hóa đơn bán lẻ tính tổng tiền các món đồ, áp dụng bậc chiết khấu phần trăm (discount rate) và tính số tiền thực thanh toán.",
+        summary: "**Hóa đơn**: tính **tổng tiền** → áp dụng **chiết khấu** → ra **số tiền thanh toán**.",
         keyPoints: [
-          "Tổng tiền gốc: $T = \\sum (SL_i \\times DG_i)$.",
-          "Nếu $T \\ge 500000$: Giảm 10%. Nếu $200000 \\le T < 500000$: Giảm 5%. Ngược lại giảm 0%.",
-          "Số tiền thanh toán: $ThanhToan = T - GiamGia$."
+          "Tổng gốc: **T = Σ (SL × Đơn giá)**",
+          "T ≥ 500000: giảm **10%**; 200000 ≤ T < 500000: giảm **5%**; còn lại **0%**",
+          "Thanh toán = T − Giảm giá"
         ],
         conceptIllustration: {
           type: "variables",
@@ -42,6 +42,18 @@ export const TOPIC_13_APPLIED_PROJECTS: Module = {
             explanation: ">= 500,000 -> Giảm 10% (60,000) -> Còn 540,000.",
             code: "# Tong: 600000\n# Giam: 60000\n# Thanh toan: 540000",
             output: "Tong: 600000\nGiam: 60000\nThanh toan: 540000"
+          },
+          {
+            title: "Ví dụ: Tổng hóa đơn nhiều món",
+            explanation: "Cộng số lượng × đơn giá cho từng món.",
+            code: "mon = [(2, 150000), (1, 300000)]\ntong = 0\nfor sl, gia in mon:\n    tong += sl * gia\nprint(f'{tong:,}')",
+            output: "600,000"
+          },
+          {
+            title: "Ví dụ: Chiết khấu theo bậc",
+            explanation: "Chọn mức giảm bằng `if / elif / else`.",
+            code: "T = 600000\nif T >= 500000:\n    giam = T * 0.10\nelif T >= 200000:\n    giam = T * 0.05\nelse:\n    giam = 0\nprint(f'{T - giam:,.0f}')",
+            output: "540,000"
           }
         ],
         multipleChoice: {
@@ -106,10 +118,10 @@ k = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật phòng thủ dữ liệu đầu vào: Liên tục đọc từng dòng, nếu ép kiểu `float(line)` thành công thì bổ sung vào danh sách cho đến khi đủ $N$ số hợp lệ.",
+        summary: "**Phòng thủ dữ liệu**: đọc từng dòng, ép `float(line)`; **thành công** mới thêm vào danh sách, đủ **N** số thì dừng.",
         keyPoints: [
-          "Bắt lỗi `ValueError` để loại bỏ các dòng chứa chuỗi không phải số.",
-          "Khi đủ $N$ phần tử, tính trung bình cộng của danh sách."
+          "Bắt **`ValueError`** để bỏ dòng không phải số.",
+          "Đủ N số → tính **trung bình cộng**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -127,6 +139,18 @@ k = int(input())
             explanation: "Nhập 'xyz', 4, 'err', 6 -> Thu được [4.0, 6.0], TBC = 5.00.",
             code: "# Valid: [4.0, 6.0] -> TBC = 5.00",
             output: "TBC: 5.00"
+          },
+          {
+            title: "Ví dụ: Chuyển chuỗi sang số an toàn",
+            explanation: "Dòng không phải số sẽ bị bỏ qua.",
+            code: "dong = ['abc', '4.5', 'x1', '6']\nso = []\nfor line in dong:\n    try:\n        so.append(float(line))\n    except ValueError:\n        pass\nprint(so)",
+            output: "[4.5, 6.0]"
+          },
+          {
+            title: "Ví dụ: Trung bình cộng",
+            explanation: "Chia tổng cho số phần tử.",
+            code: "so = [4.5, 6.0]\nprint(sum(so) / len(so))",
+            output: "5.25"
           }
         ],
         multipleChoice: {
@@ -193,11 +217,11 @@ n = int(input())
       durationMin: 30,
       xpReward: 80,
       theory: {
-        summary: "Phân tích thống kê dữ liệu bao gồm các chỉ số cơ bản (Min, Max, Sum, Count) và các giải thuật xử lý (Sorting, Searching).",
+        summary: "**Thống kê** danh sách số: **Min, Max, Sum, Count** + **sắp xếp**, **tìm kiếm**.",
         keyPoints: [
-          "Tìm kiếm tuyến tính: `x in a` hoặc tìm vị trí chỉ số `a.index(x)`.",
-          "Sắp xếp Bubble Sort tăng dần.",
-          "Đếm số lượng chẵn và lẻ."
+          "Tìm kiếm: `x in a` hoặc `a.index(x)`",
+          "Sắp xếp: **Bubble Sort** tăng dần.",
+          "Đếm số **chẵn** và số **lẻ**."
         ],
         conceptIllustration: {
           type: "arrays",
@@ -217,6 +241,24 @@ n = int(input())
             explanation: "Max=9, Min=1, Tong=25, Chan=2, Le=3, Sap xep=1 2 5 8 9, Tim 8: Co.",
             code: "# Output 6 dòng thống kê",
             output: "Max: 9\nMin: 1\nTong: 25\nChan: 2, Le: 3\nSap xep: 1 2 5 8 9\nTim 8: Co"
+          },
+          {
+            title: "Ví dụ: Thống kê cơ bản",
+            explanation: "Min, Max, Sum, Count.",
+            code: "a = [5, 2, 8, 1, 9]\nprint(min(a), max(a), sum(a), len(a))",
+            output: "1 9 25 5"
+          },
+          {
+            title: "Ví dụ: Tìm kiếm",
+            explanation: "`x in a` kiểm tra tồn tại; `a.index(x)` trả về vị trí.",
+            code: "a = [5, 2, 8, 1, 9]\nprint(8 in a)\nprint(a.index(8))",
+            output: "True\n2"
+          },
+          {
+            title: "Ví dụ: Đếm chẵn và lẻ",
+            explanation: "Dùng hai biến đếm.",
+            code: "a = [5, 2, 8, 1, 9]\nchan = 0\nle = 0\nfor x in a:\n    if x % 2 == 0:\n        chan += 1\n    else:\n        le += 1\nprint(chan, le)",
+            output: "2 3"
           }
         ],
         multipleChoice: {
@@ -281,12 +323,12 @@ x = int(input())
       durationMin: 35,
       xpReward: 100,
       theory: {
-        summary: "Dự án tổng hợp đỉnh cao: Kết hợp xử lý chuỗi (chuẩn hóa tên), danh sách, cấu trúc rẽ nhánh xếp loại và tìm kiếm học sinh thủ khoa (Max ĐTB).",
+        summary: "**Dự án tổng hợp**: chuẩn hóa tên + danh sách + xếp loại + tìm **thủ khoa** (ĐTB cao nhất).",
         keyPoints: [
-          "Hàm `chuan_hoa(name)`: xóa khoảng trắng thừa, viết hoa đầu từ.",
-          "Hàm `tinh_dtb(toan, van, anh)`: tính trung bình làm tròn 2 chữ số.",
-          "Xếp loại: Gioi (>= 8.0), Kha (6.5 - <8.0), Trung binh (5.0 - <6.5), Yeu (< 5.0).",
-          "Thủ khoa: Học sinh có ĐTB cao nhất lớp."
+          "`chuan_hoa(name)`: bỏ khoảng trắng thừa, **viết hoa đầu từ**.",
+          "`tinh_dtb(toan, van, anh)`: trung bình, làm tròn **2 số lẻ**.",
+          "Xếp loại: Gioi **≥ 8.0**; Kha **≥ 6.5**; Trung binh **≥ 5.0**; Yeu **< 5.0**",
+          "**Thủ khoa** = học sinh có ĐTB cao nhất."
         ],
         conceptIllustration: {
           type: "variables",
@@ -305,6 +347,18 @@ x = int(input())
             explanation: "An (9.0), Binh (7.0) -> Thủ khoa: Nguyen Van An (9.00).",
             code: "# Thu khoa: Nguyen Van An (9.00)",
             output: "Thu khoa: Nguyen Van An (9.00)"
+          },
+          {
+            title: "Ví dụ: Hàm tính ĐTB",
+            explanation: "Làm tròn 2 chữ số thập phân.",
+            code: "def tinh_dtb(toan, van, anh):\n    return round((toan + van + anh) / 3, 2)\n\nprint(tinh_dtb(8, 7.5, 9))",
+            output: "8.17"
+          },
+          {
+            title: "Ví dụ: Tìm thủ khoa",
+            explanation: "Duyệt và giữ học sinh có ĐTB lớn nhất.",
+            code: "ds = [('An', 8.1), ('Binh', 9.2), ('Chi', 7.5)]\nbest = ds[0]\nfor ten, dtb in ds:\n    if dtb > best[1]:\n        best = (ten, dtb)\nprint(best[0], best[1])",
+            output: "Binh 9.2"
           }
         ],
         multipleChoice: {

@@ -18,11 +18,11 @@ export const TOPIC_1_SYNTAX_IO: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Trong Python, hàm input() dùng để nhận dữ liệu nhập vào từ bàn phím dưới dạng chuỗi, và hàm print() dùng để hiển thị thông tin ra màn hình.",
+        summary: "**`input()`** nhận dữ liệu từ bàn phím (luôn là chuỗi). **`print()`** hiển thị ra màn hình.",
         keyPoints: [
-          "Cú pháp nhập: `ten_bien = input()`",
-          "Hàm `print()` có thể in chuỗi kết hợp biến bằng f-string: `f\"Xin chao {name}!\"` hoặc nối chuỗi bằng dấu phẩy `,`.",
-          "Mỗi lệnh `print()` mặc định sẽ tự động xuống dòng mới."
+          "Nhập: `ten = input()`",
+          "In kèm biến bằng **f-string**: `print(f\"Xin chao {ten}!\")`",
+          "Mỗi `print()` **tự xuống dòng**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -40,6 +40,24 @@ export const TOPIC_1_SYNTAX_IO: Module = {
             explanation: "Nhập tên và xuất lời chào.",
             code: 'ten = input()\nprint(f"Xin chao {ten}!")',
             output: "Xin chao Nguyen Van An!"
+          },
+          {
+            title: "Ví dụ: Nhập và in lại",
+            explanation: "`input()` nhận chuỗi, lưu vào biến rồi `print()` ra.",
+            code: "ten = 'An'  # thay bằng input() khi chạy thật\nprint(ten)",
+            output: "An"
+          },
+          {
+            title: "Ví dụ: Dùng dấu phẩy",
+            explanation: "In nhiều giá trị bằng dấu `,` (tự thêm dấu cách).",
+            code: "ten = 'An'\nlop = '10A1'\nprint('Xin chao', ten, '- lop', lop)",
+            output: "Xin chao An - lop 10A1"
+          },
+          {
+            title: "Ví dụ: Hai lệnh print",
+            explanation: "Mỗi `print()` tự xuống dòng.",
+            code: "print('Dong 1')\nprint('Dong 2')",
+            output: "Dong 1\nDong 2"
           }
         ],
         multipleChoice: {
@@ -112,10 +130,10 @@ truong = input()
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Lệnh print() có thể in các ký tự đặc biệt và hoa văn trang trí bằng cách in các chuỗi ký tự cố định.",
+        summary: "Dùng `print()` in các **chuỗi cố định** để tạo hình trang trí.",
         keyPoints: [
-          "Hình vuông 5x5 gồm 5 dòng, mỗi dòng có 5 dấu sao cách nhau bởi dấu cách: `* * * * *`.",
-          "Có thể dùng 5 lệnh `print(\"* * * * *\")` hoặc dùng vòng lặp."
+          "Hình vuông 5x5 = **5 dòng** `* * * * *`",
+          "Lặp lại 5 lệnh `print(\"* * * * *\")`."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -133,6 +151,18 @@ truong = input()
             explanation: "In một dòng gồm 5 dấu sao.",
             code: 'print("* * * * *")',
             output: "* * * * *"
+          },
+          {
+            title: "Ví dụ: Hình vuông 3x3",
+            explanation: "In 3 dòng, mỗi dòng 3 dấu `*`.",
+            code: "print('* * *')\nprint('* * *')\nprint('* * *')",
+            output: "* * *\n* * *\n* * *"
+          },
+          {
+            title: "Ví dụ: Dùng vòng lặp",
+            explanation: "Dùng `for` thay cho việc viết lặp lại.",
+            code: "for i in range(3):\n    print('* * *')",
+            output: "* * *\n* * *\n* * *"
           }
         ],
         multipleChoice: {
@@ -192,11 +222,11 @@ print("* * * * *")
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Để in hình tam giác cân, ta cần căn chỉnh chính xác số lượng khoảng trắng thụt vào ở đầu mỗi dòng.",
+        summary: "Tam giác cân: mỗi dòng gồm **khoảng trắng** thụt đầu dòng + **dấu sao**.",
         keyPoints: [
-          "Dòng 1: 2 khoảng trắng + 1 dấu sao: `  *`",
-          "Dòng 2: 1 khoảng trắng + 3 dấu sao: ` ***`",
-          "Dòng 3: 0 khoảng trắng + 5 dấu sao: `*****`"
+          "Dòng 1: 2 cách + 1 sao → `  *`",
+          "Dòng 2: 1 cách + 3 sao → ` ***`",
+          "Dòng 3: 0 cách + 5 sao → `*****`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -214,6 +244,18 @@ print("* * * * *")
             explanation: "In 3 dòng tạo thành hình tam giác cân.",
             code: 'print("  *")\nprint(" ***")\nprint("*****")',
             output: "  *\n ***\n*****"
+          },
+          {
+            title: "Ví dụ: Tam giác 4 dòng",
+            explanation: "Số khoảng trắng giảm dần, số sao tăng 2 mỗi dòng.",
+            code: "print('   *')\nprint('  ***')\nprint(' *****')\nprint('*******')",
+            output: "   *\n  ***\n *****\n*******"
+          },
+          {
+            title: "Ví dụ: Bằng vòng lặp",
+            explanation: "Dòng i có `n - i` cách và `2*i - 1` sao.",
+            code: "n = 4\nfor i in range(1, n + 1):\n    print(' ' * (n - i) + '*' * (2 * i - 1))",
+            output: "   *\n  ***\n *****\n*******"
           }
         ],
         multipleChoice: {
@@ -269,11 +311,11 @@ print("  *")
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Hàm print() có hai tham số đặc biệt là sep (ký tự ngăn cách giữa các phần tử) và end (ký tự kết thúc sau khi in).",
+        summary: "`print()` có 2 tham số: **`sep`** (ký tự ngăn cách) và **`end`** (ký tự kết thúc).",
         keyPoints: [
-          "`sep`: Mặc định là khoảng trắng `' '`. Có thể đổi thành `sep='/'`, `sep=':'`, `sep=' - '`, v.v.",
-          "`end`: Mặc định là ký tự xuống dòng `'\\n'`. Có thể đổi thành `end=' '` để in tiếp trên cùng 1 dòng.",
-          "Ví dụ: `print(2, 9, 2026, sep='/', end=' ')` -> in `2/9/2026 ` không xuống dòng."
+          "`sep` mặc định là dấu cách: `sep='/'`, `sep=' - '`",
+          "`end` mặc định là xuống dòng `'\\n'`; `end=' '` để **in tiếp cùng dòng**.",
+          "Ví dụ: `print(2, 9, 2026, sep='/')` → `2/9/2026`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -291,6 +333,24 @@ print("  *")
             explanation: "Dùng sep='/' để in ngày tháng.",
             code: "d = 2\nm = 9\ny = 2026\nprint(d, m, y, sep='/')",
             output: "2/9/2026"
+          },
+          {
+            title: "Ví dụ: Tham số sep",
+            explanation: "`sep` đổi ký tự ngăn cách giữa các giá trị.",
+            code: "print(2, 9, 2026, sep='/')\nprint('a', 'b', 'c', sep=' - ')",
+            output: "2/9/2026\na - b - c"
+          },
+          {
+            title: "Ví dụ: Tham số end",
+            explanation: "`end=' '` giúp in tiếp **cùng một dòng**.",
+            code: "print('Xin', end=' ')\nprint('chao', end='!')\nprint()",
+            output: "Xin chao!"
+          },
+          {
+            title: "Ví dụ: Kết hợp sep và end",
+            explanation: "Dùng cả hai tham số trong một lệnh.",
+            code: "print(1, 2, 3, sep=', ', end='.\\n')",
+            output: "1, 2, 3."
           }
         ],
         multipleChoice: {

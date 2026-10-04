@@ -18,10 +18,10 @@ export const TOPIC_12_COMPREHENSIVE: Module = {
       durationMin: 30,
       xpReward: 80,
       theory: {
-        summary: "Quy trình xử lý bảng điểm tổng hợp:\n1. Nhập số lượng học sinh $n$.\n2. Với mỗi học sinh: Nhập họ tên và 5 điểm số (Toán, Văn, Anh, Lý, Hóa).\n3. Tính `dtb = sum(diem) / 5`.\n4. Xếp loại: Xuất sắc (>= 9.0), Giỏi (8.0 - <9.0), Khá (6.5 - <8.0), Trung bình (5.0 - <6.5), Yếu (< 5.0).",
+        summary: "**Bảng điểm**: nhập **n** học sinh → nhập 5 điểm → tính **`dtb = sum(diem) / 5`** → **xếp loại**.",
         keyPoints: [
-          "Xếp loại dựa trên thang điểm chuẩn.",
-          "Căn lề hiển thị bằng f-string: `f\"{dtb:.2f}\"`."
+          "Xuất sắc **≥ 9.0**; Giỏi **≥ 8.0**; Khá **≥ 6.5**; Trung bình **≥ 5.0**; Yếu **< 5.0**",
+          "In điểm 2 số lẻ: `f\"{dtb:.2f}\"`"
         ],
         conceptIllustration: {
           type: "variables",
@@ -41,6 +41,18 @@ export const TOPIC_12_COMPREHENSIVE: Module = {
             explanation: "Nguyen An, điểm [9, 8, 9, 8, 9] -> DTB = 8.60 -> Gioi.",
             code: "# Nguyen An: DTB = 8.60 - Gioi",
             output: "Nguyen An | DTB: 8.60 | Xep loai: Gioi"
+          },
+          {
+            title: "Ví dụ: Tính điểm trung bình 5 môn",
+            explanation: "`sum(diem) / 5`.",
+            code: "diem = [8, 7.5, 9, 6, 8.5]\ndtb = sum(diem) / 5\nprint(f'{dtb:.2f}')",
+            output: "7.80"
+          },
+          {
+            title: "Ví dụ: Xếp loại",
+            explanation: "Dùng chuỗi `if / elif / else`.",
+            code: "dtb = 7.8\nif dtb >= 9:\n    print('Xuat sac')\nelif dtb >= 8:\n    print('Gioi')\nelif dtb >= 6.5:\n    print('Kha')\nelif dtb >= 5:\n    print('Trung binh')\nelse:\n    print('Yeu')",
+            output: "Kha"
           }
         ],
         multipleChoice: {
@@ -106,12 +118,11 @@ n = int(input())
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Công thức lãi kép: Mỗi năm, tiền lãi sinh ra được cộng dồn vào tiền vốn đầu kỳ tiếp theo: `Lai = Vốn * (r / 100)`, `Vốn_mới = Vốn + Lai`.",
+        summary: "**Lãi kép**: lãi mỗi năm được **cộng vào vốn** cho năm sau.",
         keyPoints: [
-          "Khởi tạo `current = P` (tiền vốn ban đầu).",
-          "Lặp qua từng năm từ 1 đến `t`.",
-          "Mỗi năm: `interest = current * (r / 100)`, `current += interest`.",
-          "In bảng và số lượng ký tự `#` đại diện cho giá trị làm tròn."
+          "`current = P` (vốn ban đầu)",
+          "Mỗi năm: `interest = current * (r / 100)`, rồi `current += interest`",
+          "In bảng và số ký tự `#` tương ứng giá trị đã làm tròn."
         ],
         conceptIllustration: {
           type: "loops",
@@ -131,6 +142,12 @@ n = int(input())
             explanation: "Năm 1: Lãi 1tr, Dư 11tr. Năm 2: Lãi 1.1tr, Dư 12.1tr.",
             code: "# Nam 1: 11.00tr\n# Nam 2: 12.10tr",
             output: "Nam 1 | Lai: 1.00 | Du: 11.00\nNam 2 | Lai: 1.10 | Du: 12.10"
+          },
+          {
+            title: "Ví dụ: Lãi kép từng năm",
+            explanation: "Lãi được cộng vào vốn mỗi năm.",
+            code: "current = 10000000\nr = 10\nfor nam in range(1, 4):\n    interest = current * (r / 100)\n    current += interest\n    print(f'Nam {nam}: {current:,.0f}')",
+            output: "Nam 1: 11,000,000\nNam 2: 12,100,000\nNam 3: 13,310,000"
           }
         ],
         multipleChoice: {

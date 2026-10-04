@@ -18,11 +18,11 @@ export const TOPIC_9_RECURSION: Module = {
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Dãy số Fibonacci được định nghĩa đệ quy: $F(1) = 1$, $F(2) = 1$, và $F(n) = F(n - 1) + F(n - 2)$ với mọi $n \\ge 3$.",
+        summary: "**Fibonacci**: F(1) = F(2) = 1; **F(n) = F(n-1) + F(n-2)** với n ≥ 3.",
         keyPoints: [
-          "Bài toán cơ sở (Base Case): Nếu `n <= 2`: `return 1`.",
-          "Bước đệ quy: `return fibonacci(n - 1) + fibonacci(n - 2)`.",
-          "Cần chú ý điều kiện cơ sở để tránh tràn ngăn xếp đệ quy (RecursionError)."
+          "**Base case**: `if n <= 2: return 1`",
+          "**Bước đệ quy**: `return fibonacci(n - 1) + fibonacci(n - 2)`",
+          "Thiếu base case → **`RecursionError`**."
         ],
         conceptIllustration: {
           type: "recursion",
@@ -40,6 +40,18 @@ export const TOPIC_9_RECURSION: Module = {
             explanation: "Dãy: 1, 1, 2, 3, 5, 8 -> F(6) = 8.",
             code: "def fib(n):\n    if n <= 2:\n        return 1\n    return fib(n - 1) + fib(n - 2)\nprint(fib(6))",
             output: "8"
+          },
+          {
+            title: "Ví dụ: Hàm đệ quy đơn giản",
+            explanation: "Hàm tự gọi chính nó, có điều kiện dừng.",
+            code: "def dem_nguoc(n):\n    if n == 0:\n        print('Xong')\n        return\n    print(n)\n    dem_nguoc(n - 1)\n\ndem_nguoc(3)",
+            output: "3\n2\n1\nXong"
+          },
+          {
+            title: "Ví dụ: Fibonacci 8 số đầu",
+            explanation: "Base case `n <= 2`, còn lại cộng hai số trước.",
+            code: "def fibonacci(n):\n    if n <= 2:\n        return 1\n    return fibonacci(n - 1) + fibonacci(n - 2)\n\nfor i in range(1, 9):\n    print(fibonacci(i), end=' ')\nprint()",
+            output: "1 1 2 3 5 8 13 21 "
           }
         ],
         multipleChoice: {
@@ -122,10 +134,10 @@ n = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Tổng các số từ 1 đến n có thể phân rã thành: $S(n) = n + S(n - 1)$ với trường hợp dừng $S(1) = 1$.",
+        summary: "Tổng 1 đến n: **S(n) = n + S(n-1)**, dừng ở **S(1) = 1**.",
         keyPoints: [
-          "Base case: `if n == 1: return 1`.",
-          "Recursive step: `return n + tong_de_quy(n - 1)`."
+          "Base case: `if n == 1: return 1`",
+          "Đệ quy: `return n + tong_de_quy(n - 1)`"
         ],
         conceptIllustration: {
           type: "recursion",
@@ -143,6 +155,12 @@ n = int(input())
             explanation: "1 + 2 + 3 + 4 + 5 = 15.",
             code: "def s(n):\n    return 1 if n == 1 else n + s(n - 1)\nprint(s(5))",
             output: "15"
+          },
+          {
+            title: "Ví dụ: Tổng 1 đến 4 qua từng bước",
+            explanation: "S(4) = 4 + S(3) = 4 + 3 + S(2) = ...",
+            code: "def tong_de_quy(n):\n    if n == 1:\n        return 1\n    return n + tong_de_quy(n - 1)\n\nprint(tong_de_quy(4))",
+            output: "10"
           }
         ],
         multipleChoice: {
@@ -220,10 +238,10 @@ n = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Giai thừa của một số nguyên không âm $n$ được định nghĩa: $0! = 1, 1! = 1$ và $n! = n \\times (n - 1)!$ với mọi $n \\ge 1$.",
+        summary: "**Giai thừa**: 0! = 1! = 1; **n! = n × (n-1)!**.",
         keyPoints: [
-          "Bài toán cơ sở: `if n == 0 or n == 1: return 1`.",
-          "Bước đệ quy: `return n * giai_thua(n - 1)`."
+          "Base case: `if n == 0 or n == 1: return 1`",
+          "Đệ quy: `return n * giai_thua(n - 1)`"
         ],
         conceptIllustration: {
           type: "recursion",
@@ -241,6 +259,12 @@ n = int(input())
             explanation: "5! = 5 * 4 * 3 * 2 * 1 = 120.",
             code: "def gt(n):\n    return 1 if n <= 1 else n * gt(n - 1)\nprint(gt(5))",
             output: "120"
+          },
+          {
+            title: "Ví dụ: Giai thừa 0 đến 5",
+            explanation: "Base case `n == 0 or n == 1`.",
+            code: "def giai_thua(n):\n    if n == 0 or n == 1:\n        return 1\n    return n * giai_thua(n - 1)\n\nfor i in range(6):\n    print(f'{i}! = {giai_thua(i)}')",
+            output: "0! = 1\n1! = 1\n2! = 2\n3! = 6\n4! = 24\n5! = 120"
           }
         ],
         multipleChoice: {

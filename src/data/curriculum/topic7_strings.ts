@@ -18,11 +18,11 @@ export const TOPIC_7_STRINGS: Module = {
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Phương thức `s.split()` tự động tách các từ và loại bỏ mọi khoảng trắng thừa (ở đầu, cuối và giữa các từ). Dùng `' '.join(words)` kết hợp `.capitalize()` hoặc `.title()` để chuẩn hóa.",
+        summary: "**`split()`** tách từ và **bỏ khoảng trắng thừa**; **`join()`** nối lại.",
         keyPoints: [
-          "`words = s.split()`: Tách chuỗi thành danh sách các từ sạch.",
-          "`words = [w.capitalize() for w in words]`: Viết hoa chữ cái đầu và viết thường các chữ còn lại của mỗi từ.",
-          "`result = ' '.join(words)`: Nối lại các từ bằng 1 khoảng trắng duy nhất."
+          "`words = s.split()` → danh sách các từ sạch.",
+          "`w.capitalize()` → **Hoa đầu**, còn lại thường.",
+          "`' '.join(words)` → nối bằng **1 dấu cách**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -40,6 +40,24 @@ export const TOPIC_7_STRINGS: Module = {
             explanation: "Tách từ, viết hoa đầu từ và nối lại.",
             code: "s = '  le   tHi   mAI  '\nprint(' '.join(w.capitalize() for w in s.split()))",
             output: "Le Thi Mai"
+          },
+          {
+            title: "Ví dụ: split()",
+            explanation: "Tách chuỗi thành list các từ, bỏ khoảng trắng thừa.",
+            code: "s = '  le   thi  mai '\nprint(s.split())",
+            output: "['le', 'thi', 'mai']"
+          },
+          {
+            title: "Ví dụ: capitalize() và join()",
+            explanation: "Viết hoa chữ đầu mỗi từ rồi nối lại.",
+            code: "words = ['le', 'THI', 'mAI']\nwords = [w.capitalize() for w in words]\nprint(' '.join(words))",
+            output: "Le Thi Mai"
+          },
+          {
+            title: "Ví dụ: Các hàm đổi chữ",
+            explanation: "`upper()`, `lower()`, `title()`.",
+            code: "s = 'hello world'\nprint(s.upper())\nprint(s.title())",
+            output: "HELLO WORLD\nHello World"
           }
         ],
         multipleChoice: {
@@ -115,10 +133,10 @@ s = input()
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Cú pháp cắt lát chuỗi (slicing) trong Python có dạng `s[start:stop:step]`. Khi đặt `step = -1` và bỏ trống start, stop (`s[::-1]`), Python sẽ duyệt chuỗi từ ký tự cuối cùng về ký tự đầu tiên.",
+        summary: "**Slicing** `s[start:stop:step]`; **`s[::-1]`** đảo ngược chuỗi.",
         keyPoints: [
-          "`s[::-1]`: Đảo ngược chuỗi tức thì với hiệu năng tối ưu $O(N)$.",
-          "Áp dụng được cho cả chuỗi ký tự, danh sách (list) và bộ dữ liệu (tuple)."
+          "`s[::-1]`: đọc từ **cuối về đầu**.",
+          "Dùng được cho **chuỗi, list, tuple**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -136,6 +154,18 @@ s = input()
             explanation: "Dùng s[::-1] để lấy 'olleH'.",
             code: "s = 'Hello'\nprint(s[::-1])",
             output: "olleH"
+          },
+          {
+            title: "Ví dụ: Slicing đảo ngược",
+            explanation: "`s[::-1]` đọc từ cuối về đầu.",
+            code: "s = 'Python'\nprint(s[::-1])",
+            output: "nohtyP"
+          },
+          {
+            title: "Ví dụ: Đảo ngược list",
+            explanation: "Áp dụng cho cả list.",
+            code: "a = [1, 2, 3, 4]\nprint(a[::-1])",
+            output: "[4, 3, 2, 1]"
           }
         ],
         multipleChoice: {
@@ -209,10 +239,10 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Chuỗi đối xứng (Palindrome) là chuỗi đọc xuôi hay đọc ngược đều hoàn toàn giống nhau (ví dụ: 'radar', 'madam', 'level').",
+        summary: "**Palindrome**: đọc xuôi hay ngược **đều giống nhau** (radar, madam, level).",
         keyPoints: [
-          "Điều kiện đối xứng: `s == s[::-1]`.",
-          "Chuyển về chữ thường bằng `.lower()` và loại bỏ khoảng trắng thừa nếu muốn kiểm tra không phân biệt hoa thường."
+          "Kiểm tra: **`s == s[::-1]`**",
+          "Muốn bỏ qua hoa/thường: dùng `.lower()` trước."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -230,6 +260,18 @@ s = input()
             explanation: "'racecar' đảo ngược vẫn là 'racecar' -> YES.",
             code: "s = 'racecar'\nprint('YES' if s == s[::-1] else 'NO')",
             output: "YES"
+          },
+          {
+            title: "Ví dụ: Chuỗi không đối xứng",
+            explanation: "So sánh `s` với `s[::-1]`.",
+            code: "s = 'python'\nprint(s == s[::-1])",
+            output: "False"
+          },
+          {
+            title: "Ví dụ: Bỏ qua hoa thường",
+            explanation: "Dùng `.lower()` trước khi so sánh.",
+            code: "s = 'Madam'\ns = s.lower()\nprint(s == s[::-1])",
+            output: "True"
           }
         ],
         multipleChoice: {
@@ -303,12 +345,12 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật Slicing đa dạng trong Python:\n1. 2 ký tự đầu: `s[:2]`\n2. 2 ký tự cuối: `s[-2:]`\n3. Đảo ngược: `s[::-1]`\n4. Ký tự vị trí chỉ số chẵn (bước 2): `s[::2]`",
+        summary: "Các mẫu **slicing** hay dùng để cắt chuỗi.",
         keyPoints: [
-          "`s[:2]`: Lấy từ đầu đến chỉ số 1 (2 ký tự đầu).",
-          "`s[-2:]`: Lấy từ vị trí thứ 2 đếm từ cuối lên.",
-          "`s[::2]`: Lấy các ký tự ở chỉ số 0, 2, 4, 6...",
-          "`s[::-1]`: Đảo ngược toàn bộ chuỗi."
+          "`s[:2]`: **2 ký tự đầu**",
+          "`s[-2:]`: **2 ký tự cuối**",
+          "`s[::2]`: ký tự ở chỉ số **0, 2, 4…**",
+          "`s[::-1]`: **đảo ngược**"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -326,6 +368,24 @@ s = input()
             explanation: "[:2] -> 'AB', [-2:] -> 'EF', [::-1] -> 'FEDCBA', [::2] -> 'ACE'.",
             code: "s = 'ABCDEF'\nprint(s[:2])\nprint(s[-2:])\nprint(s[::-1])\nprint(s[::2])",
             output: "AB\nEF\nFEDCBA\nACE"
+          },
+          {
+            title: "Ví dụ: 2 ký tự đầu và cuối",
+            explanation: "`s[:2]` và `s[-2:]`.",
+            code: "s = 'ABCDEF'\nprint(s[:2])\nprint(s[-2:])",
+            output: "AB\nEF"
+          },
+          {
+            title: "Ví dụ: Ký tự chỉ số chẵn",
+            explanation: "`s[::2]` lấy chỉ số 0, 2, 4.",
+            code: "s = 'ABCDEF'\nprint(s[::2])\nprint(s[1::2])",
+            output: "ACE\nBDF"
+          },
+          {
+            title: "Ví dụ: Truy cập từng ký tự",
+            explanation: "Chỉ số bắt đầu từ 0; chỉ số âm đếm từ cuối.",
+            code: "s = 'Python'\nprint(s[0], s[-1], len(s))",
+            output: "P n 6"
           }
         ],
         multipleChoice: {
@@ -390,12 +450,11 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Phân tích cấu trúc tên người Việt Nam: Từ đầu tiên là Họ, từ cuối cùng là Tên, các từ ở giữa (nếu có) là Tên đệm.",
+        summary: "Tên người Việt: từ **đầu** là **Họ**, từ **cuối** là **Tên**, ở giữa là **Tên đệm**.",
         keyPoints: [
           "`words = s.split()`",
-          "Họ: `words[0]`",
-          "Tên: `words[-1]`",
-          "Tên đệm: `' '.join(words[1:-1])` (nếu không có thì in `Khong co`)."
+          "Họ: `words[0]`; Tên: `words[-1]`",
+          "Tên đệm: `' '.join(words[1:-1])` (không có → in `Khong co`)"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -413,6 +472,24 @@ s = input()
             explanation: "Họ: Nguyen, Đệm: Van, Tên: An.",
             code: "# Ho: Nguyen\n# Ten dem: Van\n# Ten: An",
             output: "Ho: Nguyen\nTen dem: Van\nTen: An"
+          },
+          {
+            title: "Ví dụ: Tách họ và tên",
+            explanation: "`words[0]` là họ, `words[-1]` là tên.",
+            code: "words = 'Nguyen Van An'.split()\nprint(words[0])\nprint(words[-1])",
+            output: "Nguyen\nAn"
+          },
+          {
+            title: "Ví dụ: Tên đệm",
+            explanation: "`' '.join(words[1:-1])` ghép các từ ở giữa.",
+            code: "words = 'Tran Thi Hong Nhung'.split()\nprint(' '.join(words[1:-1]))",
+            output: "Thi Hong"
+          },
+          {
+            title: "Ví dụ: Không có tên đệm",
+            explanation: "Danh sách giữa rỗng thì in `Khong co`.",
+            code: "words = 'Le Minh'.split()\nmid = ' '.join(words[1:-1])\nprint(mid if mid else 'Khong co')",
+            output: "Khong co"
           }
         ],
         multipleChoice: {

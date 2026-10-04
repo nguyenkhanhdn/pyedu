@@ -18,10 +18,10 @@ export const TOPIC_8_FUNCTIONS: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Hàm (Function) là khối lệnh có tên, có thể tái sử dụng nhiều lần để thực hiện một tác vụ cụ thể. Khai báo bằng từ khóa `def` và trả về kết quả bằng `return`.",
+        summary: "**Hàm** là khối lệnh có tên, **dùng lại nhiều lần**. Khai báo bằng **`def`**, trả kết quả bằng **`return`**.",
         keyPoints: [
-          "Cú pháp: `def ten_ham(tham_so_1, tham_so_2): ... return ket_qua`",
-          "Lệnh `return` kết thúc hàm và chuyển giá trị kết quả về cho nơi gọi hàm."
+          "Cú pháp: `def ten_ham(a, b):` … `return ket_qua`",
+          "`return` **kết thúc hàm** và trả giá trị về nơi gọi."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -39,6 +39,24 @@ export const TOPIC_8_FUNCTIONS: Module = {
             explanation: "Hàm nhận a, b và trả về a + b.",
             code: "def tinh_tong(a, b):\n    return a + b\n\nprint(tinh_tong(10, 20))",
             output: "30"
+          },
+          {
+            title: "Ví dụ: Hàm không tham số",
+            explanation: "Hàm đơn giản chỉ in lời chào.",
+            code: "def chao():\n    print('Xin chao!')\n\nchao()\nchao()",
+            output: "Xin chao!\nXin chao!"
+          },
+          {
+            title: "Ví dụ: Hàm có return",
+            explanation: "`return` trả giá trị về nơi gọi.",
+            code: "def binh_phuong(x):\n    return x * x\n\nprint(binh_phuong(5))",
+            output: "25"
+          },
+          {
+            title: "Ví dụ: Dùng kết quả của hàm",
+            explanation: "Lưu giá trị trả về vào biến.",
+            code: "def tong(a, b):\n    return a + b\n\nkq = tong(3, 4)\nprint(kq * 2)",
+            output: "14"
           }
         ],
         multipleChoice: {
@@ -107,10 +125,11 @@ y = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Một hàm trong Python có thể trả về nhiều giá trị cùng lúc dưới dạng một `tuple` (bộ dữ liệu), ví dụ: `return chu_vi, dien_tich`.",
+        summary: "Hàm có thể **trả về nhiều giá trị** (dạng `tuple`): **`return c, s`**.",
         keyPoints: [
-          "Dùng `import math` để có `math.pi`.",
-          "Hàm tính: `c = round(2 * math.pi * r, 2)` và `s = round(math.pi * (r ** 2), 2)`.",
+          "`import math` để dùng `math.pi`",
+          "`c = round(2 * math.pi * r, 2)`",
+          "`s = round(math.pi * r ** 2, 2)`",
           "`return c, s`"
         ],
         conceptIllustration: {
@@ -128,6 +147,18 @@ y = int(input())
             title: "Ví dụ: r = 5.0",
             explanation: "C = 31.42, S = 78.54.",
             code: "c, s = 31.42, 78.54\nprint(f'{c:.2f} {s:.2f}')",
+            output: "31.42 78.54"
+          },
+          {
+            title: "Ví dụ: Trả về hai giá trị",
+            explanation: "Gọi hàm rồi gán vào hai biến.",
+            code: "def min_max(a, b):\n    return min(a, b), max(a, b)\n\nnho, lon = min_max(7, 3)\nprint(nho, lon)",
+            output: "3 7"
+          },
+          {
+            title: "Ví dụ: Tính hình tròn",
+            explanation: "Trả về chu vi và diện tích.",
+            code: "import math\n\ndef hinh_tron(r):\n    return round(2 * math.pi * r, 2), round(math.pi * r ** 2, 2)\n\nc, s = hinh_tron(5.0)\nprint(c, s)",
             output: "31.42 78.54"
           }
         ],
@@ -196,10 +227,10 @@ r = float(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Hàm kiểm tra logic (Predicate Function) thường có tiền tố `is_` và trả về giá trị boolean `True` hoặc `False`.",
+        summary: "Hàm **kiểm tra** thường đặt tên **`is_...`** và trả về **`True`/`False`**.",
         keyPoints: [
-          "Định nghĩa: `def is_even(n): return n % 2 == 0`",
-          "Hàm boolean rất gọn gàng và dễ kết hợp trong các điều kiện logic."
+          "`def is_even(n): return n % 2 == 0`",
+          "Hàm boolean **gọn** và dễ dùng trong `if`."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -217,6 +248,18 @@ r = float(input())
             explanation: "14 % 2 == 0 -> True.",
             code: "def is_even(n):\n    return n % 2 == 0\nprint(is_even(14))",
             output: "True"
+          },
+          {
+            title: "Ví dụ: Hàm kiểm tra số chẵn",
+            explanation: "Hàm `is_...` trả về `True`/`False`.",
+            code: "def is_even(n):\n    return n % 2 == 0\n\nprint(is_even(14))\nprint(is_even(7))",
+            output: "True\nFalse"
+          },
+          {
+            title: "Ví dụ: Dùng trong if",
+            explanation: "Gọi hàm ngay trong điều kiện.",
+            code: "def is_even(n):\n    return n % 2 == 0\n\nif is_even(10):\n    print('So chan')",
+            output: "So chan"
           }
         ],
         multipleChoice: {
@@ -294,10 +337,10 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Đóng gói thuật toán chuẩn hóa họ tên vào một hàm giúp mã nguồn sạch sẽ, dễ bảo trì và có thể gọi lại ở nhiều nơi trong chương trình.",
+        summary: "**Đóng gói** thuật toán vào hàm để code **gọn, dễ bảo trì, tái sử dụng**.",
         keyPoints: [
-          "Định nghĩa: `def chuan_hoa(name): ... return ' '.join(w.capitalize() for w in name.split())`",
-          "Hàm nhận vào chuỗi `name` và trả về chuỗi họ tên chuẩn."
+          "`def chuan_hoa(name): return ' '.join(w.capitalize() for w in name.split())`",
+          "Nhận chuỗi `name` → trả về họ tên **chuẩn**."
         ],
         conceptIllustration: {
           type: "syntax",
@@ -315,6 +358,12 @@ n = int(input())
             explanation: "Gọi hàm chuan_hoa với chuỗi thô.",
             code: "def chuan_hoa(name):\n    return ' '.join(w.capitalize() for w in name.split())\nprint(chuan_hoa('tran  duc  anh'))",
             output: "Tran Duc Anh"
+          },
+          {
+            title: "Ví dụ: Gọi hàm nhiều lần",
+            explanation: "Một hàm dùng lại cho nhiều tên.",
+            code: "def chuan_hoa(name):\n    return ' '.join(w.capitalize() for w in name.split())\n\nprint(chuan_hoa('  nGUYEN   van an '))\nprint(chuan_hoa('le thi mai'))",
+            output: "Nguyen Van An\nLe Thi Mai"
           }
         ],
         multipleChoice: {
@@ -385,10 +434,11 @@ s = input()
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Khối `try ... except ValueError` giúp chương trình không bị dừng đột ngột (crash) khi người dùng nhập chuỗi ký tự chữ cái vào vị trí yêu cầu số nguyên.",
+        summary: "**`try ... except ValueError`** giúp chương trình **không bị dừng** khi nhập sai kiểu.",
         keyPoints: [
-          "Cấu trúc: `try: val = int(raw_input) ... except ValueError: in lỗi và nhập lại`.",
-          "Kết hợp kiểm tra `min_val <= val <= max_val`."
+          "`try:` `val = int(raw_input)`",
+          "`except ValueError:` báo lỗi và **nhập lại**.",
+          "Kiểm tra khoảng: `min_val <= val <= max_val`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -406,6 +456,18 @@ s = input()
             explanation: "Nhập 'tin_hoc' sẽ nhảy vào khối except.",
             code: "# Input: 'abc' -> Exception ValueError caught",
             output: "Loi nhap lieu"
+          },
+          {
+            title: "Ví dụ: Chương trình bị lỗi",
+            explanation: "Ép kiểu chuỗi chữ sang `int` gây `ValueError`.",
+            code: "try:\n    n = int('abc')\nexcept ValueError:\n    print('Khong phai so!')",
+            output: "Khong phai so!"
+          },
+          {
+            title: "Ví dụ: Nhập lại đến khi đúng",
+            explanation: "Kết hợp `while`, `try/except` và kiểm tra khoảng.",
+            code: "du_lieu = ['abc', '50', '7']\nfor raw in du_lieu:\n    try:\n        val = int(raw)\n    except ValueError:\n        print('Loi, nhap lai')\n        continue\n    if 1 <= val <= 10:\n        print('Hop le:', val)\n        break\n    print('Ngoai khoang, nhap lai')",
+            output: "Loi, nhap lai\nNgoai khoang, nhap lai\nHop le: 7"
           }
         ],
         multipleChoice: {

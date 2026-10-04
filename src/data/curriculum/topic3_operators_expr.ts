@@ -18,10 +18,10 @@ export const TOPIC_3_OPERATORS_EXPR: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Phép trừ số học `-` dùng để tính toán khoảng thời gian hoặc độ tuổi: `tuoi = nam_hien_tai - nam_sinh`.",
+        summary: "Tính tuổi bằng **phép trừ**: **`tuoi = nam_hien_tai - nam_sinh`**.",
         keyPoints: [
-          "Dùng `int(input())` để đọc năm sinh dạng số nguyên.",
-          "Công thức: `tuoi = 2025 - nam_sinh`."
+          "Đọc năm sinh: `int(input())`",
+          "Công thức: `tuoi = 2025 - nam_sinh`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -39,6 +39,18 @@ export const TOPIC_3_OPERATORS_EXPR: Module = {
             explanation: "Nhập năm sinh 2010 và tính tuổi.",
             code: "y = 2010\nprint(f\"Tuoi vao nam 2025: {2025 - y}\")",
             output: "Tuoi vao nam 2025: 15"
+          },
+          {
+            title: "Ví dụ: Phép trừ",
+            explanation: "`tuoi = nam_hien_tai - nam_sinh`.",
+            code: "nam_sinh = 2009\ntuoi = 2025 - nam_sinh\nprint(tuoi)",
+            output: "16"
+          },
+          {
+            title: "Ví dụ: Câu trả lời đầy đủ",
+            explanation: "Kết hợp phép tính và f-string.",
+            code: "nam_sinh = 2009\nprint(f'Ban {2025 - nam_sinh} tuoi')",
+            output: "Ban 16 tuoi"
           }
         ],
         multipleChoice: {
@@ -108,11 +120,10 @@ y = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Phép nhân `*` và phép cộng `+` kết hợp tạo thành công thức tính tổng chi phí mua sắm: `tong = so_luong_1 * gia_1 + so_luong_2 * gia_2`.",
+        summary: "Tổng tiền = **số lượng × đơn giá**, rồi **cộng** các món lại.",
         keyPoints: [
-          "Giá vở: 8.000 đ/quyển.",
-          "Giá bút: 5.000 đ/cây.",
-          "Tổng tiền = `x * 8000 + y * 5000`."
+          "Vở: **8000đ**/quyển; bút: **5000đ**/cây.",
+          "`tong = x * 8000 + y * 5000`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -130,6 +141,18 @@ y = int(input())
             explanation: "10 * 8000 + 2 * 5000 = 90.000 VND.",
             code: "x = 10\ny = 2\nprint(x * 8000 + y * 5000)",
             output: "90000"
+          },
+          {
+            title: "Ví dụ: Tổng hóa đơn",
+            explanation: "Số lượng × đơn giá, rồi cộng các món.",
+            code: "x = 3  # so vo\ny = 2  # so but\nprint(x * 8000 + y * 5000)",
+            output: "34000"
+          },
+          {
+            title: "Ví dụ: Các toán tử số học",
+            explanation: "`+`, `-`, `*`, `/`, `**`.",
+            code: "print(7 + 2, 7 - 2, 7 * 2)\nprint(7 / 2)\nprint(7 ** 2)",
+            output: "9 5 14\n3.5\n49"
           }
         ],
         multipleChoice: {
@@ -205,12 +228,12 @@ y = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Toán tử chia lấy nguyên `//` và chia lấy dư `%` rất hữu ích khi đổi đơn vị thời gian (1 giờ = 3600 giây, 1 phút = 60 giây).",
+        summary: "Đổi giây sang giờ:phút:giây bằng **`//`** (chia lấy nguyên) và **`%`** (chia lấy dư).",
         keyPoints: [
-          "`gio = s // 3600` (lấy số giờ nguyên).",
-          "`s_du = s % 3600` (số giây còn lại sau khi trừ đi các giờ chẵn).",
-          "`phut = s_du // 60` (lấy số phút).",
-          "`giay = s_du % 60` (lấy số giây cuối cùng)."
+          "`gio = s // 3600`",
+          "`s_du = s % 3600`",
+          "`phut = s_du // 60`",
+          "`giay = s_du % 60`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -228,6 +251,18 @@ y = int(input())
             explanation: "75 giây = 0 giờ 1 phút 15 giây.",
             code: "s = 75\nprint(s // 60, \"phut\", s % 60, \"giay\")",
             output: "1 phut 15 giay"
+          },
+          {
+            title: "Ví dụ: Chia lấy nguyên và chia lấy dư",
+            explanation: "`//` lấy phần nguyên, `%` lấy phần dư.",
+            code: "print(17 // 5)\nprint(17 % 5)",
+            output: "3\n2"
+          },
+          {
+            title: "Ví dụ: Đổi 3725 giây",
+            explanation: "Tách giờ, phút, giây bằng `//` và `%`.",
+            code: "s = 3725\ngio = s // 3600\ns_du = s % 3600\nphut = s_du // 60\ngiay = s_du % 60\nprint(gio, phut, giay)",
+            output: "1 2 5"
           }
         ],
         multipleChoice: {
@@ -304,12 +339,12 @@ s = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Thư viện `math` trong Python cung cấp hằng số `math.pi` (số Pi xấp xỉ 3.14159...). Công thức: Chu vi $C = 2 \\times \\pi \\times r$, Diện tích $S = \\pi \\times r^2$.",
+        summary: "Dùng **`math.pi`** của thư viện `math` để tính chu vi, diện tích hình tròn.",
         keyPoints: [
-          "Import thư viện: `import math`.",
-          "Chu vi: `c = 2 * math.pi * r`.",
-          "Diện tích: `s = math.pi * (r ** 2)`.",
-          "Định dạng làm tròn 2 chữ số thập phân: `f\"{c:.2f}\"`."
+          "`import math`",
+          "Chu vi: `c = 2 * math.pi * r`",
+          "Diện tích: `s = math.pi * r ** 2`",
+          "Làm tròn 2 số lẻ: `f\"{c:.2f}\"`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -327,6 +362,18 @@ s = int(input())
             explanation: "r = 3 -> C = 18.85, S = 28.27.",
             code: "import math\nr = 3.0\nprint(f\"{2 * math.pi * r:.2f}\")\nprint(f\"{math.pi * r * r:.2f}\")",
             output: "18.85\n28.27"
+          },
+          {
+            title: "Ví dụ: Dùng math.pi",
+            explanation: "Nhập thư viện `math` rồi dùng `math.pi`.",
+            code: "import math\nprint(math.pi)",
+            output: "3.141592653589793"
+          },
+          {
+            title: "Ví dụ: Chu vi và diện tích",
+            explanation: "Dùng `**` để bình phương.",
+            code: "import math\nr = 2\nc = 2 * math.pi * r\ns = math.pi * r ** 2\nprint(f'{c:.2f}')\nprint(f'{s:.2f}')",
+            output: "12.57\n12.57"
           }
         ],
         multipleChoice: {
@@ -400,11 +447,11 @@ r = float(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Để định dạng số nguyên có dấu phẩy phân cách hàng nghìn trong Python, ta dùng f-string với cú pháp `f\"{so:,}\"` (ví dụ `2500000` -> `'2,500,000'`).",
+        summary: "In số có **dấu phẩy ngăn hàng nghìn** bằng **`f\"{so:,}\"`**.",
         keyPoints: [
-          "Tỷ giá: 1 USD = 25.000 VND.",
-          "`vnd = usd * 25000`.",
-          "Cú pháp định dạng dấu phẩy hàng nghìn: `f\"{vnd:,}\"`."
+          "Tỷ giá: **1 USD = 25000 VND**",
+          "`vnd = usd * 25000`",
+          "In: `f\"{vnd:,}\"` → `2,500,000`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -422,6 +469,18 @@ r = float(input())
             explanation: "50 * 25.000 = 1,250,000 VND.",
             code: "usd = 50\nvnd = usd * 25000\nprint(f\"{vnd:,} VND\")",
             output: "1,250,000 VND"
+          },
+          {
+            title: "Ví dụ: Dấu phẩy hàng nghìn",
+            explanation: "`:,` thêm dấu phẩy ngăn cách hàng nghìn.",
+            code: "so = 2500000\nprint(f'{so:,}')",
+            output: "2,500,000"
+          },
+          {
+            title: "Ví dụ: Đổi 100 USD",
+            explanation: "Nhân với tỷ giá rồi in có định dạng.",
+            code: "usd = 100\nvnd = usd * 25000\nprint(f'{vnd:,} VND')",
+            output: "2,500,000 VND"
           }
         ],
         multipleChoice: {
@@ -496,10 +555,10 @@ usd = int(input())
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Toán tử so sánh `==` khi kết hợp với phép chia lấy dư `%` sẽ trả về trực tiếp giá trị boolean `True` hoặc `False` mà không cần dùng câu lệnh điều kiện `if`.",
+        summary: "**`==`** kết hợp **`%`** cho kết quả **`True`/`False`** mà không cần `if`.",
         keyPoints: [
-          "Biểu thức `n % 2 == 0` trả về `True` nếu `n` là số chẵn, `False` nếu `n` là số lẻ.",
-          "Có thể in trực tiếp biểu thức logic: `print(n % 2 == 0)`."
+          "`n % 2 == 0` → `True` nếu **chẵn**, `False` nếu **lẻ**.",
+          "In trực tiếp: `print(n % 2 == 0)`"
         ],
         conceptIllustration: {
           type: "syntax",
@@ -517,6 +576,18 @@ usd = int(input())
             explanation: "In kết quả True/False không dùng if.",
             code: "n = 11\nprint(n % 2 == 0)",
             output: "False"
+          },
+          {
+            title: "Ví dụ: Biểu thức trả về bool",
+            explanation: "So sánh cho kết quả `True`/`False`.",
+            code: "print(5 > 3)\nprint(5 == 3)\nprint(5 != 3)",
+            output: "True\nFalse\nTrue"
+          },
+          {
+            title: "Ví dụ: Số chẵn hay lẻ",
+            explanation: "`n % 2 == 0` là `True` khi `n` chẵn.",
+            code: "print(10 % 2 == 0)\nprint(7 % 2 == 0)",
+            output: "True\nFalse"
           }
         ],
         multipleChoice: {

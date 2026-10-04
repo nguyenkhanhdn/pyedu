@@ -37,16 +37,13 @@ export const TOPIC_5_FOR_LOOPS: Module = {
       durationMin: 15,
       xpReward: 50,
       theory: {
-        summary: "Vòng lặp for được dùng để lặp lại một khối lệnh với số lần xác định trước. Hàm range() là công cụ chủ lực để sinh ra một dãy số nguyên tuần tự.",
+        summary: "**`for`** lặp số lần **xác định trước**; **`range()`** sinh dãy số nguyên.",
         keyPoints: [
-          "**3 dạng của hàm range()**:",
-          "  1. `range(stop)`: Sinh dãy từ `0` đến `stop - 1` (ví dụ `range(5)` -> 0, 1, 2, 3, 4).",
-          "  2. `range(start, stop)`: Sinh dãy từ `start` đến `stop - 1` (ví dụ `range(1, n + 1)` để chạy từ 1 đến n).",
-          "  3. `range(start, stop, step)`: Sinh dãy với bước nhảy `step`:",
-          "     - `range(2, n + 1, 2)`: Duyệt các số chẵn 2, 4, 6, ...",
-          "     - `range(1, n + 1, 2)`: Duyệt các số lẻ 1, 3, 5, ...",
-          "     - `range(n, 0, -1)`: Đếm ngược từ n về 1 với bước nhảy âm (-1).",
-          "Tham số `end=' '` trong lệnh `print()` giúp in các giá trị trên cùng một dòng cách nhau bởi dấu cách."
+          "`range(stop)`: từ **0** đến `stop - 1`",
+          "`range(start, stop)`: từ `start` đến `stop - 1`",
+          "`range(start, stop, step)`: có **bước nhảy** `step`",
+          "Chẵn: `range(2, n + 1, 2)`; lẻ: `range(1, n + 1, 2)`; ngược: `range(n, 0, -1)`",
+          "`print(i, end=' ')` để in **cùng một dòng**."
         ],
         conceptIllustration: {
           type: "loops",
@@ -67,6 +64,30 @@ export const TOPIC_5_FOR_LOOPS: Module = {
             explanation: "Dùng range(1, n + 1) để duyệt từ 1 đến n.",
             code: "n = 5\nfor i in range(1, n + 1):\n    print(i, end=' ')\nprint()",
             output: "1 2 3 4 5 "
+          },
+          {
+            title: "Ví dụ: range(stop)",
+            explanation: "`range(5)` sinh 0, 1, 2, 3, 4.",
+            code: "for i in range(5):\n    print(i, end=' ')\nprint()",
+            output: "0 1 2 3 4 "
+          },
+          {
+            title: "Ví dụ: range(start, stop)",
+            explanation: "Từ 1 đến 5 (không gồm 6).",
+            code: "for i in range(1, 6):\n    print(i, end=' ')\nprint()",
+            output: "1 2 3 4 5 "
+          },
+          {
+            title: "Ví dụ: range với bước nhảy",
+            explanation: "Số chẵn và số lẻ từ 1 đến 10.",
+            code: "for i in range(2, 11, 2):\n    print(i, end=' ')\nprint()\nfor i in range(1, 11, 2):\n    print(i, end=' ')\nprint()",
+            output: "2 4 6 8 10 \n1 3 5 7 9 "
+          },
+          {
+            title: "Ví dụ: Đếm ngược",
+            explanation: "Bước nhảy âm `-1`.",
+            code: "for i in range(5, 0, -1):\n    print(i, end=' ')\nprint()",
+            output: "5 4 3 2 1 "
           }
         ],
         multipleChoice: {
@@ -288,14 +309,12 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Kỹ thuật tích lũy là mẫu hình thuật toán cốt lõi: khởi tạo biến tích lũy (ví dụ total = 0 hoặc count = 0) trước vòng lặp, cập nhật giá trị sau mỗi bước lặp và in kết quả ở cuối chương trình.",
+        summary: "**Tích lũy**: khởi tạo biến **trước** vòng lặp, cập nhật **trong** vòng lặp, in kết quả **sau** vòng lặp.",
         keyPoints: [
-          "**Các bước của kỹ thuật tích lũy**:",
-          "  1. Khởi tạo: `tong = 0` (hoặc `tich = 1` nếu tính tích, `dem = 0` nếu đếm).",
-          "  2. Lặp: `for i in range(1, n + 1):`",
-          "  3. Cập nhật: `tong += i` (tương đương `tong = tong + i`).",
-          "  4. Xuất kết quả sau vòng lặp: `print(tong)` (lưu ý không thụt lề lệnh print).",
-          "In bảng cửu chương: Dùng vòng lặp `for i in range(1, 11): print(f'{k} x {i} = {k * i}')`."
+          "Khởi tạo: `tong = 0` (tích: `tich = 1`, đếm: `dem = 0`)",
+          "Cập nhật: `tong += i`",
+          "`print(tong)` đặt **ngoài** vòng lặp (không thụt lề).",
+          "Bảng cửu chương: `print(f'{k} x {i} = {k * i}')`"
         ],
         conceptIllustration: {
           type: "loops",
@@ -317,6 +336,24 @@ n = int(input())
             explanation: "1 + 2 + 3 + 4 + 5 = 15.",
             code: "n = 5\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)",
             output: "15"
+          },
+          {
+            title: "Ví dụ: Đếm số lần lặp",
+            explanation: "Biến đếm bắt đầu từ 0.",
+            code: "dem = 0\nfor i in range(1, 11):\n    dem += 1\nprint(dem)",
+            output: "10"
+          },
+          {
+            title: "Ví dụ: Tính tích 1 đến 5",
+            explanation: "Biến tích bắt đầu từ **1** (không phải 0).",
+            code: "tich = 1\nfor i in range(1, 6):\n    tich *= i\nprint(tich)",
+            output: "120"
+          },
+          {
+            title: "Ví dụ: Bảng cửu chương",
+            explanation: "In bảng nhân của k.",
+            code: "k = 3\nfor i in range(1, 6):\n    print(f'{k} x {i} = {k * i}')",
+            output: "3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15"
           }
         ],
         multipleChoice: {
@@ -482,17 +519,12 @@ n = int(input())
       durationMin: 20,
       xpReward: 60,
       theory: {
-        summary: "Đặt câu lệnh if bên trong thân vòng lặp for cho phép kiểm tra từng phần tử khi duyệt qua, từ đó lọc ra các giá trị thỏa mãn điều kiện xác định.",
+        summary: "Đặt **`if` trong `for`** để **lọc** hoặc **phân loại** từng phần tử.",
         keyPoints: [
-          "Cấu trúc cơ bản:",
-          "  ```python",
-          "  for i in range(1, n + 1):",
-          "      if i % 2 == 0:     # Kiểm tra điều kiện",
-          "          print(i)       # Chỉ xử lý khi điều kiện True",
-          "  ```",
-          "Đếm số thỏa điều kiện: `if dieu_kien: count += 1`.",
-          "Cộng dồn có điều kiện: `if dieu_kien: tong += i`.",
-          "Bài toán FizzBuzz kinh điển: Kiểm tra chia hết cho cả 3 và 5 (`i % 15 == 0`), rồi mới đến chia hết cho 3, chia hết cho 5."
+          "Mẫu: `for i in range(1, n + 1):` → `if i % 2 == 0:` → `print(i)`",
+          "Đếm: `if dieu_kien: count += 1`",
+          "Cộng dồn: `if dieu_kien: tong += i`",
+          "**FizzBuzz**: kiểm tra `i % 15 == 0` **trước**, rồi mới `% 3`, `% 5`."
         ],
         conceptIllustration: {
           type: "loops",
@@ -514,6 +546,24 @@ n = int(input())
             explanation: "Chỉ in ra các số chia hết cho 2.",
             code: "for i in range(1, 11):\n    if i % 2 == 0:\n        print(i, end=' ')\nprint()",
             output: "2 4 6 8 10 "
+          },
+          {
+            title: "Ví dụ: Đếm số chia hết cho 3",
+            explanation: "`count += 1` khi điều kiện đúng.",
+            code: "count = 0\nfor i in range(1, 11):\n    if i % 3 == 0:\n        count += 1\nprint(count)",
+            output: "3"
+          },
+          {
+            title: "Ví dụ: Tổng các số lẻ",
+            explanation: "Cộng dồn có điều kiện.",
+            code: "tong = 0\nfor i in range(1, 11):\n    if i % 2 != 0:\n        tong += i\nprint(tong)",
+            output: "25"
+          },
+          {
+            title: "Ví dụ: FizzBuzz",
+            explanation: "Kiểm tra `% 15` **trước**.",
+            code: "for i in range(1, 16):\n    if i % 15 == 0:\n        print('FizzBuzz')\n    elif i % 3 == 0:\n        print('Fizz')\n    elif i % 5 == 0:\n        print('Buzz')\n    else:\n        print(i)",
+            output: "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz"
           }
         ],
         multipleChoice: {
@@ -598,15 +648,12 @@ for i in range(1, 51):
       durationMin: 25,
       xpReward: 70,
       theory: {
-        summary: "Câu lệnh break dùng để thoát ngay lập tức khỏi vòng lặp khi điều kiện thỏa mãn. Câu lệnh continue dùng để bỏ qua phần còn lại của lượt lặp hiện tại và nhảy sang lượt kế tiếp. Vòng lặp lồng nhau giúp xử lý dữ liệu ma trận và vẽ hình.",
+        summary: "**`break`** thoát vòng lặp; **`continue`** bỏ qua lượt hiện tại; **vòng lặp lồng nhau** để in hình.",
         keyPoints: [
-          "`break`: Dừng vòng lặp ngay tại thời điểm gọi. Rất hữu ích khi tìm kiếm hoặc kiểm tra tính chất (ví dụ kiểm tra số nguyên tố).",
-          "`continue`: Bỏ qua các lệnh phía sau và tiếp tục với giá trị kế tiếp của vòng lặp.",
-          "**Kiểm tra số nguyên tố**:",
-          "  - Nếu `n < 2` -> Không phải số nguyên tố.",
-          "  - Duyệt `i` từ 2 đến `int(n**0.5)`: Nếu `n % i == 0` -> Có ước số -> Không nguyên tố, dùng `break` dừng sớm.",
-          "  - Nếu không gặp ước số nào -> Là số nguyên tố (YES).",
-          "Vòng lặp lồng nhau (2 tầng): Vòng ngoài duyệt hàng, vòng trong duyệt cột/kí tự để in hình sao, hình vuông, kim cương."
+          "`break`: **dừng hẳn** vòng lặp.",
+          "`continue`: **nhảy sang lượt kế**.",
+          "Số nguyên tố: `n < 2` → không; duyệt `i` từ 2 đến `int(n ** 0.5)`, nếu `n % i == 0` → **`break`**.",
+          "Lồng nhau: vòng **ngoài = hàng**, vòng **trong = cột**."
         ],
         conceptIllustration: {
           type: "loops",
@@ -626,6 +673,30 @@ for i in range(1, 51):
             explanation: "Số 7 chỉ chia hết cho 1 và 7 -> YES.",
             code: "n = 7\nis_prime = True\nif n < 2:\n    is_prime = False\nelse:\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            is_prime = False\n            break\nprint('YES' if is_prime else 'NO')",
             output: "YES"
+          },
+          {
+            title: "Ví dụ: Lệnh break",
+            explanation: "Dừng vòng lặp khi gặp số 4.",
+            code: "for i in range(1, 10):\n    if i == 4:\n        break\n    print(i, end=' ')\nprint()",
+            output: "1 2 3 "
+          },
+          {
+            title: "Ví dụ: Lệnh continue",
+            explanation: "Bỏ qua số 3, tiếp tục các số còn lại.",
+            code: "for i in range(1, 6):\n    if i == 3:\n        continue\n    print(i, end=' ')\nprint()",
+            output: "1 2 4 5 "
+          },
+          {
+            title: "Ví dụ: Vòng lặp lồng nhau",
+            explanation: "Vòng ngoài là hàng, vòng trong là cột.",
+            code: "for hang in range(3):\n    for cot in range(4):\n        print('*', end=' ')\n    print()",
+            output: "* * * * \n* * * * \n* * * * "
+          },
+          {
+            title: "Ví dụ: Hình tam giác sao",
+            explanation: "Số sao của hàng `i` là `i`.",
+            code: "for i in range(1, 5):\n    print('*' * i)",
+            output: "*\n**\n***\n****"
           }
         ],
         multipleChoice: {

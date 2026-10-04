@@ -78,19 +78,15 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     ? allLessons[currentLessonIndex + 1]
     : null;
 
-  // Sidebar expanded modules - mở sẵn các chủ đề quan trọng
-  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
-    "topic-1": true,
-    "topic-2": true,
-    "topic-3": true,
-    "topic-4": true,
-    "topic-5": true,
-  });
+  // Cây chủ đề kiểu accordion: chỉ mở chủ đề đang học, các chủ đề khác đóng lại
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => ({
+    [selectedLesson.moduleId]: true,
+  }));
 
-  // Tự động mở rộng module chứa bài học đang chọn
+  // Khi chuyển sang bài thuộc chủ đề khác: mở chủ đề đó và đóng các chủ đề còn lại
   useEffect(() => {
     if (selectedLesson?.moduleId) {
-      setExpandedModules(prev => ({ ...prev, [selectedLesson.moduleId]: true }));
+      setExpandedModules({ [selectedLesson.moduleId]: true });
     }
   }, [selectedLesson.moduleId]);
 
@@ -184,8 +180,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     setUnlockedHintLevel(0);
   }, [selectedLesson.id, activePracticeIndex]);
 
+  // Bấm tiêu đề chủ đề: mở chủ đề đó (đóng các chủ đề khác) hoặc đóng nếu đang mở
   const toggleModuleExpand = (modId: string) => {
-    setExpandedModules(prev => ({ ...prev, [modId]: !prev[modId] }));
+    setExpandedModules(prev => (prev[modId] ? {} : { [modId]: true }));
   };
 
   const handleSelectLesson = (lesson: Lesson) => {

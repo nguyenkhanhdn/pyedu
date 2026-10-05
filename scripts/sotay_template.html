@@ -230,7 +230,7 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
 <script>
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
-  var root=document.documentElement, q=$('#q'), level='all', kind='';
+  var root=document.documentElement, q=$('#q'), level='all', kind='', searching=false;
   var topics=$$('.topic'), appendix=$$('.appendix'), tocItems=$$('.toc-item'), groups=$$('.toc-group');
 
   // chép code
@@ -276,18 +276,31 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
       var any=tocItems.some(function(li){return li.style.display!=='none'&&li.dataset.level===g.dataset.level});
       g.style.display=any?'':'none';
     });
+    if(s){topics.forEach(function(t){if(t.style.display!=='none')t.classList.remove('collapsed')});searching=true}
+    else if(searching){searching=false;openOnly(topics.filter(function(t){return t.style.display!=='none'})[0]||topics[0])}
     $('#empty').style.display=Object.keys(visibleTopics).length?'none':'block';
     $('#result-info').textContent=s?('Tìm thấy '+shown+' mục cho “'+q.value.trim()+'”'):'';
   }
   q.addEventListener('input',apply);
   $$('.pill[data-level]').forEach(function(p){p.onclick=function(){
     $$('.pill[data-level]').forEach(function(x){x.classList.remove('active')});p.classList.add('active');
-    level=p.dataset.level;apply();window.scrollTo({top:0,behavior:'smooth'});
+    level=p.dataset.level;apply();var f=topics.filter(function(t){return t.style.display!=='none'})[0];if(f&&!q.value.trim())openOnly(f);window.scrollTo({top:0,behavior:'smooth'});
   }});
   $('#kindSel').onchange=function(){kind=this.value;apply()};
+  // kiểu accordion: chỉ mở chủ đề đang xem, các chủ đề khác đóng lại
+  function openOnly(t){
+    topics.forEach(function(x){x.classList.toggle('collapsed',x!==t)});
+    if(t&&t.classList)t.classList.remove('collapsed');
+  }
   $('#collapseAll').onclick=function(){topics.forEach(function(t){t.classList.add('collapsed')})};
   $('#expandAll').onclick=function(){topics.forEach(function(t){t.classList.remove('collapsed')})};
-  topics.forEach(function(t){$('.topic-head',t).onclick=function(){t.classList.toggle('collapsed')}});
+  topics.forEach(function(t){$('.topic-head',t).onclick=function(){
+    if(t.classList.contains('collapsed')){
+      var before=t.getBoundingClientRect().top;
+      openOnly(t);
+      window.scrollBy(0,t.getBoundingClientRect().top-before);   // giữ tiêu đề đứng yên khi các chủ đề phía trên co lại
+    }else{t.classList.add('collapsed')}
+  }});
 
   // phím tắt
   document.addEventListener('keydown',function(e){
@@ -298,12 +311,12 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
   // mục lục trên điện thoại
   $('#menuBtn').onclick=function(){document.body.classList.toggle('nav-open')};
   $$('.toc a').forEach(function(a){a.addEventListener('click',function(){document.body.classList.remove('nav-open');
-    var t=document.getElementById(a.dataset.id);if(t&&t.classList)t.classList.remove('collapsed')})});
+    var t=document.getElementById(a.dataset.id);if(t&&t.classList&&t.classList.contains('topic'))openOnly(t)})});
   // đến chủ đề đang bị lọc ẩn → bỏ bộ lọc
   window.addEventListener('hashchange',function(){
     var el=document.getElementById(location.hash.slice(1));
     if(el&&el.style.display==='none'){q.value='';level='all';kind='';$('#kindSel').value='';$$('.pill[data-level]').forEach(function(p){p.classList.toggle('active',p.dataset.level==='all')});apply();el.scrollIntoView()}
-    if(el&&el.classList)el.classList.remove('collapsed');
+    if(el&&el.classList&&el.classList.contains('topic')){openOnly(el);el.scrollIntoView()}
   });
 
   // đánh dấu mục đang xem ở mục lục + nút lên đầu trang
@@ -313,7 +326,9 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
     topics.concat(appendix).forEach(function(s){io.observe(s)});
   }
   window.addEventListener('scroll',function(){$('#fab').classList.toggle('show',window.scrollY>400)});
-  if(location.hash){var h=document.getElementById(location.hash.slice(1));if(h&&h.classList)h.classList.remove('collapsed')}
+  var h0=location.hash&&document.getElementById(location.hash.slice(1));
+  openOnly(h0&&h0.classList&&h0.classList.contains('topic')?h0:topics[0]);
+  if(h0)setTimeout(function(){h0.scrollIntoView()},0);
 })();
 </script>
 </body>

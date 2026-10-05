@@ -12,19 +12,23 @@ from sotay_content_1 import T1
 from sotay_content_2 import T2, T3
 from sotay_content_3 import T4, INDEX, ERRORS, CONTEST
 
-from sotay_content_5 import T5
+from sotay_content_5 import T5 as _T5
+from sotay_content_5b import T2_EXTRA, T5_NEW, ORDER5
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUTS = [os.path.join(ROOT, p) for p in ("Sotay.html", "public/Sotay.html", "public/sotay.html")]
 
 LEVELS = {
     1: ("Cấp 1", "Cơ bản", "Làm quen: in, biến, nhập xuất, rẽ nhánh, vòng lặp"),
-    2: ("Cấp 2", "Cấu trúc dữ liệu", "Chuỗi, list, tuple, set, dict"),
+    2: ("Cấp 2", "Cấu trúc dữ liệu", "Chuỗi, list, tuple, set, dict, ma trận"),
     3: ("Cấp 3", "Hàm & xử lý lỗi", "Hàm, đệ quy, try/except, tệp"),
     4: ("Cấp 4", "Nâng cao", "Comprehension, lambda, thư viện, class"),
-    5: ("Cấp 5", "Thuật toán", "Khái niệm → giải thuật → mã mẫu: số học, sàng, sắp xếp, DP, đồ thị"),
+    5: ("Cấp 5", "Thuật toán", "Khái niệm → giải thuật → mã mẫu: vét cạn, số học, sắp xếp, DP, đồ thị"),
 }
-TOPICS = T1 + T2 + T3 + T4 + T5
+_all5 = {t["id"]: t for t in _T5 + T5_NEW}
+T5 = [_all5[i] for i in ORDER5]
+assert len(T5) == len(_all5), "ORDER5 thiếu/thừa chủ đề"
+TOPICS = T1 + T2 + T2_EXTRA + T3 + T4 + T5
 
 # ------------------------------------------------------------------ tô màu cú pháp
 KEYWORDS = set("""False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield""".split())

@@ -10,7 +10,9 @@ import html, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sotay_content_1 import T1
 from sotay_content_2 import T2, T3
-from sotay_content_3 import T4, T5, INDEX, ERRORS, CONTEST
+from sotay_content_3 import T4, INDEX, ERRORS, CONTEST
+
+from sotay_content_5 import T5
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUTS = [os.path.join(ROOT, p) for p in ("Sotay.html", "public/Sotay.html", "public/sotay.html")]
@@ -20,7 +22,7 @@ LEVELS = {
     2: ("Cấp 2", "Cấu trúc dữ liệu", "Chuỗi, list, tuple, set, dict"),
     3: ("Cấp 3", "Hàm & xử lý lỗi", "Hàm, đệ quy, try/except, tệp"),
     4: ("Cấp 4", "Nâng cao", "Comprehension, lambda, thư viện, class"),
-    5: ("Cấp 5", "Thuật toán", "Số học, sắp xếp, sàng, DP, đồ thị"),
+    5: ("Cấp 5", "Thuật toán", "Khái niệm → giải thuật → mã mẫu: số học, sàng, sắp xếp, DP, đồ thị"),
 }
 TOPICS = T1 + T2 + T3 + T4 + T5
 
@@ -107,6 +109,12 @@ def render_block(b):
     kind = b[0]
     if kind == "p":
         return '<div class="blk" data-text="%s"><p>%s</p></div>' % (attr(plain(b[1]).lower()), inline(b[1]))
+    if kind == "h":
+        icons = {"concept": "📖", "idea": "🧩", "code": "💻"}
+        return '<div class="blk phase ph-%s" data-text="%s"><span>%s</span> %s</div>' % (b[1], attr(plain(b[2]).lower()), icons[b[1]], esc(b[2]))
+    if kind == "steps":
+        items = "".join("<li>%s</li>" % inline(i) for i in b[1])
+        return '<div class="blk" data-text="%s"><ol class="steps">%s</ol></div>' % (attr(plain(" ".join(b[1])).lower()), items)
     if kind == "tip" or kind == "warn":
         icon, label = ("💡", "Mẹo") if kind == "tip" else ("⚠️", "Lưu ý")
         return '<div class="blk %s-box" data-text="%s"><b>%s %s:</b> %s</div>' % (kind, attr(plain(b[1]).lower()), icon, label, inline(b[1]))

@@ -117,6 +117,15 @@ tbody tr:hover{background:var(--primary-soft)}
 .tip-box{background:var(--tip-bg);border-color:var(--tip-bd);color:var(--tip-tx)}
 .warn-box{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn-tx)}
 .tip-box code.ic,.warn-box code.ic{color:inherit}
+/* ---- cấp 5: 3 chặng khái niệm → giải thuật → mã nguồn ---- */
+.phase{display:flex;align-items:center;gap:8px;margin-top:22px;padding:7px 12px;border-radius:9px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-left:4px solid}
+.phase:first-child{margin-top:6px}
+.ph-concept{background:rgba(79,70,229,.1);border-color:#4f46e5;color:var(--primary)}
+.ph-idea{background:rgba(217,119,6,.12);border-color:#d97706;color:var(--warn-tx)}
+.ph-code{background:var(--tip-bg);border-color:var(--tip-bd);color:var(--tip-tx)}
+ol.steps{list-style:none;counter-reset:st;padding-left:0}
+ol.steps li{counter-increment:st;position:relative;padding:4px 0 4px 34px;margin:2px 0}
+ol.steps li::before{content:counter(st);position:absolute;left:0;top:4px;width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 /* ---- phụ lục ---- */
 .appendix{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:18px;scroll-margin-top:120px}
 .appendix h2{font-size:19px;margin-bottom:4px}

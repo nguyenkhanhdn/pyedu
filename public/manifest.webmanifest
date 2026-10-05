@@ -1,0 +1,15 @@
+{
+  "name": "PyEdu - Học lập trình Python",
+  "short_name": "PyEdu",
+  "description": "Học lập trình Python từ cơ bản đến nâng cao với trình biên dịch tích hợp và chấm điểm tự động.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "lang": "vi",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

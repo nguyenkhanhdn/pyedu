@@ -15,6 +15,7 @@ from sotay_content_3 import T4, INDEX, ERRORS, CONTEST
 from sotay_content_5 import T5 as _T5
 from sotay_content_ops import LIST_TOPIC, DICT_TOPIC
 from sotay_content_ops2 import STR_TOPIC, TUPLE_TOPIC, SET_TOPIC
+from sotay_content_ops3 import IF_TOPIC
 from sotay_content_5b import T2_EXTRA, T5_NEW, ORDER5
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,6 +33,7 @@ T5 = [_all5[i] for i in ORDER5]
 assert len(T5) == len(_all5), "ORDER5 thiếu/thừa chủ đề"
 _swap = {"list": [LIST_TOPIC], "dict": [DICT_TOPIC], "str": [STR_TOPIC], "tupleset": [TUPLE_TOPIC, SET_TOPIC]}
 T2 = [x for t in T2 for x in _swap.get(t["id"], [t])]
+T1 = [IF_TOPIC if t["id"] == "if" else t for t in T1]
 TOPICS = T1 + T2 + T2_EXTRA + T3 + T4 + T5
 
 # ------------------------------------------------------------------ tô màu cú pháp

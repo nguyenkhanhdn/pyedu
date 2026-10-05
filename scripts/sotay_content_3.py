@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Cấp 4 (Nâng cao) và Cấp 5 (Thuật toán)
+# Cấp 4 (Nâng cao); Cấp 5 nằm trong sotay_content_5.py
 
 T4 = [
 dict(id="comp", level=4, title="List / Dict / Set comprehension", summary="Tạo list, dict, set **trong một dòng**: `[biểu thức for x in dãy if điều kiện]`.",
@@ -41,45 +41,6 @@ dict(id="oop", level=4, title="Lớp và đối tượng (class)", summary="`cla
  blocks=[
   ("ex", "Khai báo và dùng class", "class HocSinh:\n    def __init__(self, ten, diem):   # hàm khởi tạo\n        self.ten = ten\n        self.diem = diem\n\n    def xep_loai(self):\n        return \"Gioi\" if self.diem >= 8 else \"Kha\"\n\nhs = HocSinh(\"An\", 8.5)\nprint(hs.ten, hs.xep_loai())", {}),
   ("ex", "Kế thừa", "class Dongvat:\n    def keu(self):\n        return \"...\"\n\nclass Cho(Dongvat):\n    def keu(self):\n        return \"Gau gau\"\n\nprint(Cho().keu())", {}),
- ]),
-]
-
-T5 = [
-dict(id="num", level=5, title="Số học: ước, nguyên tố, chữ số", summary="Các mẫu bài số học thường gặp khi thi học sinh giỏi.",
- blocks=[
-  ("ex", "Ước chung lớn nhất, bội chung nhỏ nhất", "import math\nprint(math.gcd(48, 18))   # UCLN\nprint(math.lcm(4, 6))     # BCNN\n\ndef gcd(a, b):            # tự cài đặt (Euclid)\n    while b:\n        a, b = b, a % b\n    return a\nprint(gcd(48, 18))", {}),
-  ("ex", "Liệt kê ước của n (duyệt đến căn n)", "n = 36\nuoc = []\nd = 1\nwhile d * d <= n:\n    if n % d == 0:\n        uoc.append(d)\n        if d != n // d:\n            uoc.append(n // d)\n    d += 1\nprint(sorted(uoc))", {}),
-  ("ex", "Phân tích ra thừa số nguyên tố", "n = 360\nres = []\nd = 2\nwhile d * d <= n:\n    while n % d == 0:\n        res.append(d)\n        n //= d\n    d += 1\nif n > 1:\n    res.append(n)\nprint(res)", {}),
-  ("ex", "Đảo số, đếm chữ số, tổng chữ số", "n = 12345\nprint(int(str(n)[::-1]))        # số đảo ngược\nprint(len(str(n)))              # số chữ số\nprint(sum(int(c) for c in str(n)))   # tổng chữ số", {}),
- ]),
-dict(id="sort_search", level=5, title="Sắp xếp & tìm kiếm", summary="Hiểu thuật toán cơ bản, còn khi làm bài thật thì dùng `sorted()` / `bisect`.",
- blocks=[
-  ("ex", "Sắp xếp nổi bọt (Bubble Sort) — O(N²)", "a = [5, 2, 9, 1]\nn = len(a)\nfor i in range(n):\n    for j in range(0, n - i - 1):\n        if a[j] > a[j + 1]:\n            a[j], a[j + 1] = a[j + 1], a[j]\nprint(a)", {}),
-  ("ex", "Sắp xếp chọn (Selection Sort) — O(N²)", "a = [5, 2, 9, 1]\nfor i in range(len(a)):\n    vt = i\n    for j in range(i + 1, len(a)):\n        if a[j] < a[vt]:\n            vt = j\n    a[i], a[vt] = a[vt], a[i]\nprint(a)", {}),
-  ("ex", "Tìm kiếm tuần tự — O(N)", "a = [5, 2, 9, 1]\nx = 9\nvt = -1\nfor i in range(len(a)):\n    if a[i] == x:\n        vt = i\n        break\nprint(vt)", {}),
-  ("ex", "Tìm kiếm nhị phân — O(log N), mảng đã sắp xếp", "def binary_search(a, x):\n    l, r = 0, len(a) - 1\n    while l <= r:\n        m = (l + r) // 2\n        if a[m] == x:\n            return m\n        elif a[m] < x:\n            l = m + 1\n        else:\n            r = m - 1\n    return -1\n\nprint(binary_search([10, 20, 30, 40, 50], 40))\nprint(binary_search([10, 20, 30], 25))", {}),
- ]),
-dict(id="sieve", level=5, title="Sàng nguyên tố Eratosthenes", summary="Tìm **mọi** số nguyên tố đến N trong O(N log log N) — nhanh hơn nhiều so với kiểm tra từng số.",
- blocks=[
-  ("ex", "Sàng đến N", "def sieve(n):\n    la_nt = [True] * (n + 1)\n    la_nt[0] = la_nt[1] = False\n    for p in range(2, int(n ** 0.5) + 1):\n        if la_nt[p]:\n            for boi in range(p * p, n + 1, p):\n                la_nt[boi] = False\n    return [i for i in range(n + 1) if la_nt[i]]\n\nprint(sieve(50))", {}),
-  ("tip", "Ý tưởng: với mỗi số nguyên tố `p`, **gạch bỏ** các bội của `p` bắt đầu từ `p * p`."),
- ]),
-dict(id="prefix", level=5, title="Mảng cộng dồn & hai con trỏ", summary="Hai kỹ thuật giúp giảm từ O(N²) xuống O(N) hoặc O(1) mỗi truy vấn.",
- blocks=[
-  ("ex", "Prefix sum: tổng đoạn [L, R] trong O(1)", "A = [2, 4, 1, 7, 5, 3]\npref = [0] * (len(A) + 1)\nfor i in range(len(A)):\n    pref[i + 1] = pref[i] + A[i]\n\ndef tong(L, R):          # chỉ số tính từ 0, gồm cả R\n    return pref[R + 1] - pref[L]\n\nprint(tong(1, 3))        # 4 + 1 + 7", {}),
-  ("ex", "Hai con trỏ: tìm cặp có tổng bằng target (mảng đã sắp xếp)", "def hai_so(a, target):\n    l, r = 0, len(a) - 1\n    while l < r:\n        s = a[l] + a[r]\n        if s == target:\n            return l, r\n        elif s < target:\n            l += 1\n        else:\n            r -= 1\n    return None\n\nprint(hai_so([1, 3, 4, 6, 9], 10))", {}),
- ]),
-dict(id="dp", level=5, title="Quy hoạch động cơ bản", summary="Chia bài toán thành bài con, **lưu kết quả** để không tính lại.",
- blocks=[
-  ("ex", "Fibonacci bằng mảng dp", "n = 10\ndp = [0] * (n + 1)\ndp[1] = 1\nfor i in range(2, n + 1):\n    dp[i] = dp[i - 1] + dp[i - 2]\nprint(dp[n])", {}),
-  ("ex", "Đổi tiền: ít tờ nhất để đủ số tiền", "tien = [1, 5, 10]\nS = 27\nINF = 10 ** 9\ndp = [0] + [INF] * S\nfor s in range(1, S + 1):\n    for t in tien:\n        if t <= s:\n            dp[s] = min(dp[s], dp[s - t] + 1)\nprint(dp[S])", {}),
-  ("ex", "Dãy con tăng dài nhất (LIS) — O(N²)", "a = [3, 1, 4, 1, 5, 9, 2, 6]\ndp = [1] * len(a)\nfor i in range(len(a)):\n    for j in range(i):\n        if a[j] < a[i]:\n            dp[i] = max(dp[i], dp[j] + 1)\nprint(max(dp))", {}),
- ]),
-dict(id="graph", level=5, title="Duyệt đồ thị: BFS & DFS", summary="**BFS** (hàng đợi) tìm đường ngắn nhất theo số cạnh; **DFS** (đệ quy / ngăn xếp) đi sâu hết một nhánh.",
- blocks=[
-  ("ex", "Biểu diễn đồ thị bằng danh sách kề", "ke = {1: [2, 3], 2: [4], 3: [4], 4: []}\nprint(ke[1])", {}),
-  ("ex", "BFS: khoảng cách ngắn nhất từ đỉnh 1", "from collections import deque\nke = {1: [2, 3], 2: [4], 3: [4], 4: []}\ndist = {1: 0}\nq = deque([1])\nwhile q:\n    u = q.popleft()\n    for v in ke[u]:\n        if v not in dist:\n            dist[v] = dist[u] + 1\n            q.append(v)\nprint(dist)", {}),
-  ("ex", "DFS đệ quy", "ke = {1: [2, 3], 2: [4], 3: [4], 4: []}\nda_tham = set()\n\ndef dfs(u):\n    da_tham.add(u)\n    print(u, end=\" \")\n    for v in ke[u]:\n        if v not in da_tham:\n            dfs(v)\n\ndfs(1)\nprint()", {}),
  ]),
 ]
 

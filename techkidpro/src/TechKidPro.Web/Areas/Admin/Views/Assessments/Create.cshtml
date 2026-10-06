@@ -1,4 +1,0 @@
-@model TechKidPro.Web.Models.AssessmentFormViewModel
-@{ ViewBag.Title = "Tạo bài kiểm tra"; }
-<h2>Tạo bài kiểm tra</h2>
-@using (Html.BeginForm("Create", "Assessments", new { area = "Admin" })) { Html.RenderPartial("_Form", Model); }

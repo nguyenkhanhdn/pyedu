@@ -1,4 +1,5 @@
-import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry } from "../types";
+import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry, ResetScope } from "../types";
+import { lessonCodeKeys } from "../utils/progressReset";
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
 
@@ -381,6 +382,45 @@ export class LocalDataManager {
     return updated;
   }
 
+  /** Đặt lại tiến độ theo phạm vi (toàn bộ hoặc một số bài); `patch` là điểm XP mới. */
+  public static resetProgress(userId: string, scope: ResetScope, patch: { totalXp: number; weeklyXp: number }): User | null {
+    if (scope.mode === "all") {
+      const u = this.resetUserProgress(userId);
+      try {
+        localStorage.removeItem(`pyedu_passed_practices_${userId}`);
+      } catch {}
+      return u;
+    }
+    const user = this.getUserById(userId);
+    if (!user) return null;
+    const lessonSet = new Set(scope.lessonIds);
+    const updated = this.updateUser(userId, {
+      completedLessons: (user.completedLessons || []).filter(id => !lessonSet.has(id)),
+      totalXp: patch.totalXp,
+      weeklyXp: patch.weeklyXp,
+    });
+    try {
+      // Bài nộp của các bài học được đặt lại
+      const subs = this.getSubmissions(userId).filter(s => !lessonSet.has(s.lessonId));
+      localStorage.setItem(`${this.STORAGE_KEY_SUBS}_${userId}`, JSON.stringify(subs));
+      // Code đã lưu (tùy chọn)
+      if (scope.clearCode) {
+        const keys = new Set(lessonCodeKeys(scope.lessonIds));
+        const codes = this.getCodes(userId);
+        Object.keys(codes).forEach(k => { if (keys.has(k)) delete codes[k]; });
+        localStorage.setItem(`${this.STORAGE_KEY_CODES}_${userId}`, JSON.stringify(codes));
+      }
+      // Các bài tập (khởi động / luyện tập) đã vượt qua trên thiết bị này
+      const raw = localStorage.getItem(`pyedu_passed_practices_${userId}`);
+      if (raw) {
+        const passed: string[] = JSON.parse(raw);
+        const keep = passed.filter(k => !scope.lessonIds.some(id => k === id || k.startsWith(`${id}_p`)));
+        localStorage.setItem(`pyedu_passed_practices_${userId}`, JSON.stringify(keep));
+      }
+    } catch {}
+    return updated;
+  }
+
   public static batchAddXp(userIds: string[], xpAmount: number) {
     const users = this.getUsers();
     users.forEach(u => {
@@ -467,6 +507,17 @@ export class LocalDataManager {
     } catch {
       return [];
     }
+  }
+
+  /** Chỉ dùng khi chạy không có Supabase: bộ nhớ trình duyệt lưu chung bài nộp thuật toán. */
+  public static removeAlgorithmSubmissions(problemIds: string[]) {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY_ALGO_SUBS);
+      if (!raw) return;
+      const set = new Set(problemIds);
+      const all: AlgorithmSubmission[] = JSON.parse(raw);
+      localStorage.setItem(this.STORAGE_KEY_ALGO_SUBS, JSON.stringify(all.filter(s => !set.has(s.problemId))));
+    } catch {}
   }
 
   public static saveAlgorithmSubmission(sub: AlgorithmSubmission) {
@@ -918,6 +969,23 @@ export const ApiService = {
     return LocalDataManager.resetUserProgress(userId);
   },
 
+  /**
+   * Đặt lại tiến độ của một học sinh theo phạm vi. Trả về ok = false nếu máy chủ không xử lý được.
+   * `user` là bản ghi đã cập nhật (có thể null khi tài khoản chỉ tồn tại trên Supabase).
+   */
+  async adminResetProgress(userId: string, scope: ResetScope, patch: { totalXp: number; weeklyXp: number }): Promise<{ ok: boolean; user: User | null }> {
+    const remote = SupabaseService.isAvailable();
+    if (remote) {
+      const ok = await SupabaseService.resetProgress(userId, scope, patch);
+      if (!ok) return { ok: false, user: null };
+    } else if (scope.mode === "topics" && scope.problemIds.length > 0) {
+      LocalDataManager.removeAlgorithmSubmissions(scope.problemIds);
+    } else if (scope.mode === "all") {
+      LocalDataManager.removeAlgorithmSubmissions(ALGORITHM_PROBLEMS.map(p => p.id));
+    }
+    return { ok: true, user: LocalDataManager.resetProgress(userId, scope, patch) };
+  },
+
   async adminUpdateUser(userId: string, updates: Partial<User> & { password?: string }): Promise<User | null> {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.updateUserProfile(userId, updates);
@@ -1200,8 +1268,8 @@ export const ApiService = {
   async fetchAlgorithmSubmissions(userId: string): Promise<AlgorithmSubmission[]> {
     if (SupabaseService.isAvailable()) {
       const suSubs = await SupabaseService.getAlgorithmSubmissions(userId);
-      if (suSubs && suSubs.length > 0) {
-        return suSubs;
+      if (suSubs) {
+        return suSubs;   // kể cả danh sách rỗng (sau khi giáo viên đặt lại), tránh dùng lại bản lưu cũ
       }
     }
     return LocalDataManager.getAlgorithmSubmissions(userId);

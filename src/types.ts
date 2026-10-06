@@ -279,3 +279,12 @@ export interface AlgorithmLeaderboardEntry {
   accuracy: number;
   isCurrentUser?: boolean;
 }
+
+/** Phạm vi đặt lại tiến độ học tập của học sinh (dùng cho admin / giáo viên). */
+export interface ResetScope {
+  mode: 'all' | 'topics';      // all: đưa điểm về 0, xóa mọi tiến độ; topics: chỉ các bài đã chọn
+  lessonIds: string[];         // các bài học (mode = topics)
+  problemIds: string[];        // các bài luyện thuật toán (mode = topics)
+  clearCode: boolean;          // xóa cả code đã lưu của các bài được đặt lại
+  notify: boolean;             // gửi thông báo cho học sinh
+}

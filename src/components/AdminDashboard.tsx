@@ -47,6 +47,7 @@ import { ApiService } from "../services/apiClient";
 import { AdminStatsView } from "./admin/AdminStatsView";
 import { AdminCurriculumView } from "./admin/AdminCurriculumView";
 import { AdminAlgorithmsView } from "./admin/AdminAlgorithmsView";
+import { ProgressResetDialog } from "./ProgressResetDialog";
 
 interface AdminDashboardProps {
   onOpenSupabaseSync?: () => void;
@@ -60,7 +61,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
     adminUpdateUser,
     adminDeleteUser,
     adminBatchDeleteUsers,
-    adminResetUserProgress,
     adminBatchAddXp,
     adminApproveUser,
     refreshUsers,
@@ -97,7 +97,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [userToReset, setUserToReset] = useState<User | null>(null);
+  const [resetTargets, setResetTargets] = useState<User[] | null>(null);
   const [userToBlock, setUserToBlock] = useState<User | null>(null);
   const [userToReject, setUserToReject] = useState<User | null>(null);
   const [blockReason, setBlockReason] = useState<string>("Vi phạm quy chế sử dụng hệ thống PyEdu");
@@ -480,22 +480,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
       setSelectedUserIds([]);
     } else {
       showAlert("error", "Không thể xóa người dùng hàng loạt. Vui lòng thử lại.");
-    }
-  };
-
-  // Handle Reset User Progress
-  const handleConfirmReset = async () => {
-    if (!userToReset) return;
-
-    setIsProcessing(true);
-    const updated = await adminResetUserProgress(userToReset.id);
-    setIsProcessing(false);
-
-    if (updated) {
-      showAlert("success", `Đã đặt lại toàn bộ tiến độ học tập (bài nộp, code, XP) của "${userToReset.username}".`);
-      setUserToReset(null);
-    } else {
-      showAlert("error", "Không thể đặt lại tiến độ người dùng.");
     }
   };
 
@@ -1066,6 +1050,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                       </button>
                     )}
 
+                    {selectedUserIds.some((id) => allUsers.find((u) => u.id === id)?.role === "student") && (
+                      <button
+                        onClick={() => setResetTargets(allUsers.filter((u) => selectedUserIds.includes(u.id) && u.role === "student"))}
+                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title="Đặt lại điểm hoặc yêu cầu làm lại chủ đề cho các học sinh đã chọn"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        <span>Đặt lại tiến độ</span>
+                      </button>
+                    )}
+
                     <button
                       onClick={() => setIsBatchXpOpen(true)}
                       className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
@@ -1368,7 +1363,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                                 {/* Reset Progress (only for active users) */}
                                 {!isPending && (
                                   <button
-                                    onClick={() => setUserToReset(user)}
+                                    onClick={() => setResetTargets([user])}
                                     className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
                                     title="Đặt lại tiến độ học tập (Reset bài & điểm)"
                                   >
@@ -1761,35 +1756,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
         </div>
       )}
 
-      {/* MODAL: Xác nhận đặt lại tiến độ */}
-      {userToReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-4">
-              <RotateCcw className="h-7 w-7" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Đặt lại tiến độ học tập?</h3>
-            <p className="text-xs text-slate-500 mb-6">
-              Thao tác này sẽ xóa toàn bộ bài tập đã hoàn thành, lịch sử nộp code và điểm XP của <b className="text-slate-800">@{userToReset.username}</b> về 0, nhưng giữ lại tài khoản đăng nhập.
-            </p>
-
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => setUserToReset(null)}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl cursor-pointer"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={handleConfirmReset}
-                disabled={isProcessing}
-                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-amber-600/30 cursor-pointer disabled:opacity-50"
-              >
-                {isProcessing ? "Đang xử lý..." : "Đặt lại tiến độ"}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* MODAL: Đặt lại điểm / yêu cầu làm lại chủ đề */}
+      {resetTargets && (
+        <ProgressResetDialog targets={resetTargets} onClose={() => { setResetTargets(null); setSelectedUserIds([]); }} />
       )}
 
       {/* MODAL: Cộng điểm hàng loạt */}

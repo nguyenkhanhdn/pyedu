@@ -10,7 +10,9 @@ import {
   AlgorithmSubmission,
   LeaderboardEntry,
   AlgorithmLeaderboardEntry,
+  ResetScope,
 } from "../types";
+import { lessonCodeKeys } from "../utils/progressReset";
 
 export class SupabaseService {
   /**
@@ -326,6 +328,46 @@ export class SupabaseService {
       return true;
     } catch (e) {
       console.error("Supabase resetUserProgress error:", e);
+      return false;
+    }
+  }
+
+  /**
+   * Đặt lại tiến độ theo phạm vi: toàn bộ (điểm về 0) hoặc chỉ một số bài học / bài luyện thuật toán.
+   * `patch` là điểm XP mới của học sinh (đã trừ phần các bài bị đặt lại).
+   */
+  public static async resetProgress(
+    userId: string,
+    scope: ResetScope,
+    patch: { totalXp: number; weeklyXp: number }
+  ): Promise<boolean> {
+    if (scope.mode === "all") return this.resetUserProgress(userId);
+    const supabase = getSupabase();
+    if (!supabase) return false;
+
+    try {
+      let failed = false;
+      const track = (res: { error: any } | null) => {
+        if (res?.error) {
+          console.warn("Supabase resetProgress error:", res.error);
+          failed = true;
+        }
+      };
+
+      if (scope.lessonIds.length > 0) {
+        track(await supabase.from("user_progress").delete().eq("user_id", userId).in("lesson_id", scope.lessonIds));
+        track(await supabase.from("submissions").delete().eq("user_id", userId).in("lesson_id", scope.lessonIds));
+        if (scope.clearCode) {
+          track(await supabase.from("user_codes").delete().eq("user_id", userId).in("lesson_id", lessonCodeKeys(scope.lessonIds)));
+        }
+      }
+      if (scope.problemIds.length > 0) {
+        track(await supabase.from("algorithm_submissions").delete().eq("user_id", userId).in("problem_id", scope.problemIds));
+      }
+      track(await supabase.from("users").update({ total_xp: patch.totalXp, weekly_xp: patch.weeklyXp }).eq("id", userId));
+      return !failed;
+    } catch (e) {
+      console.error("Supabase resetProgress error:", e);
       return false;
     }
   }

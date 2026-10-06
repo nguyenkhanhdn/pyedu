@@ -14,7 +14,8 @@ import {
   Target,
   BarChart3,
   Layers,
-  ExternalLink
+  ExternalLink,
+  GraduationCap
 } from "lucide-react";
 
 interface NavbarProps {
@@ -210,6 +211,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 <Trophy className="h-4 w-4 text-amber-500" />
                 <span>Bảng xếp hạng</span>
               </button>
+
+              {currentUser?.role === "teacher" && (
+                <button
+                  onClick={() => setActiveTab("class")}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                    activeTab === "class"
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                >
+                  <GraduationCap className="h-4 w-4 text-indigo-500" />
+                  <span>Quản lý lớp</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab("groups")}
@@ -506,6 +521,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 Bảng Xếp Hạng
               </button>
+              {currentUser?.role === "teacher" && (
+                <button
+                  onClick={() => setActiveTab("class")}
+                  className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${
+                    activeTab === "class" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  Quản Lý Lớp
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab("groups")}
                 className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${

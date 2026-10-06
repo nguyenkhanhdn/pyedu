@@ -65,7 +65,8 @@ interface AppContextType {
   teacherMode: boolean;
   setTeacherMode: (val: boolean) => void;
   enforceSequentialProgression: boolean;
-  setEnforceSequentialProgression: (enabled: boolean) => void;
+  setEnforceSequentialProgression: (enabled: boolean) => Promise<boolean>;
+  canManageSequentialMode: boolean;
 
   // Code & Submissions
   userCodes: Record<string, string>;
@@ -339,8 +340,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentUser]);
 
-  // Chế độ ràng buộc học sinh: Bắt buộc học và pass bài thực hành mới mở bài tiếp theo
-  // MẶC ĐỊNH: BẬT (true) theo yêu cầu người dùng
+  // Chế độ ràng buộc học bài: học sinh phải pass bài trước mới mở bài sau.
+  // Chỉ giáo viên (và admin) được bật/tắt; thiết lập lưu trên Supabase để áp dụng đồng loạt cho mọi học sinh.
+  // MẶC ĐỊNH: BẬT
+  const SEQUENTIAL_KEY = "enforce_sequential";
+  const canManageSequentialMode = currentUser?.role === "teacher" || currentUser?.role === "admin";
   const [enforceSequentialProgression, setEnforceSequentialProgressionState] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem("pyedu_enforce_sequential");
@@ -351,12 +355,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return true; // Mặc định BẬT
   });
 
-  const setEnforceSequentialProgression = (enabled: boolean) => {
+  const applySequentialValue = (enabled: boolean) => {
     setEnforceSequentialProgressionState(enabled);
     try {
       localStorage.setItem("pyedu_enforce_sequential", String(enabled));
     } catch {}
   };
+
+  // Giáo viên / admin đổi thiết lập; trả về false nếu không có quyền hoặc không lưu được lên máy chủ
+  const setEnforceSequentialProgression = async (enabled: boolean): Promise<boolean> => {
+    if (!canManageSequentialMode) return false;
+    const previous = enforceSequentialProgression;
+    applySequentialValue(enabled);
+    const ok = await ApiService.setAppSetting(SEQUENTIAL_KEY, String(enabled), currentUser?.id);
+    if (!ok) applySequentialValue(previous);
+    return ok;
+  };
+
+  // Mọi người dùng đọc thiết lập chung từ máy chủ khi đăng nhập, khi quay lại tab và định kỳ
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+    const sync = async () => {
+      const v = await ApiService.getAppSetting(SEQUENTIAL_KEY);
+      if (!cancelled && v !== null) applySequentialValue(v === "true");
+    };
+    sync();
+    const timer = window.setInterval(sync, 60000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") sync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [currentUser?.id]);
 
   // Lưu tiến trình cho cả khách vãng lai (guest)
   const [guestCompletedLessons, setGuestCompletedLessons] = useState<string[]>(() => {
@@ -1316,6 +1351,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTeacherMode,
         enforceSequentialProgression,
         setEnforceSequentialProgression,
+        canManageSequentialMode,
 
         userCodes,
         setUserCodeForLesson,

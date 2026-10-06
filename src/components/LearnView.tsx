@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { Lesson, TestCase, SubmissionResult } from "../types";
 import { PythonRunner } from "../utils/pythonRunner";
+import { SequentialModeToggle } from "./SequentialModeToggle";
 import {
   Play,
   CheckCircle2,
@@ -61,8 +62,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     addNote,
     teacherMode,
     currentUser,
-    enforceSequentialProgression,
-    setEnforceSequentialProgression
+    enforceSequentialProgression
   } = useApp();
 
   // Active Main Pane: 'theory' or 'practice'
@@ -313,24 +313,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
           </div>
           <p className="text-xs text-slate-500 mt-1">Pass bài thực hành để mở khóa bài tiếp theo</p>
 
-          {/* Toggle Chế độ học ràng buộc */}
-          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
-              <Lock className={`h-3.5 w-3.5 ${enforceSequentialProgression ? "text-indigo-600" : "text-slate-400"}`} />
-              <span className="text-2xs sm:text-xs">Ràng buộc bài học:</span>
-            </div>
-            <button
-              onClick={() => setEnforceSequentialProgression(!enforceSequentialProgression)}
-              className={`px-2 py-0.5 rounded text-2xs font-bold transition-all cursor-pointer ${
-                enforceSequentialProgression
-                  ? "bg-indigo-600 text-white shadow-2xs"
-                  : "bg-slate-200 text-slate-600 hover:bg-slate-300"
-              }`}
-              title="Bật/Tắt chế độ ràng buộc tuần tự: Phải pass bài trước mới mở bài sau"
-            >
-              {enforceSequentialProgression ? "ĐANG BẬT" : "TẮT"}
-            </button>
-          </div>
+          {/* Chế độ học ràng buộc: giáo viên bật/tắt cho cả lớp, học sinh chỉ xem */}
+          <SequentialModeToggle />
         </div>
 
         <div className="p-2 space-y-2 flex-1">

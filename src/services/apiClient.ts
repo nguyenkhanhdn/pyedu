@@ -986,6 +986,22 @@ export const ApiService = {
     return { ok: true, user: LocalDataManager.resetProgress(userId, scope, patch) };
   },
 
+  /** Cài đặt dùng chung cho cả lớp (lưu trên Supabase); null nếu chưa có / không đọc được. */
+  async getAppSetting(key: string): Promise<string | null> {
+    if (SupabaseService.isAvailable()) {
+      return SupabaseService.getAppSetting(key);
+    }
+    return null;
+  },
+
+  /** Ghi cài đặt dùng chung. Khi có Supabase mà ghi thất bại thì trả về false (học sinh sẽ không nhận được). */
+  async setAppSetting(key: string, value: string, updatedBy?: string): Promise<boolean> {
+    if (SupabaseService.isAvailable()) {
+      return SupabaseService.setAppSetting(key, value, updatedBy);
+    }
+    return true;
+  },
+
   async adminUpdateUser(userId: string, updates: Partial<User> & { password?: string }): Promise<User | null> {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.updateUserProfile(userId, updates);

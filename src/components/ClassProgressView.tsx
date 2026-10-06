@@ -3,6 +3,7 @@ import { useApp } from "../context/AppContext";
 import { ApiService } from "../services/apiClient";
 import { User } from "../types";
 import { ProgressResetDialog } from "./ProgressResetDialog";
+import { SequentialModeToggle } from "./SequentialModeToggle";
 import { RotateCcw, Search, Users, CheckSquare, GraduationCap } from "lucide-react";
 
 /** Màn hình giáo viên: xem tiến độ học sinh và yêu cầu làm lại bài / đưa điểm về 0. */
@@ -57,6 +58,8 @@ export const ClassProgressView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <SequentialModeToggle variant="card" />
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">

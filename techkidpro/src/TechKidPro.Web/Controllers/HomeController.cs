@@ -2,7 +2,7 @@ using System.Web.Mvc;
 
 namespace TechKidPro.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : AppController
     {
         [AllowAnonymous]
         public ActionResult Index()

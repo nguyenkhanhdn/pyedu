@@ -13,3 +13,9 @@ namespace TechKidPro.Core.Enums
         public static readonly string[] All = { Student, Mentor, Admin };
     }
 }
+
+namespace TechKidPro.Core.Enums
+{
+    public enum EnrollmentStatus { Active = 0, Expired = 1, Cancelled = 2 }
+    public enum ProgressStatus { NotStarted = 0, InProgress = 1, Completed = 2 }
+}

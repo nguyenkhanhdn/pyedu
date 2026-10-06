@@ -16,6 +16,7 @@
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
+        <li>@Html.ActionLink("Khóa học", "Index", "Catalog", new { area = "" }, null)</li>
         @if (User.IsInRole("Student")) {
             <li>@Html.ActionLink("Dashboard", "Index", "Dashboard", new { area = "Student" }, null)</li>
         }
@@ -44,6 +45,7 @@
   </div>
 </nav>
 <div class="container body-content">
+    @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
     @RenderBody()
     <hr /><footer><p>&copy; @DateTime.Now.Year TechKidPro</p></footer>
 </div>

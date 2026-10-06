@@ -3,7 +3,9 @@ using System.Data.Entity;
 using System.Linq;
 using Microsoft.AspNet.Identity.EntityFramework;
 using TechKidPro.Core.Common;
+using TechKidPro.Core.Entities.Access;
 using TechKidPro.Core.Entities.Catalog;
+using TechKidPro.Core.Entities.Learning;
 using TechKidPro.Core.Entities.Identity;
 using TechKidPro.Core.Interfaces;
 
@@ -27,6 +29,8 @@ namespace TechKidPro.Data
         public DbSet<CourseSection> CourseSections { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<LessonContent> LessonContents { get; set; }
+        public DbSet<Enrollment> Enrollments { get; set; }
+        public DbSet<LessonProgress> LessonProgresses { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

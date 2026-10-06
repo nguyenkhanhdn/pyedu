@@ -10,7 +10,7 @@ using TechKidPro.Web.Models;
 namespace TechKidPro.Web.Controllers
 {
     [AllowAnonymous]
-    public class AccountController : Controller
+    public class AccountController : AppController
     {
         private ApplicationUserManager UserManager { get { return HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>(); } }
         private ApplicationSignInManager SignInManager { get { return HttpContext.GetOwinContext().Get<ApplicationSignInManager>(); } }

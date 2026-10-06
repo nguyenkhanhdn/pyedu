@@ -13,7 +13,7 @@ namespace TechKidPro.Web
     {
         public void Configuration(IAppBuilder app)
         {
-            app.CreatePerOwinContext(ApplicationDbContext.Create);
+            app.CreatePerOwinContext(() => new ApplicationDbContext(new HttpCurrentUserProvider()));
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
             app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
 
@@ -26,6 +26,7 @@ namespace TechKidPro.Web
             using (var db = new ApplicationDbContext())
             {
                 DatabaseSeeder.SeedRoles(db);
+                DatabaseSeeder.SeedCatalog(db);
             }
         }
     }

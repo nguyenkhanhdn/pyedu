@@ -1,0 +1,13 @@
+@model IList<TechKidPro.Core.Entities.Catalog.Category>
+@{ ViewBag.Title = "Danh mục"; }
+<h2>Danh mục</h2>
+@if (TempData["Message"] != null) { <div class="alert alert-success">@TempData["Message"]</div> }
+<table class="table table-striped"><tr><th>Tên</th><th>Slug</th></tr>
+@foreach (var c in Model) { <tr><td>@c.Name</td><td>@c.Slug</td></tr> }
+</table>
+@using (Html.BeginForm("Create", "Categories", new { area = "Admin" }, FormMethod.Post, new { @class = "form-inline" })) {
+    @Html.AntiForgeryToken()
+    <input name="name" class="form-control" placeholder="Tên danh mục" required />
+    <input name="slug" class="form-control" placeholder="slug (tùy chọn)" />
+    <button class="btn btn-primary">Thêm</button>
+}

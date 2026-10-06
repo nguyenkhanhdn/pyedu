@@ -1,3 +1,12 @@
-@{ ViewBag.Title = "Student Dashboard"; }
-<h2>Student Dashboard</h2>
-<p>Khu vực Student – Phase 1 chỉ có khung; chức năng bổ sung theo các phase sau.</p>
+@model IList<TechKidPro.Web.Models.MyCourseItem>
+@{ ViewBag.Title = "Dashboard"; }
+<h2>Tiếp tục học</h2>
+@if (!Model.Any()) {
+    <p class="text-muted">Bạn chưa đăng ký khóa nào. @Html.ActionLink("Xem danh sách khóa học", "Index", "Catalog", new { area = "" }, null)</p>
+}
+@foreach (var i in Model) {
+    <div class="panel panel-default"><div class="panel-body">
+        <h4>@Html.ActionLink(i.Course.Title, "Learn", "Courses", new { area = "Student", slug = i.Course.Slug }, null)</h4>
+        <div class="progress"><div class="progress-bar" role="progressbar" style="width:@(i.Percent)%">@i.Percent%</div></div>
+    </div></div>
+}

@@ -1,0 +1,11 @@
+@model IList<TechKidPro.Core.Entities.Catalog.Course>
+@{ ViewBag.Title = "Quản lý khóa học"; }
+<h2>Khóa học</h2>
+<p>@Html.ActionLink("+ Tạo khóa học", "Create", null, new { @class = "btn btn-primary" }) @Html.ActionLink("Danh mục", "Index", "Categories", new { area = "Admin" }, new { @class = "btn btn-default" })</p>
+<div class="table-responsive"><table class="table table-striped">
+<tr><th>Tên</th><th>Slug</th><th>Trạng thái</th><th></th></tr>
+@foreach (var c in Model) {
+  <tr><td>@c.Title</td><td>@c.Slug</td><td>@c.Status</td>
+  <td>@Html.ActionLink("Đề cương", "Curriculum", new { id = c.Id }) | @Html.ActionLink("Sửa", "Edit", new { id = c.Id })</td></tr>
+}
+</table></div>

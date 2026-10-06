@@ -1,0 +1,61 @@
+@model TechKidPro.Core.Entities.Catalog.Course
+@using TechKidPro.Core.Enums
+@{ ViewBag.Title = "Đề cương: " + Model.Title; }
+@if (TempData["Message"] != null) { <div class="alert alert-success">@TempData["Message"]</div> }
+<h2>@Model.Title <small>@Model.Status</small></h2>
+<p>
+  @Html.ActionLink("Sửa thông tin", "Edit", new { id = Model.Id }, new { @class = "btn btn-default btn-sm" })
+  @Html.ActionLink("← Danh sách", "Index", null, new { @class = "btn btn-default btn-sm" })
+  @foreach (var st in new[] { PublishStatus.Draft, PublishStatus.Review, PublishStatus.Published, PublishStatus.Archived }) {
+      if (st != Model.Status) {
+          using (Html.BeginForm("SetStatus", "Courses", new { area = "Admin" }, FormMethod.Post, new { @class = "form-inline", style = "display:inline" })) {
+              @Html.AntiForgeryToken()
+              @Html.Hidden("id", Model.Id)
+              @Html.Hidden("status", st)
+              <button class="btn btn-sm @(st == PublishStatus.Published ? "btn-success" : "btn-default")">→ @st</button>
+          }
+      }
+  }
+</p>
+@foreach (var s in Model.Sections) {
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      @using (Html.BeginForm("UpdateSection", "Courses", new { area = "Admin" }, FormMethod.Post, new { @class = "form-inline" })) {
+          @Html.AntiForgeryToken()
+          @Html.Hidden("id", Model.Id) @Html.Hidden("sectionId", s.Id)
+          <input name="title" value="@s.Title" class="form-control input-sm" />
+          <input name="sortOrder" type="number" value="@s.SortOrder" class="form-control input-sm" style="width:70px" />
+          <button class="btn btn-sm btn-default">Lưu</button>
+      }
+    </div>
+    <ul class="list-group">
+    @foreach (var l in s.Lessons) {
+      <li class="list-group-item">
+        @Html.ActionLink(l.Title, "Lesson", new { id = l.Id }) <span class="label label-default">@l.Status</span>
+        @using (Html.BeginForm("DeleteLesson", "Courses", new { area = "Admin" }, FormMethod.Post, new { style = "display:inline" })) {
+            @Html.AntiForgeryToken() @Html.Hidden("id", Model.Id) @Html.Hidden("lessonId", l.Id)
+            <button class="btn btn-link btn-xs text-danger" onclick="return confirm('Xóa bài học này?')">Xóa</button>
+        }
+      </li>
+    }
+    <li class="list-group-item">
+      @using (Html.BeginForm("AddLesson", "Courses", new { area = "Admin" }, FormMethod.Post, new { @class = "form-inline" })) {
+          @Html.AntiForgeryToken() @Html.Hidden("id", Model.Id) @Html.Hidden("sectionId", s.Id)
+          <input name="title" class="form-control input-sm" placeholder="Tên bài học mới" required />
+          <button class="btn btn-sm btn-primary">+ Bài học</button>
+      }
+    </li>
+    </ul>
+    <div class="panel-footer">
+      @using (Html.BeginForm("DeleteSection", "Courses", new { area = "Admin" }, FormMethod.Post)) {
+          @Html.AntiForgeryToken() @Html.Hidden("id", Model.Id) @Html.Hidden("sectionId", s.Id)
+          <button class="btn btn-link btn-xs text-danger" onclick="return confirm('Xóa chương và các bài học trong chương?')">Xóa chương</button>
+      }
+    </div>
+  </div>
+}
+@using (Html.BeginForm("AddSection", "Courses", new { area = "Admin" }, FormMethod.Post, new { @class = "form-inline" })) {
+    @Html.AntiForgeryToken() @Html.Hidden("id", Model.Id)
+    <input name="title" class="form-control" placeholder="Tên chương mới" required />
+    <button class="btn btn-primary">+ Chương</button>
+}

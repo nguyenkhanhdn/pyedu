@@ -1,0 +1,15 @@
+@model TechKidPro.Web.Models.CourseEditViewModel
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+@Html.HiddenFor(m => m.Id)
+<div class="form-group">@Html.LabelFor(m => m.Title)@Html.TextBoxFor(m => m.Title, new { @class = "form-control" })@Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })</div>
+<div class="form-group">@Html.LabelFor(m => m.Slug)@Html.TextBoxFor(m => m.Slug, new { @class = "form-control" })</div>
+<div class="form-group">@Html.LabelFor(m => m.Summary)@Html.TextAreaFor(m => m.Summary, 3, 60, new { @class = "form-control" })</div>
+<div class="form-group">@Html.LabelFor(m => m.ThumbnailUrl)@Html.TextBoxFor(m => m.ThumbnailUrl, new { @class = "form-control" })</div>
+<div class="form-group"><label>Danh mục</label><br />
+@foreach (var c in Model.AllCategories) {
+    var on = Model.CategoryIds != null && Model.CategoryIds.Contains(c.Id);
+    <label class="checkbox-inline"><input type="checkbox" name="CategoryIds" value="@c.Id" @(on ? "checked" : "") /> @c.Name</label>
+}
+</div>
+<button class="btn btn-primary" type="submit">Lưu</button>

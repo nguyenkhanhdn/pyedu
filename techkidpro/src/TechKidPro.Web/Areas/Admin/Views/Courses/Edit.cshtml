@@ -1,0 +1,4 @@
+@model TechKidPro.Web.Models.CourseEditViewModel
+@{ ViewBag.Title = "Sửa khóa học"; }
+<h2>Sửa khóa học</h2>
+@using (Html.BeginForm("Edit", "Courses", new { area = "Admin" })) { Html.RenderPartial("_Form", Model); }

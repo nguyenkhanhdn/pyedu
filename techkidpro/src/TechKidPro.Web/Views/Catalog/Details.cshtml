@@ -1,0 +1,28 @@
+@model TechKidPro.Web.Models.CourseDetailsViewModel
+@{ ViewBag.Title = Model.Course.Title; }
+<h2>@Model.Course.Title</h2>
+<p class="lead">@Model.Course.Summary</p>
+<div>
+@if (Model.IsEnrolled) {
+    @Html.ActionLink("Vào học", "Learn", "Courses", new { area = "Student", slug = Model.Course.Slug }, new { @class = "btn btn-success btn-lg" })
+} else if (User.IsInRole("Student")) {
+    using (Html.BeginForm("Enroll", "Catalog", FormMethod.Post)) {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("courseId", Model.Course.Id)
+        @Html.Hidden("slug", Model.Course.Slug)
+        <button class="btn btn-primary btn-lg" type="submit">Đăng ký học</button>
+    }
+} else if (!User.Identity.IsAuthenticated) {
+    @Html.ActionLink("Đăng nhập để đăng ký học", "Login", "Account", new { returnUrl = Request.RawUrl }, new { @class = "btn btn-primary btn-lg" })
+}
+</div>
+<h3>Nội dung khóa học</h3>
+@foreach (var s in Model.Course.Sections) {
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>@s.Title</strong></div>
+        <ul class="list-group">
+            @foreach (var l in s.Lessons) { <li class="list-group-item">@l.Title</li> }
+            @if (!s.Lessons.Any()) { <li class="list-group-item text-muted">Đang cập nhật</li> }
+        </ul>
+    </div>
+}

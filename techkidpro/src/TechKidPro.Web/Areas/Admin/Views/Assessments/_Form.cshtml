@@ -1,0 +1,16 @@
+@model TechKidPro.Web.Models.AssessmentFormViewModel
+@Html.AntiForgeryToken() @Html.HiddenFor(m => m.Id)
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<div class="form-group">@Html.LabelFor(m => m.CourseId)
+  <select name="CourseId" class="form-control">@foreach (var c in Model.Courses) { <option value="@c.Id" @(Model.CourseId == c.Id ? "selected" : "")>@c.Title</option> }</select></div>
+<div class="form-group">@Html.LabelFor(m => m.Title)@Html.TextBoxFor(m => m.Title, new { @class = "form-control" })@Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger" })</div>
+<div class="form-group">@Html.LabelFor(m => m.Description)@Html.TextAreaFor(m => m.Description, 2, 60, new { @class = "form-control" })</div>
+<div class="row">
+  <div class="col-sm-3 form-group">@Html.LabelFor(m => m.Type)@Html.EnumDropDownListFor(m => m.Type, new { @class = "form-control" })</div>
+  <div class="col-sm-3 form-group">@Html.LabelFor(m => m.TimeLimitMinutes)@Html.TextBoxFor(m => m.TimeLimitMinutes, new { @class = "form-control", type = "number" })</div>
+  <div class="col-sm-3 form-group">@Html.LabelFor(m => m.PassPercent)@Html.TextBoxFor(m => m.PassPercent, new { @class = "form-control", type = "number" })</div>
+  <div class="col-sm-3 form-group">@Html.LabelFor(m => m.MaxAttempts)@Html.TextBoxFor(m => m.MaxAttempts, new { @class = "form-control", type = "number" })</div>
+</div>
+<div class="checkbox"><label>@Html.CheckBoxFor(m => m.ShuffleQuestions) @Html.DisplayNameFor(m => m.ShuffleQuestions)</label></div>
+<div class="checkbox"><label>@Html.CheckBoxFor(m => m.ShowAnswersAfterSubmit) @Html.DisplayNameFor(m => m.ShowAnswersAfterSubmit)</label></div>
+<button class="btn btn-primary" type="submit">Lưu</button>

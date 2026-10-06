@@ -1,0 +1,31 @@
+@model TechKidPro.Web.Models.AssessmentEditViewModel
+@using TechKidPro.Core.Enums
+@{ ViewBag.Title = "Quản lý: " + Model.Assessment.Title; var a = Model.Assessment; }
+@if (TempData["Message"] != null) { <div class="alert alert-success">@TempData["Message"]</div> }
+<h2>@a.Title <small>@a.Type · @a.Status · Id @a.Id</small></h2>
+<p>@Html.ActionLink("← Danh sách", "Index", null, new { @class = "btn btn-default btn-sm" })
+@foreach (var st in new[] { PublishStatus.Draft, PublishStatus.Published, PublishStatus.Archived }) { if (st != a.Status) {
+  using (Html.BeginForm("SetStatus", "Assessments", new { area = "Admin" }, FormMethod.Post, new { style = "display:inline" })) {
+    @Html.AntiForgeryToken() @Html.Hidden("id", a.Id) @Html.Hidden("status", st)
+    <button class="btn btn-sm @(st == PublishStatus.Published ? "btn-success" : "btn-default")">→ @st</button> } } }
+</p>
+<h4>Cài đặt</h4>
+@using (Html.BeginForm("Edit", "Assessments", new { area = "Admin" })) { Html.RenderPartial("_Form", Model.Form); }
+<h4 style="margin-top:24px">Câu hỏi trong bài (@a.Questions.Count)</h4>
+<ul class="list-group">
+@foreach (var aq in a.Questions) {
+  <li class="list-group-item">@aq.Question.Text <span class="badge">@aq.Points đ</span>
+   @using (Html.BeginForm("RemoveQuestion", "Assessments", new { area = "Admin" }, FormMethod.Post, new { style = "display:inline" })) {
+     @Html.AntiForgeryToken() @Html.Hidden("id", a.Id) @Html.Hidden("questionId", aq.QuestionId)
+     <button class="btn btn-link btn-xs text-danger">Bỏ</button> }
+  </li>
+}
+</ul>
+<h4>Thêm câu hỏi (đã Published, cùng khóa học)</h4>
+@if (!Model.Available.Any()) { <p class="text-muted">Không còn câu hỏi phù hợp. @Html.ActionLink("Tạo câu hỏi", "Create", "Questions", new { area = "Admin", courseId = a.CourseId }, null)</p> } else {
+  using (Html.BeginForm("AddQuestions", "Assessments", new { area = "Admin" })) {
+    @Html.AntiForgeryToken() @Html.Hidden("id", a.Id)
+    foreach (var q in Model.Available) { <div class="checkbox"><label><input type="checkbox" name="questionIds" value="@q.Id" /> @q.Text <small class="text-muted">(@q.Difficulty)</small></label></div> }
+    <button class="btn btn-primary">Thêm đã chọn</button>
+  }
+}

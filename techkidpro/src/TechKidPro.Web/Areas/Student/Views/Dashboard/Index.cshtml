@@ -1,12 +1,20 @@
-@model IList<TechKidPro.Web.Models.MyCourseItem>
+@model TechKidPro.Web.Models.DashboardViewModel
 @{ ViewBag.Title = "Dashboard"; }
 <h2>Tiếp tục học</h2>
-@if (!Model.Any()) {
+@if (!Model.Courses.Any()) {
     <p class="text-muted">Bạn chưa đăng ký khóa nào. @Html.ActionLink("Xem danh sách khóa học", "Index", "Catalog", new { area = "" }, null)</p>
 }
-@foreach (var i in Model) {
+@foreach (var i in Model.Courses) {
     <div class="panel panel-default"><div class="panel-body">
         <h4>@Html.ActionLink(i.Course.Title, "Learn", "Courses", new { area = "Student", slug = i.Course.Slug }, null)</h4>
         <div class="progress"><div class="progress-bar" role="progressbar" style="width:@(i.Percent)%">@i.Percent%</div></div>
+        @Html.ActionLink("Bài kiểm tra / Luyện tập", "Index", "Assessments", new { area = "Student", slug = i.Course.Slug }, new { @class = "btn btn-default btn-sm" })
     </div></div>
+}
+@if (Model.Skills.Any()) {
+    <h3>Kỹ năng</h3>
+    foreach (var s in Model.Skills) {
+        <div>@s.Skill.Name <small class="text-muted">(@s.CorrectCount/@s.TotalCount)</small>
+        <div class="progress"><div class="progress-bar @(s.Percent < 60 ? "progress-bar-danger" : "progress-bar-success")" style="width:@(s.Percent)%">@s.Percent%</div></div></div>
+    }
 }

@@ -32,6 +32,8 @@
         if (UrlSafety.IsHttp(d.Url)) { <p><a href="@d.Url" target="_blank" rel="noopener noreferrer">@(string.IsNullOrEmpty(d.Title) ? d.Url : d.Title)</a></p> }
         break;
     case LessonBlockType.Quiz:
-        <div class="alert alert-info">Bài kiểm tra sẽ có ở Phase 3.</div>
+        if (d.AssessmentId.HasValue) {
+            <p>@Html.ActionLink("Làm bài kiểm tra", "Intro", "Assessments", new { area = "Student", id = d.AssessmentId.Value }, new { @class = "btn btn-info" })</p>
+        }
         break;
 }

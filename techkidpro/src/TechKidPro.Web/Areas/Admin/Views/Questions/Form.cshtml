@@ -1,0 +1,39 @@
+@model TechKidPro.Web.Models.QuestionFormViewModel
+@using TechKidPro.Core.Enums
+@{ ViewBag.Title = Model.Id == 0 ? "Câu hỏi mới" : "Sửa câu hỏi"; }
+<h2>@ViewBag.Title</h2>
+@using (Html.BeginForm(Model.Id == 0 ? "Create" : "Edit", "Questions", new { area = "Admin" })) {
+  @Html.AntiForgeryToken() @Html.HiddenFor(m => m.Id)
+  @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+  <div class="row">
+    <div class="col-sm-6 form-group">@Html.LabelFor(m => m.CourseId)
+      <select name="CourseId" class="form-control"><option value="">-- Dùng chung --</option>
+        @foreach (var c in Model.Courses) { <option value="@c.Id" @(Model.CourseId == c.Id ? "selected" : "")>@c.Title</option> }</select></div>
+    <div class="col-sm-6 form-group">@Html.LabelFor(m => m.LessonId)@Html.TextBoxFor(m => m.LessonId, new { @class = "form-control", type = "number" })</div>
+  </div>
+  <div class="row">
+    <div class="col-sm-4 form-group">@Html.LabelFor(m => m.Type)@Html.EnumDropDownListFor(m => m.Type, new { @class = "form-control" })</div>
+    <div class="col-sm-4 form-group">@Html.LabelFor(m => m.Difficulty)@Html.EnumDropDownListFor(m => m.Difficulty, new { @class = "form-control" })</div>
+    <div class="col-sm-4 form-group">@Html.LabelFor(m => m.Status)@Html.EnumDropDownListFor(m => m.Status, new { @class = "form-control" })</div>
+  </div>
+  <div class="form-group">@Html.LabelFor(m => m.Text)@Html.TextAreaFor(m => m.Text, 3, 60, new { @class = "form-control" })@Html.ValidationMessageFor(m => m.Text, "", new { @class = "text-danger" })</div>
+  <label>Các lựa chọn (tích vào đáp án đúng; để trống dòng không dùng)</label>
+  @if (Model.OptionsLocked) { <div class="alert alert-warning">Câu hỏi đã có bài làm: không thể đổi loại hoặc các lựa chọn.</div> }
+  @for (var i = 0; i < Model.OptionTexts.Length; i++) {
+    <div class="input-group" style="margin-bottom:6px">
+      <span class="input-group-addon"><input type="checkbox" name="CorrectIndexes" value="@i" @(Model.CorrectIndexes != null && Model.CorrectIndexes.Contains(i) ? "checked" : "") @(Model.OptionsLocked ? "disabled" : "") /></span>
+      <input type="text" name="OptionTexts" value="@Model.OptionTexts[i]" class="form-control" @(Model.OptionsLocked ? "readonly" : "") />
+    </div>
+  }
+  @if (Model.OptionsLocked) {
+    foreach (var i in Model.CorrectIndexes ?? new int[0]) { <input type="hidden" name="CorrectIndexes" value="@i" /> }
+  }
+  <div class="form-group" style="margin-top:12px">@Html.LabelFor(m => m.Explanation)@Html.TextAreaFor(m => m.Explanation, 2, 60, new { @class = "form-control" })</div>
+  <div class="form-group"><label>Kỹ năng</label><br />
+    @foreach (var s in Model.AllSkills) {
+      <label class="checkbox-inline"><input type="checkbox" name="SkillIds" value="@s.Id" @(Model.SkillIds != null && Model.SkillIds.Contains(s.Id) ? "checked" : "") /> @s.Name</label>
+    }
+  </div>
+  <button class="btn btn-primary" type="submit">Lưu</button>
+  @Html.ActionLink("Hủy", "Index", null, new { @class = "btn btn-default" })
+}

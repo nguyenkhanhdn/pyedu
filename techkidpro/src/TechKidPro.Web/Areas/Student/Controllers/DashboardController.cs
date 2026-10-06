@@ -13,7 +13,11 @@ namespace TechKidPro.Web.Areas.Student.Controllers
         {
             var enrollments = await Enrollments.GetActiveForUserAsync(CurrentUserId);
             var percents = await Progress.GetPercentByCourseAsync(CurrentUserId, enrollments.Select(e => e.CourseId));
-            return View(enrollments.Select(e => new MyCourseItem { Course = e.Course, Percent = percents[e.CourseId] }).ToList());
+            return View(new DashboardViewModel
+            {
+                Courses = enrollments.Select(e => new MyCourseItem { Course = e.Course, Percent = percents[e.CourseId] }).ToList(),
+                Skills = await Skills.GetProgressAsync(CurrentUserId)
+            });
         }
     }
 }

@@ -4,7 +4,9 @@ using System.Linq;
 using Microsoft.AspNet.Identity.EntityFramework;
 using TechKidPro.Core.Common;
 using TechKidPro.Core.Entities.Access;
+using TechKidPro.Core.Entities.Assessments;
 using TechKidPro.Core.Entities.Catalog;
+using TechKidPro.Core.Entities.Skills;
 using TechKidPro.Core.Entities.Learning;
 using TechKidPro.Core.Entities.Identity;
 using TechKidPro.Core.Interfaces;
@@ -31,6 +33,16 @@ namespace TechKidPro.Data
         public DbSet<LessonContent> LessonContents { get; set; }
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<LessonProgress> LessonProgresses { get; set; }
+        public DbSet<SkillCategory> SkillCategories { get; set; }
+        public DbSet<Skill> Skills { get; set; }
+        public DbSet<SkillProgress> SkillProgresses { get; set; }
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<QuestionOption> QuestionOptions { get; set; }
+        public DbSet<QuestionSkill> QuestionSkills { get; set; }
+        public DbSet<Assessment> Assessments { get; set; }
+        public DbSet<AssessmentQuestion> AssessmentQuestions { get; set; }
+        public DbSet<AssessmentAttempt> AssessmentAttempts { get; set; }
+        public DbSet<AssessmentAnswer> AssessmentAnswers { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

@@ -19,3 +19,11 @@ namespace TechKidPro.Core.Enums
     public enum EnrollmentStatus { Active = 0, Expired = 1, Cancelled = 2 }
     public enum ProgressStatus { NotStarted = 0, InProgress = 1, Completed = 2 }
 }
+
+namespace TechKidPro.Core.Enums
+{
+    public enum QuestionType { SingleChoice = 0, MultipleChoice = 1, TrueFalse = 2 }
+    public enum Difficulty { Easy = 0, Medium = 1, Hard = 2 }
+    public enum AssessmentType { Quiz = 0, Practice = 1, MockExam = 2, FinalExam = 3, Assignment = 4 }
+    public enum AttemptStatus { InProgress = 0, Submitted = 1 }
+}

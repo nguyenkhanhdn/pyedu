@@ -9,6 +9,8 @@ namespace TechKidPro.Services.Courses
         [JsonProperty("url")] public string Url { get; set; }
         [JsonProperty("title")] public string Title { get; set; }
         [JsonProperty("language")] public string Language { get; set; }
+        /// <summary>Dùng cho block Quiz: Id của Assessment.</summary>
+        [JsonProperty("assessmentId")] public int? AssessmentId { get; set; }
 
         public string ToJson() { return JsonConvert.SerializeObject(this); }
 

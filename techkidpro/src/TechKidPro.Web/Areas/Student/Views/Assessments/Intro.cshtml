@@ -1,0 +1,23 @@
+@model TechKidPro.Core.Entities.Assessments.Assessment
+@{ ViewBag.Title = Model.Title; var attempts = (IList<TechKidPro.Core.Entities.Assessments.AssessmentAttempt>)ViewBag.Attempts; }
+<h2>@Model.Title <small>@Model.Type</small></h2>
+<p>@Model.Description</p>
+<ul>
+  <li>Thời gian: @(Model.TimeLimitMinutes.HasValue ? Model.TimeLimitMinutes + " phút" : "không giới hạn")</li>
+  <li>Điểm đạt: @Model.PassPercent%</li>
+  <li>Số lần làm: @(Model.MaxAttempts.HasValue ? Model.MaxAttempts.ToString() : "không giới hạn")</li>
+</ul>
+@using (Html.BeginForm("Start", "Assessments", new { area = "Student" })) {
+  @Html.AntiForgeryToken() @Html.Hidden("id", Model.Id)
+  <button class="btn btn-primary btn-lg">@(attempts.Any(t => t.Status == TechKidPro.Core.Enums.AttemptStatus.InProgress) ? "Tiếp tục làm bài" : "Bắt đầu làm bài")</button>
+}
+@if (attempts.Any()) {
+  <h4 style="margin-top:20px">Lịch sử</h4>
+  <ul class="list-group">
+  @foreach (var t in attempts) {
+    <li class="list-group-item">@t.StartedDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm") –
+      @if (t.Status == TechKidPro.Core.Enums.AttemptStatus.Submitted) { @Html.ActionLink(t.Percent + "% " + (t.Passed ? "(Đạt)" : "(Chưa đạt)"), "Result", new { attemptId = t.Id }) }
+      else { @Html.ActionLink("Đang làm", "Take", new { attemptId = t.Id }) }</li>
+  }
+  </ul>
+}

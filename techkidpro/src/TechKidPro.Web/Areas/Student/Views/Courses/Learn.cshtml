@@ -6,6 +6,7 @@
   <div class="col-md-3 col-md-push-0">
     <h4>@Model.Course.Title</h4>
     <div class="progress"><div class="progress-bar" style="width:@(Model.Progress.Percent)%">@Model.Progress.Percent%</div></div>
+    @if (User.IsInRole("Student")) { <p>@Html.ActionLink("Bài kiểm tra / Luyện tập", "Index", "Assessments", new { area = "Student", slug = Model.Course.Slug }, new { @class = "btn btn-default btn-sm" })</p> }
     @foreach (var s in Model.Course.Sections) {
         <div class="panel panel-default">
             <div class="panel-heading"><strong>@s.Title</strong></div>

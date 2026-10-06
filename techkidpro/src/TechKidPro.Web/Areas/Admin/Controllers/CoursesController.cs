@@ -139,11 +139,11 @@ namespace TechKidPro.Web.Areas.Admin.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<ActionResult> AddContent(int id, LessonBlockType type, string text, string url, string title, string language)
+        public async Task<ActionResult> AddContent(int id, LessonBlockType type, string text, string url, string title, string language, int? assessmentId)
         {
             try
             {
-                await CourseAdmin.AddContentAsync(id, type, new LessonBlockData { Text = text, Url = url, Title = title, Language = language });
+                await CourseAdmin.AddContentAsync(id, type, new LessonBlockData { Text = text, Url = url, Title = title, Language = language, AssessmentId = assessmentId });
                 TempData["Message"] = "Đã thêm nội dung.";
             }
             catch (InvalidOperationException ex) { TempData["Error"] = ex.Message; }

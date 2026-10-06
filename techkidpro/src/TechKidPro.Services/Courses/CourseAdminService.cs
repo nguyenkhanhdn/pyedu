@@ -169,6 +169,10 @@ namespace TechKidPro.Services.Courses
                 case LessonBlockType.Code:
                     Require(data.Text, "Nội dung");
                     break;
+                case LessonBlockType.Quiz:
+                    if (!data.AssessmentId.HasValue || !await _db.Assessments.AnyAsync(a => a.Id == data.AssessmentId.Value))
+                        throw new InvalidOperationException("Bài kiểm tra không tồn tại.");
+                    break;
                 case LessonBlockType.Video:
                 case LessonBlockType.Image:
                 case LessonBlockType.File:

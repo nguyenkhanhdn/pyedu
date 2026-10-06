@@ -25,6 +25,9 @@
         }
         @if (User.IsInRole("Admin")) {
             <li>@Html.ActionLink("Admin", "Index", "Dashboard", new { area = "Admin" }, null)</li>
+            <li>@Html.ActionLink("Khóa học (QL)", "Index", "Courses", new { area = "Admin" }, null)</li>
+            <li>@Html.ActionLink("Câu hỏi", "Index", "Questions", new { area = "Admin" }, null)</li>
+            <li>@Html.ActionLink("Bài kiểm tra (QL)", "Index", "Assessments", new { area = "Admin" }, null)</li>
         }
       </ul>
       <ul class="nav navbar-nav navbar-right">

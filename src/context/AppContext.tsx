@@ -13,7 +13,8 @@ import {
   AlgorithmSubmission,
   AlgorithmLeaderboardEntry,
   AlgorithmLevel,
-  ResetScope
+  ResetScope,
+  GROUP_MESSAGE_MAX_LENGTH
 } from "../types";
 import {
   CURRICULUM_MODULES,
@@ -1074,6 +1075,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const sendMessageToGroup = async (groupId: string, content: string, codeSnippet?: string) => {
     if (!currentUser) return;
+    // Giới hạn độ dài tin nhắn (giao diện đã chặn; đây là lớp bảo vệ cuối)
+    content = (content || "").slice(0, GROUP_MESSAGE_MAX_LENGTH);
+    codeSnippet = codeSnippet ? codeSnippet.slice(0, GROUP_MESSAGE_MAX_LENGTH) : codeSnippet;
+    if (!content.trim() && !codeSnippet?.trim()) return;
     const msg = await ApiService.sendGroupMessage(groupId, {
       userId: currentUser.id,
       userName: currentUser.fullName,

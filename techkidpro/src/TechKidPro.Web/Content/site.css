@@ -1,0 +1,3 @@
+body { padding-top: 60px; }
+.body-content { padding-top: 20px; }
+@media (max-width: 767px) { .body-content { padding-left: 12px; padding-right: 12px; } }

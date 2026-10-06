@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
+import { GROUP_MESSAGE_MAX_LENGTH } from "../types";
 import {
   Users,
   MessageSquare,
@@ -215,10 +216,14 @@ export const StudyGroupsView: React.FC = () => {
                 <textarea
                   rows={3}
                   value={codeSnippet}
-                  onChange={(e) => setCodeSnippet(e.target.value)}
+                  maxLength={GROUP_MESSAGE_MAX_LENGTH}
+                  onChange={(e) => setCodeSnippet(e.target.value.slice(0, GROUP_MESSAGE_MAX_LENGTH))}
                   placeholder="def solution(): ... (dán code cần hỏi vào đây)"
                   className="w-full bg-transparent font-mono text-xs text-emerald-300 focus:outline-none resize-none"
                 />
+                <div className={`text-right text-[10px] font-mono ${codeSnippet.length >= GROUP_MESSAGE_MAX_LENGTH ? "text-rose-400" : "text-slate-500"}`}>
+                  {codeSnippet.length}/{GROUP_MESSAGE_MAX_LENGTH}
+                </div>
               </div>
             )}
 
@@ -240,10 +245,19 @@ export const StudyGroupsView: React.FC = () => {
               <input
                 type="text"
                 value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
+                maxLength={GROUP_MESSAGE_MAX_LENGTH}
+                onChange={(e) => setMessageText(e.target.value.slice(0, GROUP_MESSAGE_MAX_LENGTH))}
                 placeholder="Gửi câu hỏi hoặc ý kiến thảo luận cùng các bạn trong nhóm..."
                 className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-600 shadow-xs"
               />
+              {messageText.length >= GROUP_MESSAGE_MAX_LENGTH * 0.8 && (
+                <span
+                  className={`text-[11px] font-mono whitespace-nowrap ${messageText.length >= GROUP_MESSAGE_MAX_LENGTH ? "text-rose-600 font-bold" : "text-slate-400"}`}
+                  title={`Tin nhắn tối đa ${GROUP_MESSAGE_MAX_LENGTH} ký tự`}
+                >
+                  {messageText.length}/{GROUP_MESSAGE_MAX_LENGTH}
+                </span>
+              )}
 
               <button
                 type="submit"

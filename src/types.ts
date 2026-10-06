@@ -288,3 +288,6 @@ export interface ResetScope {
   clearCode: boolean;          // xóa cả code đã lưu của các bài được đặt lại
   notify: boolean;             // gửi thông báo cho học sinh
 }
+
+/** Độ dài tối đa (ký tự) của nội dung tin nhắn và của đoạn code đính kèm trong học nhóm. */
+export const GROUP_MESSAGE_MAX_LENGTH = 1000;

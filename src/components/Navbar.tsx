@@ -47,6 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
   const unreadCount = notifications.filter((n) => !n.read).length;
   const progressPercent = getLessonProgressPercentage();
   const isAdmin = currentUser?.role === "admin";
+  const isTeacher = currentUser?.role === "teacher";
   const pendingUsersCount = allUsers.filter((u) => u.status === "pending").length;
 
   const handleAdminNav = (section: 'users' | 'stats' | 'curriculum' | 'algorithms') => {
@@ -266,8 +267,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
 
           {/* Right Action Tools */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Student-only right tools */}
-            {!isAdmin && (
+            {/* Công cụ dành riêng cho học sinh (admin và giáo viên không hiển thị chuỗi ngày, tiến độ, AI Tutor) */}
+            {!isAdmin && !isTeacher && (
               <>
                 {/* Streak Counter */}
                 {currentUser && (

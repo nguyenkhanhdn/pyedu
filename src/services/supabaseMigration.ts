@@ -150,6 +150,14 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 10b. BẢNG CÀI ĐẶT DÙNG CHUNG (APP SETTINGS) - ví dụ: chế độ ràng buộc học bài do giáo viên thiết lập cho cả lớp
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_by TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- 11. BẢNG KHO ĐỀ BÀI THUẬT TOÁN (ALGORITHM PROBLEMS - 120+ BÀI TẬP)
 CREATE TABLE IF NOT EXISTS public.algorithm_problems (
     id TEXT PRIMARY KEY,
@@ -213,6 +221,7 @@ ALTER TABLE public.group_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.algorithm_problems ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.algorithm_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
 
 -- Xóa policies cũ nếu đã tồn tại trước khi tạo mới (Tránh lỗi duplicate policy)
 DROP POLICY IF EXISTS "Allow public read users" ON public.users;
@@ -231,6 +240,7 @@ DROP POLICY IF EXISTS "Allow public access members" ON public.study_group_member
 DROP POLICY IF EXISTS "Allow public access messages" ON public.group_messages;
 DROP POLICY IF EXISTS "Allow public access notifs" ON public.notifications;
 DROP POLICY IF EXISTS "Allow public access badges" ON public.user_badges;
+DROP POLICY IF EXISTS "Allow public access app_settings" ON public.app_settings;
 
 -- Tạo Policies cho phép truy xuất anon/authenticated
 CREATE POLICY "Allow public read users" ON public.users FOR SELECT USING (true);
@@ -251,6 +261,8 @@ CREATE POLICY "Allow public access members" ON public.study_group_members FOR AL
 CREATE POLICY "Allow public access messages" ON public.group_messages FOR ALL USING (true);
 CREATE POLICY "Allow public access notifs" ON public.notifications FOR ALL USING (true);
 CREATE POLICY "Allow public access badges" ON public.user_badges FOR ALL USING (true);
+CREATE POLICY "Allow public access app_settings" ON public.app_settings FOR ALL USING (true) WITH CHECK (true);
+INSERT INTO public.app_settings (key, value) VALUES ('enforce_sequential', 'true') ON CONFLICT (key) DO NOTHING;
 `;
 
 export interface MigrationProgress {

@@ -706,6 +706,40 @@ export class SupabaseService {
     }
   }
 
+  // ===================== APP SETTINGS (cài đặt dùng chung) =====================
+
+  /** Đọc một cài đặt dùng chung; trả về null nếu chưa có hoặc bảng `app_settings` chưa được tạo. */
+  public static async getAppSetting(key: string): Promise<string | null> {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+    try {
+      const { data, error } = await supabase.from("app_settings").select("value").eq("key", key).maybeSingle();
+      if (error || !data) return null;
+      return String(data.value);
+    } catch {
+      return null;
+    }
+  }
+
+  public static async setAppSetting(key: string, value: string, updatedBy?: string): Promise<boolean> {
+    const supabase = getSupabase();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from("app_settings").upsert(
+        { key, value, updated_by: updatedBy || null, updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+      if (error) {
+        console.warn("Supabase setAppSetting error:", error);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.warn("Supabase setAppSetting error:", e);
+      return false;
+    }
+  }
+
   // ===================== PERSONAL NOTES =====================
 
   public static async addNote(userId: string, note: Omit<PersonalNote, "id" | "createdAt" | "updatedAt">): Promise<PersonalNote | null> {

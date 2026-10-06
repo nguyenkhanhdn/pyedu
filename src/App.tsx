@@ -14,6 +14,7 @@ import { NotesView } from "./components/NotesView";
 import { OfflineHandbookView } from "./components/OfflineHandbookView";
 import { ProfileView } from "./components/ProfileView";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { ClassProgressView } from "./components/ClassProgressView";
 import { AuthModal } from "./components/AuthModal";
 import { AiTutorDrawer } from "./components/AiTutorDrawer";
 import { AuthGateView } from "./components/AuthGateView";
@@ -54,6 +55,7 @@ function AppContent() {
         {activeTab === "algorithms" && (
           <AlgorithmView onOpenAiWithContext={handleOpenAiWithContext} />
         )}
+        {activeTab === "class" && currentUser.role === "teacher" && <ClassProgressView />}
         {activeTab === "leaderboard" && <LeaderboardView />}
         {activeTab === "groups" && <StudyGroupsView />}
         {activeTab === "notes" && <NotesView />}

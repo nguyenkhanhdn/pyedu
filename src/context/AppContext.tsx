@@ -12,7 +12,8 @@ import {
   AlgorithmProblem,
   AlgorithmSubmission,
   AlgorithmLeaderboardEntry,
-  AlgorithmLevel
+  AlgorithmLevel,
+  ResetScope
 } from "../types";
 import {
   CURRICULUM_MODULES,
@@ -23,6 +24,7 @@ import {
   INITIAL_ALGORITHM_LEADERBOARD
 } from "../data/curriculum";
 import { ApiService } from "../services/apiClient";
+import { computeXpLoss, describeScope } from "../utils/progressReset";
 import confetti from "canvas-confetti";
 
 interface AppContextType {
@@ -41,6 +43,7 @@ interface AppContextType {
   adminDeleteUser: (userId: string, username?: string, email?: string, fullName?: string) => Promise<boolean>;
   adminBatchDeleteUsers: (userIds: string[]) => Promise<boolean>;
   adminResetUserProgress: (userId: string) => Promise<boolean>;
+  resetStudentProgress: (userIds: string[], scope: ResetScope) => Promise<{ done: number; failed: number }>;
   adminBatchAddXp: (userIds: string[], xpAmount: number) => Promise<void>;
   refreshUsers: () => Promise<void>;
   adminApproveUser: (userId: string, role?: 'student' | 'teacher' | 'admin') => Promise<boolean>;
@@ -115,8 +118,8 @@ interface AppContextType {
   handbookTopics: typeof OFFLINE_HANDBOOK_TOPICS;
 
   // Active View Tab
-  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin';
-  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin') => void;
+  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class';
+  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class') => void;
   adminSection: 'users' | 'stats' | 'curriculum' | 'algorithms';
   setAdminSection: (sec: 'users' | 'stats' | 'curriculum' | 'algorithms') => void;
 }
@@ -132,7 +135,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [teacherMode, setTeacherMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin'>(() => {
+  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class'>(() => {
     try {
       const saved = localStorage.getItem("pyedu_current_user");
       if (saved) {
@@ -242,6 +245,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           grouped[sub.lessonId].push(sub);
         });
         setLessonSubmissions(grouped);
+
+        // Giáo viên / admin có thể đã đặt lại bài trên máy chủ: bỏ các bài tập "đã qua" lưu cục bộ
+        // của những bài học không còn bài nộp nào và chưa hoàn thành (mỗi lần vượt qua đều có bài nộp).
+        try {
+          const storeKey = `pyedu_passed_practices_${user.id}`;
+          const raw = localStorage.getItem(storeKey);
+          if (raw) {
+            const done = new Set<string>(data.user?.completedLessons || user.completedLessons || []);
+            const passed: string[] = JSON.parse(raw);
+            const keep = passed.filter(k => {
+              const lessonId = k.replace(/_p\d+$/, "");
+              return done.has(lessonId) || (grouped[lessonId] && grouped[lessonId].length > 0);
+            });
+            if (keep.length !== passed.length) {
+              localStorage.setItem(storeKey, JSON.stringify(keep));
+              setPassedPractices(keep);
+            }
+          }
+        } catch {}
       }
       if (data.notes) {
         setPersonalNotes(data.notes);
@@ -255,7 +277,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Also load algorithm submissions for user
       const algoSubs = await ApiService.fetchAlgorithmSubmissions(user.id);
-      if (algoSubs && algoSubs.length > 0) {
+      if (Array.isArray(algoSubs)) {
         setAlgorithmSubmissions(algoSubs);
         try {
           localStorage.setItem("pyedu_algo_submissions", JSON.stringify(algoSubs));
@@ -762,6 +784,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Đặt lại tiến độ (toàn bộ hoặc một số chủ đề) cho học sinh — dành cho admin và giáo viên
+  const resetStudentProgress = async (userIds: string[], scope: ResetScope): Promise<{ done: number; failed: number }> => {
+    const result = { done: 0, failed: 0 };
+    const caller = currentUser;
+    if (!caller || (caller.role !== "admin" && caller.role !== "teacher")) {
+      return { done: 0, failed: userIds.length };
+    }
+
+    for (const uid of userIds) {
+      const target = allUsers.find(u => u.id === uid);
+      // Giáo viên chỉ được đặt lại tiến độ của học sinh
+      if (!target || (caller.role === "teacher" && target.role !== "student")) {
+        result.failed++;
+        continue;
+      }
+      try {
+        let totalXp = 0;
+        let weeklyXp = 0;
+        if (scope.mode === "topics") {
+          const algoSubs = scope.problemIds.length > 0 ? await ApiService.fetchAlgorithmSubmissions(uid) : [];
+          const loss = computeXpLoss(target, algoSubs, scope);
+          totalXp = Math.max(0, (target.totalXp || 0) - loss);
+          weeklyXp = Math.max(0, (target.weeklyXp || 0) - loss);
+        }
+        const res = await ApiService.adminResetProgress(uid, scope, { totalXp, weeklyXp });
+        if (!res.ok) {
+          result.failed++;
+          continue;
+        }
+        const lessonSet = new Set(scope.lessonIds);
+        const updated: User = res.user || (scope.mode === "all"
+          ? { ...target, completedLessons: [], totalXp: 0, weeklyXp: 0, streakDays: 1 }
+          : { ...target, completedLessons: (target.completedLessons || []).filter(id => !lessonSet.has(id)), totalXp, weeklyXp });
+        setAllUsers(prev => prev.map(u => (u.id === uid ? updated : u)));
+        if (currentUser && currentUser.id === uid) {
+          setCurrentUser(updated);
+          try {
+            localStorage.setItem("pyedu_current_user", JSON.stringify(updated));
+          } catch {}
+          await loadUserData(updated);
+        }
+        if (scope.notify) {
+          ApiService.addNotification(uid, {
+            title: "🔄 Giáo viên yêu cầu làm lại bài",
+            message: scope.mode === "all"
+              ? "Tiến độ học tập của em đã được đặt lại về 0. Hãy bắt đầu học lại từ đầu nhé!"
+              : `Em cần làm lại: ${describeScope(scope)}. Điểm XP của các bài này đã được trừ, hãy hoàn thành lại để nhận điểm.`,
+            type: "system",
+            linkTab: scope.mode === "topics" && scope.lessonIds.length === 0 ? "algorithms" : "learn"
+          }).catch(() => {});
+        }
+        result.done++;
+      } catch (e) {
+        console.error("Reset student progress error:", e);
+        result.failed++;
+      }
+    }
+    return result;
+  };
+
   const adminBatchAddXp = async (userIds: string[], xpAmount: number): Promise<void> => {
     try {
       await ApiService.adminBatchAddXp(userIds, xpAmount);
@@ -1212,6 +1294,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminDeleteUser,
         adminBatchDeleteUsers,
         adminResetUserProgress,
+        resetStudentProgress,
         adminBatchAddXp,
         adminApproveUser,
         refreshUsers,

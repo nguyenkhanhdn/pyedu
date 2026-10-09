@@ -1,5 +1,6 @@
 import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry, ResetScope } from "../types";
 import { lessonCodeKeys } from "../utils/progressReset";
+import type { PracticeEvent } from "../utils/practiceStats";
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
 
@@ -419,6 +420,34 @@ export class LocalDataManager {
       }
     } catch {}
     return updated;
+  }
+
+  /** Lượt nộp bài của mọi học sinh trên trình duyệt này (khi không có Supabase). */
+  public static getPracticeEvents(sinceMs: number): PracticeEvent[] {
+    const events: PracticeEvent[] = [];
+    this.getUsers().forEach(u => {
+      this.getSubmissions(u.id).forEach(s => {
+        const ts = Date.parse(s.timestamp);
+        if (Number.isNaN(ts) || ts < sinceMs) return;
+        events.push({
+          userId: u.id, kind: "lesson", itemId: s.lessonId, score: s.score || 0, ts,
+          ok: Boolean(s.passed) || (s.totalTests > 0 && s.passedTests === s.totalTests),
+        });
+      });
+    });
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY_ALGO_SUBS);
+      const all: AlgorithmSubmission[] = raw ? JSON.parse(raw) : [];
+      all.forEach(s => {
+        const ts = Date.parse(s.timestamp);
+        if (!s.userId || Number.isNaN(ts) || ts < sinceMs) return;
+        events.push({
+          userId: s.userId, kind: "algo", itemId: s.problemId, title: s.problemTitle, score: s.score || 0, ts,
+          ok: Boolean(s.passed) || (s.totalTests > 0 && s.passedTests === s.totalTests),
+        });
+      });
+    } catch {}
+    return events;
   }
 
   public static batchAddXp(userIds: string[], xpAmount: number) {
@@ -1002,6 +1031,18 @@ export const ApiService = {
     return true;
   },
 
+  /** Lượt nộp bài của mọi học sinh trong `days` ngày gần nhất (dùng cho thống kê theo ngày). */
+  async fetchPracticeEvents(days: number): Promise<PracticeEvent[]> {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (days - 1));
+    if (SupabaseService.isAvailable()) {
+      const remote = await SupabaseService.getPracticeEvents(start.toISOString());
+      if (remote) return remote;
+    }
+    return LocalDataManager.getPracticeEvents(start.getTime());
+  },
+
   async adminUpdateUser(userId: string, updates: Partial<User> & { password?: string }): Promise<User | null> {
     if (SupabaseService.isAvailable()) {
       await SupabaseService.updateUserProfile(userId, updates);
@@ -1112,7 +1153,7 @@ export const ApiService = {
   },
 
   async recordAlgorithmSubmission(userId: string, submission: AlgorithmSubmission): Promise<void> {
-    LocalDataManager.saveAlgorithmSubmission(submission);
+    LocalDataManager.saveAlgorithmSubmission({ ...submission, userId });
     if (SupabaseService.isAvailable()) {
       await SupabaseService.saveAlgorithmSubmission(userId, submission);
     }

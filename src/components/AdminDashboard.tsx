@@ -1084,9 +1084,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-slate-700">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                     <tr>
-                      <th className="p-4 w-10">
+                      <th className="px-2.5 py-4 w-10">
                         <button
                           onClick={toggleSelectAll}
                           className="text-slate-400 hover:text-indigo-600 cursor-pointer"
@@ -1098,14 +1098,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                           )}
                         </button>
                       </th>
-                      <th className="p-4">Người dùng</th>
-                      <th className="p-4 text-center">Trạng thái</th>
-                      <th className="p-4">Vai trò</th>
-                      <th className="p-4">Lớp / Trường</th>
-                      <th className="p-4 text-center">Tiến độ & Bài nộp</th>
-                      <th className="p-4 text-right">Tổng XP</th>
-                      <th className="p-4 text-center">Chuỗi Streak</th>
-                      <th className="p-4 text-right">Thao tác Quản trị</th>
+                      <th className="px-2.5 py-4 w-[17rem] max-w-[17rem]">Người dùng</th>
+                      <th className="px-2.5 py-4 text-center">Trạng thái</th>
+                      <th className="px-2.5 py-4">Vai trò</th>
+                      <th className="px-2.5 py-4">Lớp / Trường</th>
+                      <th className="px-2.5 py-4 text-center">Tiến độ</th>
+                      <th className="px-2.5 py-4 text-right">Tổng XP</th>
+                      <th className="px-2.5 py-4 text-center">Streak</th>
+                      <th className="px-2.5 py-4 text-right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -1136,7 +1136,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                             }`}
                           >
                             {/* Checkbox */}
-                            <td className="p-4">
+                            <td className="px-2.5 py-4">
                               <button
                                 onClick={() => toggleSelectUser(user.id)}
                                 className="text-slate-400 hover:text-indigo-600 cursor-pointer"
@@ -1149,9 +1149,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                               </button>
                             </td>
 
-                            {/* User info */}
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
+                            {/* User info (cột có độ rộng giới hạn để các cột sau luôn nhìn thấy mà không cần cuộn ngang) */}
+                            <td className="px-2.5 py-4 w-[17rem] max-w-[17rem]">
+                              <div className="flex items-center gap-3 min-w-0">
                                 <div className="relative">
                                   <img
                                     src={user.avatar}
@@ -1167,19 +1167,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                                     </span>
                                   )}
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="font-bold text-slate-900">{user.fullName}</span>
+                                    <span className="font-bold text-slate-900 truncate max-w-[11rem]" title={user.fullName}>{user.fullName}</span>
                                     {isCurrentAdmin && (
                                       <span className="px-1.5 py-0.2 text-[10px] font-bold bg-indigo-100 text-indigo-700 rounded-full">
                                         (Bạn)
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-slate-500 flex items-center gap-2">
-                                    <span className="font-mono text-indigo-600">@{user.username}</span>
+                                  <p className="text-xs text-slate-500 flex items-center gap-2 min-w-0">
+                                    <span className="font-mono text-indigo-600 shrink-0">@{user.username}</span>
                                     <span>•</span>
-                                    <span>{user.email}</span>
+                                    <span className="truncate" title={user.email}>{user.email}</span>
                                   </p>
                                   {user.registeredAt && (
                                     <p className="text-[10px] text-slate-400 mt-0.5">
@@ -1191,7 +1191,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                             </td>
 
                             {/* Status Badge */}
-                            <td className="p-4 text-center">
+                            <td className="whitespace-nowrap px-2.5 py-4 text-center">
                               {isPending ? (
                                 <div className="inline-flex flex-col items-center">
                                   <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-800 border border-amber-300 inline-flex items-center gap-1.5 shadow-xs">
@@ -1226,7 +1226,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                             </td>
 
                             {/* Role Badge */}
-                            <td className="p-4">
+                            <td className="whitespace-nowrap px-2.5 py-4">
                               {user.role === "admin" ? (
                                 <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-100 text-purple-800 border border-purple-200 inline-flex items-center gap-1">
                                   <ShieldCheck className="h-3.5 w-3.5 text-purple-600" />
@@ -1246,22 +1246,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                             </td>
 
                             {/* Grade & School */}
-                            <td className="p-4 text-xs">
+                            <td className="whitespace-nowrap px-2.5 py-4 text-xs">
                               <p className="font-semibold text-slate-800">{user.grade}</p>
-                              <p className="text-slate-500 truncate max-w-[150px]">
+                              <p className="text-slate-500 truncate max-w-[110px]">
                                 {user.school || "THPT Chuyên Tin"}
                               </p>
                             </td>
 
                             {/* Progress */}
-                            <td className="p-4 text-center">
+                            <td className="whitespace-nowrap px-2.5 py-4 text-center">
                               <span className="font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 text-xs">
-                                {user.completedLessons.length} bài đã giải
+                                {user.completedLessons.length} bài
                               </span>
                             </td>
 
                             {/* XP */}
-                            <td className="p-4 text-right">
+                            <td className="whitespace-nowrap px-2.5 py-4 text-right">
                               <div className="font-bold text-slate-900 text-sm">
                                 {user.totalXp.toLocaleString()} XP
                               </div>
@@ -1269,14 +1269,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenSupabaseSy
                             </td>
 
                             {/* Streak */}
-                            <td className="p-4 text-center">
+                            <td className="whitespace-nowrap px-2.5 py-4 text-center">
                               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-orange-600 font-bold text-xs">
                                 🔥 {user.streakDays} ngày
                               </div>
                             </td>
 
                             {/* Actions */}
-                            <td className="p-4 text-right">
+                            <td className="px-2.5 py-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 {/* PENDING USER ACTIONS: Approve & Reject */}
                                 {isPending && (

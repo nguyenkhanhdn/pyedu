@@ -146,7 +146,8 @@ def render_block(b):
         out_html = '<div class="output"><span class="out-label">▶ Kết quả</span><pre>%s</pre></div>' % (esc(out) if out else "<i>(không in gì)</i>")
         txt = (title + " " + code + " " + out).lower()
         return ('<div class="blk example" data-text="%s"><div class="ex-title"><span>%s</span>'
-                '<button class="copy" onclick="copyCode(this)" title="Chép code">📋 Chép</button></div>'
+                '<span class="ex-actions"><button class="run" onclick="togglePlay(this)" aria-expanded="false" title="Sửa và chạy thử đoạn mã này ngay trên trang">▶ Chạy thử</button>'
+                '<button class="copy" onclick="copyCode(this)" title="Chép code">📋 Chép</button></span></div>'
                 '<pre class="code"><code>%s</code></pre>%s%s</div>') % (attr(txt), esc(title), highlight(code), stdin_html, out_html)
     raise ValueError(kind)
 

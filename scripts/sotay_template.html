@@ -15,7 +15,7 @@
   --ic-bg:#f1f5f9;--ic-text:#334155;
   --i-kw:#7c3aed;--i-bi:#0369a1;--i-lib:#0f766e;--i-fn:#b45309;--i-fc:#a16207;--i-mt:#0e7490;--i-str:#15803d;--i-num:#c2410c;--i-cm:#64748b;--i-op:#be185d;--i-dec:#a21caf;
   --tip-bg:#f0fdf4;--tip-bd:#16a34a;--tip-tx:#166534;--warn-bg:#fffbeb;--warn-bd:#d97706;--warn-tx:#92400e;
-  --code-bg:#0f172a;--code-tx:#e2e8f0;--out-bg:#ecfdf5;--out-tx:#065f46;--out-bd:#a7f3d0;
+  --code-bg:#0f172a;--code-tx:#e2e8f0;--out-bg:#ecfdf5;--out-tx:#065f46;--out-bd:#a7f3d0;--err-bg:#fef2f2;--err-tx:#b91c1c;--err-bd:#fecaca;
   --side:290px;
 }
 [data-theme="dark"]{
@@ -23,7 +23,7 @@
   --ic-bg:#1e293b;--ic-text:#e2e8f0;
   --i-kw:#c084fc;--i-bi:#7dd3fc;--i-lib:#5eead4;--i-fn:#fde68a;--i-fc:#fcd34d;--i-mt:#67e8f9;--i-str:#86efac;--i-num:#fdba74;--i-cm:#94a3b8;--i-op:#f9a8d4;--i-dec:#f0abfc;
   --tip-bg:rgba(22,163,74,.12);--tip-bd:#16a34a;--tip-tx:#86efac;--warn-bg:rgba(217,119,6,.12);--warn-bd:#d97706;--warn-tx:#fde68a;
-  --code-bg:#030712;--out-bg:rgba(16,185,129,.1);--out-tx:#6ee7b7;--out-bd:rgba(16,185,129,.3);
+  --code-bg:#030712;--out-bg:rgba(16,185,129,.1);--out-tx:#6ee7b7;--out-bd:rgba(16,185,129,.3);--err-bg:rgba(239,68,68,.1);--err-tx:#fca5a5;--err-bd:rgba(239,68,68,.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -105,6 +105,26 @@ main{flex:1;min-width:0;max-width:980px;margin:0 auto;padding:26px 32px 80px}
 .ex-title{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:var(--primary-soft);font-size:13px;font-weight:600;color:var(--primary)}
 .copy{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer}
 .copy:hover{border-color:var(--primary)}
+.ex-actions{display:flex;gap:6px;align-items:center}
+.run{border:1px solid var(--primary);background:var(--primary);color:#fff;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer}
+.run:hover{filter:brightness(1.1)}
+.run[aria-expanded="true"]{background:var(--card);color:var(--primary)}
+.play{border-top:1px solid var(--border);background:var(--card);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.play-head{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.play-head b{color:var(--text)}
+.play label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:3px}
+.play textarea{width:100%;display:block;font:13.5px/1.6 'JetBrains Mono','SFMono-Regular',Consolas,Menlo,monospace;background:var(--code-bg);color:var(--code-tx);border:1px solid var(--border);border-radius:8px;padding:10px 12px;resize:vertical;tab-size:4;white-space:pre;overflow:auto}
+.play textarea:focus{outline:2px solid var(--primary);outline-offset:1px}
+.play .stdin-edit textarea{background:var(--bg);color:var(--text);font-size:13px}
+.play-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.play-bar button{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+.play-bar button:hover{border-color:var(--primary)}
+.play-bar .go{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700}
+.play-bar .go:disabled{opacity:.55;cursor:wait}
+.play-status{font-size:12px;color:var(--muted);margin-left:auto}
+.play-out{margin:0;padding:10px 12px;border-radius:8px;background:var(--out-bg);color:var(--out-tx);border:1px solid var(--out-bd);white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.55;min-height:2.6em}
+.play-out.err{background:var(--err-bg);color:var(--err-tx);border-color:var(--err-bd)}
+.play-out.idle{background:var(--bg);color:var(--muted);border-color:var(--border)}
 .stdin{padding:8px 14px;background:var(--bg);border-top:1px dashed var(--border);font-size:12.5px;color:var(--muted)}
 .stdin pre{display:inline-block;vertical-align:top;margin-left:6px;color:var(--text);font-size:12.5px}
 .output{padding:9px 14px;background:var(--out-bg);border-top:1px solid var(--out-bd);color:var(--out-tx)}
@@ -153,7 +173,7 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
   .topic-head{padding:14px 14px 0}.summary{padding:6px 14px 10px}.topic-body{padding:0 14px 16px}
 }
 @media print{
-  .top,aside,.filters,.fab,.copy,.menu-btn{display:none!important}
+  .top,aside,.filters,.fab,.copy,.run,.play,.menu-btn{display:none!important}
   main{max-width:100%;padding:0}
   .topic,.appendix{border:none;page-break-inside:auto}
   .topic.collapsed .topic-body{display:block}
@@ -231,6 +251,26 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
   </main>
 </div>
 <a href="#top" class="fab" id="fab" title="Lên đầu trang">↑</a>
+<script type="text/plain" id="pyWorker">
+var BASE='https://cdn.jsdelivr.net/pyodide/v0.26.2/full/';
+importScripts(BASE+'pyodide.js');
+var py=null;
+var loading=loadPyodide({indexURL:BASE}).then(function(p){py=p;postMessage({type:'ready'});});
+onmessage=async function(e){
+  var m=e.data; await loading;
+  var out='',err='',lines=m.stdin?m.stdin.split('\n'):[],i=0,fail=null,g=null;
+  py.setStdout({batched:function(s){out+=s+'\n';}});
+  py.setStderr({batched:function(s){err+=s+'\n';}});
+  py.setStdin({stdin:function(){return i<lines.length?lines[i++]:undefined;}});
+  try{
+    g=py.globals.get('dict')(); g.set('__name__','__main__');
+    await py.runPythonAsync(m.code,{globals:g});
+  }catch(ex){fail=String(ex&&ex.message||ex);}
+  try{py.runPython("import sys\nsys.stdout.write('\\n')\nsys.stdout.flush()\nsys.stderr.flush()");}catch(x){}
+  try{g&&g.destroy();}catch(x){}
+  postMessage({type:'done',id:m.id,out:out.replace(/\n+$/,''),err:fail||err.trim()});
+};
+</script>
 <script>
 (function(){
   var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
@@ -242,6 +282,85 @@ mark{background:#fde68a;color:#1e293b;border-radius:3px;padding:0 1px}
     var code=btn.closest('.example').querySelector('pre code').innerText;
     var done=function(){var o=btn.innerHTML;btn.innerHTML='✅ Đã chép';setTimeout(function(){btn.innerHTML=o},1500)};
     if(navigator.clipboard){navigator.clipboard.writeText(code).then(done)}else{var t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();done()}
+  };
+
+  // ---- Chạy thử mã mẫu bằng Python thật (Pyodide trong Web Worker, chỉ tải khi bấm "Chạy thử" lần đầu) ----
+  var pyWorker=null, pyReady=null, pyWaiters={}, pySeq=0;
+  function pyReset(){ if(pyWorker){try{pyWorker.terminate()}catch(e){}} pyWorker=null; pyReady=null; }
+  function pyEnsure(){
+    if(pyReady) return pyReady;
+    pyReady=new Promise(function(resolve,reject){
+      var timer=setTimeout(function(){pyReset();reject(new Error('Tải Python quá lâu. Kiểm tra kết nối mạng rồi thử lại.'))},90000);
+      try{
+        var url=URL.createObjectURL(new Blob([document.getElementById('pyWorker').textContent],{type:'text/javascript'}));
+        pyWorker=new Worker(url);
+      }catch(e){clearTimeout(timer);pyReady=null;reject(new Error('Trình duyệt không hỗ trợ chạy thử mã.'));return}
+      pyWorker.onmessage=function(ev){
+        var m=ev.data;
+        if(m.type==='ready'){clearTimeout(timer);resolve()}
+        else if(m.type==='done'&&pyWaiters[m.id]){var f=pyWaiters[m.id];delete pyWaiters[m.id];f(m)}
+      };
+      pyWorker.onerror=function(){clearTimeout(timer);pyReset();reject(new Error('Không tải được Python (cần kết nối mạng ở lần chạy đầu tiên).'))};
+    });
+    pyReady.catch(function(){});
+    return pyReady;
+  }
+  function pyRun(code,stdin){
+    return pyEnsure().then(function(){
+      return new Promise(function(resolve){
+        var id=++pySeq, t0=performance.now();
+        var timer=setTimeout(function(){
+          delete pyWaiters[id]; pyReset();
+          resolve({out:'',err:'Chương trình chạy quá 10 giây nên đã bị dừng (có thể có vòng lặp vô hạn).',ms:10000});
+        },10000);
+        pyWaiters[id]=function(m){clearTimeout(timer);m.ms=Math.round(performance.now()-t0);resolve(m)};
+        pyWorker.postMessage({id:id,code:code,stdin:stdin});
+      });
+    });
+  }
+  window.togglePlay=function(btn){
+    var ex=btn.closest('.example'), panel=ex.querySelector('.play');
+    if(panel){var open=panel.style.display==='none';panel.style.display=open?'':'none';btn.setAttribute('aria-expanded',open?'true':'false');if(open)panel.querySelector('textarea').focus();return}
+    var origCode=ex.querySelector('pre code').innerText.replace(/\n$/,'');
+    var stdinPre=ex.querySelector('.stdin pre'), origIn=stdinPre?stdinPre.innerText:'';
+    panel=document.createElement('div'); panel.className='play';
+    panel.innerHTML='<div class="play-head"><b>▶ Chạy thử</b><span>Sửa mã tùy ý rồi bấm Chạy (hoặc Ctrl + Enter). Python chạy ngay trên máy bạn.</span></div>'
+      +'<div><label>Mã nguồn</label><textarea class="play-code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>'
+      +'<div class="stdin-edit"><label>Dữ liệu nhập vào (mỗi dòng cho một lần <code class="ic">input()</code>)</label><textarea class="play-in" rows="2" spellcheck="false"></textarea></div>'
+      +'<div class="play-bar"><button type="button" class="go">▶ Chạy</button><button type="button" class="reset">↺ Mã gốc</button><button type="button" class="close">✕ Đóng</button><span class="play-status"></span></div>'
+      +'<pre class="play-out idle">Kết quả sẽ hiện ở đây.</pre>';
+    ex.appendChild(panel);
+    var ta=panel.querySelector('.play-code'), inp=panel.querySelector('.play-in'), go=panel.querySelector('.go'),
+        out=panel.querySelector('.play-out'), status=panel.querySelector('.play-status'), inWrap=panel.querySelector('.stdin-edit');
+    ta.value=origCode; inp.value=origIn;
+    function fit(){ta.rows=Math.max(4,Math.min(18,ta.value.split('\n').length+1))}
+    function syncIn(){inWrap.style.display=/input\s*\(|stdin/.test(ta.value)?'':'none'}
+    fit(); syncIn();
+    ta.addEventListener('input',function(){fit();syncIn()});
+    ta.addEventListener('keydown',function(e){
+      if(e.key==='Tab'){e.preventDefault();var s=ta.selectionStart;ta.value=ta.value.slice(0,s)+'    '+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+4;fit()}
+      else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();run()}
+    });
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();run()}});
+    function show(text,cls){out.textContent=text;out.className='play-out'+(cls?' '+cls:'')}
+    var running=false;
+    function run(){
+      if(running) return; running=true; go.disabled=true;
+      status.textContent=pyReady?'Đang chạy…':'Đang tải Python lần đầu (khoảng 10 MB)…';
+      show('⏳ Đang xử lý…','idle');
+      pyRun(ta.value,inp.value).then(function(m){
+        if(m.err){show((m.out?m.out+'\n\n':'')+m.err,'err')}
+        else{show(m.out||'(chương trình không in gì)',m.out?'':'idle')}
+        status.textContent=m.err?'Có lỗi':'Xong trong '+m.ms+' ms';
+      }).catch(function(e){show(e.message||String(e),'err');status.textContent='Không chạy được'})
+        .then(function(){running=false;go.disabled=false});
+    }
+    go.onclick=run;
+    panel.querySelector('.reset').onclick=function(){ta.value=origCode;inp.value=origIn;fit();syncIn();show('Kết quả sẽ hiện ở đây.','idle');status.textContent=''};
+    panel.querySelector('.close').onclick=function(){panel.style.display='none';btn.setAttribute('aria-expanded','false');btn.focus()};
+    btn.setAttribute('aria-expanded','true');
+    ta.focus();
+    pyEnsure();   // bắt đầu tải Python ngay để lần bấm Chạy đầu tiên nhanh hơn
   };
 
   // giao diện sáng / tối

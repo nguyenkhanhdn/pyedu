@@ -108,3 +108,72 @@ export const buildDailyStats = (events: PracticeEvent[], students: User[], days:
   }
   return out;
 };
+
+export interface StudentDayCell {
+  attempts: number;
+  passed: number;
+  distinctPassed: number;
+}
+
+export interface StudentItemRow {
+  kind: "lesson" | "algo";
+  itemId: string;
+  title?: string;
+  attempts: number;
+  passed: boolean;
+  bestScore: number;
+}
+
+export interface StudentStat {
+  user: User;
+  /** Theo khóa ngày yyyy-mm-dd (chỉ các ngày có hoạt động). */
+  days: Record<string, StudentDayCell>;
+  /** Từng bài đã làm trong mỗi ngày. */
+  items: Record<string, StudentItemRow[]>;
+  attempts: number;
+  passed: number;
+  distinctPassed: number;
+  activeDays: number;
+  lastTs: number;
+}
+
+/** Thống kê theo từng học sinh: mỗi học sinh một dòng, kèm số liệu từng ngày trong `days` ngày gần nhất. */
+export const buildStudentStats = (events: PracticeEvent[], students: User[], days: number): StudentStat[] => {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - (days - 1));
+  const startMs = start.getTime();
+
+  const map = new Map<string, StudentStat>();
+  students.forEach((user) =>
+    map.set(user.id, { user, days: {}, items: {}, attempts: 0, passed: 0, distinctPassed: 0, activeDays: 0, lastTs: 0 })
+  );
+
+  for (const e of events) {
+    if (e.ts < startMs) continue;
+    const st = map.get(e.userId);
+    if (!st) continue;
+    const key = dayKey(e.ts);
+    const cell = (st.days[key] = st.days[key] || { attempts: 0, passed: 0, distinctPassed: 0 });
+    cell.attempts++;
+    st.attempts++;
+    if (e.ts > st.lastTs) st.lastTs = e.ts;
+
+    const list = (st.items[key] = st.items[key] || []);
+    let row = list.find((r) => r.kind === e.kind && r.itemId === e.itemId);
+    if (!row) list.push((row = { kind: e.kind, itemId: e.itemId, title: e.title, attempts: 0, passed: false, bestScore: 0 }));
+    row.attempts++;
+    row.bestScore = Math.max(row.bestScore, e.score || 0);
+    if (e.ok) {
+      cell.passed++;
+      st.passed++;
+      if (!row.passed) {
+        row.passed = true;
+        cell.distinctPassed++;
+        st.distinctPassed++;
+      }
+    }
+  }
+  map.forEach((st) => (st.activeDays = Object.keys(st.days).length));
+  return Array.from(map.values());
+};

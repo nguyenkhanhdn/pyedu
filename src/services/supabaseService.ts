@@ -12,6 +12,7 @@ import {
   AlgorithmLeaderboardEntry,
   ResetScope,
 } from "../types";
+import type { PracticeEvent } from "../utils/practiceStats";
 import { lessonCodeKeys } from "../utils/progressReset";
 
 export class SupabaseService {
@@ -663,7 +664,8 @@ export class SupabaseService {
         total_tests: submission.totalTests,
         runtime_ms: submission.runtimeMs,
         test_results: submission.testResults,
-        timestamp: submission.timestamp || new Date().toISOString(),
+        // Cột là TIMESTAMPTZ: chuỗi giờ địa phương (vd. "14:05 21/10/2026") làm lưu thất bại, nên chuẩn hóa về ISO
+        timestamp: /^\d{4}-\d{2}-\d{2}T/.test(submission.timestamp || "") ? submission.timestamp : new Date().toISOString(),
       }, { onConflict: "id" });
 
       return !error;
@@ -702,6 +704,61 @@ export class SupabaseService {
       }));
     } catch (e) {
       console.warn("Supabase getAlgorithmSubmissions error:", e);
+      return null;
+    }
+  }
+
+  // ===================== PRACTICE STATS (thống kê luyện tập) =====================
+
+  /** Các lượt nộp bài (bài học + luyện đề thuật toán) của mọi học sinh kể từ `sinceIso`. */
+  public static async getPracticeEvents(sinceIso: string): Promise<PracticeEvent[] | null> {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+    const PAGE = 1000;
+    const MAX_PAGES = 30;
+
+    const fetchAll = async (table: string, columns: string): Promise<any[] | null> => {
+      const rows: any[] = [];
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const { data, error } = await supabase
+          .from(table)
+          .select(columns)
+          .gte("timestamp", sinceIso)
+          .order("timestamp", { ascending: false })
+          .range(page * PAGE, page * PAGE + PAGE - 1);
+        if (error || !data) return page === 0 ? null : rows;
+        rows.push(...data);
+        if (data.length < PAGE) break;
+      }
+      return rows;
+    };
+
+    try {
+      const [lessons, algos] = await Promise.all([
+        fetchAll("submissions", "user_id,lesson_id,passed,score,total_tests,passed_tests,timestamp"),
+        fetchAll("algorithm_submissions", "user_id,problem_id,problem_title,passed,score,total_tests,passed_tests,timestamp"),
+      ]);
+      if (!lessons && !algos) return null;
+      const events: PracticeEvent[] = [];
+      (lessons || []).forEach((r: any) => {
+        const ts = Date.parse(r.timestamp);
+        if (!r.user_id || Number.isNaN(ts)) return;
+        events.push({
+          userId: r.user_id, kind: "lesson", itemId: r.lesson_id, score: r.score || 0, ts,
+          ok: Boolean(r.passed) || (r.total_tests > 0 && r.passed_tests === r.total_tests),
+        });
+      });
+      (algos || []).forEach((r: any) => {
+        const ts = Date.parse(r.timestamp);
+        if (!r.user_id || Number.isNaN(ts)) return;
+        events.push({
+          userId: r.user_id, kind: "algo", itemId: r.problem_id, title: r.problem_title, score: r.score || 0, ts,
+          ok: Boolean(r.passed) || (r.total_tests > 0 && r.passed_tests === r.total_tests),
+        });
+      });
+      return events;
+    } catch (e) {
+      console.warn("Supabase getPracticeEvents error:", e);
       return null;
     }
   }

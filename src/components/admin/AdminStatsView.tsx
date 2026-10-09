@@ -2,6 +2,7 @@ import React from "react";
 import { BarChart3, TrendingUp, Users, Award, BookOpen, Flame, GraduationCap, School } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { ApiService } from "../../services/apiClient";
+import { PracticeStatsPanel } from "../PracticeStatsPanel";
 
 export const AdminStatsView: React.FC = () => {
   const { allUsers } = useApp();
@@ -163,6 +164,9 @@ export const AdminStatsView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Thống kê luyện tập của học sinh theo ngày */}
+      <PracticeStatsPanel />
     </div>
   );
 };

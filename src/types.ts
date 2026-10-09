@@ -262,6 +262,7 @@ export interface AlgorithmSubmission {
   runtimeMs: number;
   testResults: TestResultDetail[];
   timestamp: string;
+  userId?: string; // chỉ dùng cho bản lưu cục bộ (không có Supabase) để thống kê theo học sinh
 }
 
 export interface AlgorithmLeaderboardEntry {

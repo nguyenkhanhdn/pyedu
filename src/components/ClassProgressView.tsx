@@ -4,6 +4,7 @@ import { ApiService } from "../services/apiClient";
 import { User } from "../types";
 import { ProgressResetDialog } from "./ProgressResetDialog";
 import { SequentialModeToggle } from "./SequentialModeToggle";
+import { PracticeStatsPanel } from "./PracticeStatsPanel";
 import { RotateCcw, Search, Users, CheckSquare, GraduationCap } from "lucide-react";
 
 /** Màn hình giáo viên: xem tiến độ học sinh và yêu cầu làm lại bài / đưa điểm về 0. */
@@ -13,6 +14,7 @@ export const ClassProgressView: React.FC = () => {
   const [grade, setGrade] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [dialogTargets, setDialogTargets] = useState<User[] | null>(null);
+  const [view, setView] = useState<"students" | "stats">("students");
 
   const totalLessons = useMemo(() => modules.reduce((n, m) => n + m.lessons.length, 0), [modules]);
 
@@ -61,6 +63,21 @@ export const ClassProgressView: React.FC = () => {
 
         <SequentialModeToggle variant="card" />
 
+        <div className="flex gap-1.5">
+          {([["students", "Danh sách học sinh"], ["stats", "Thống kê luyện tập theo ngày"]] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setView(k)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer transition-colors ${view === k ? "bg-indigo-600 text-white shadow-sm" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {view === "stats" && <PracticeStatsPanel />}
+
+        {view === "students" && (<>
         <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -169,6 +186,7 @@ export const ClassProgressView: React.FC = () => {
             </div>
           )}
         </div>
+        </>)}
       </div>
 
       {dialogTargets && (

@@ -93,18 +93,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                   <span className="px-2 py-0.5 text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300 rounded-full flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5 text-purple-600" /> Hệ Thống Quản Trị
                   </span>
-                ) : (
-                  <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
-                    Python v3.12
-                  </span>
-                )}
+                ) : null}
                 {!isAdmin && teacherMode && (
                   <span className="px-2 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-300 rounded-full flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5" /> Chế độ giáo viên
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block">
+              <p className={`text-xs text-slate-500 whitespace-nowrap ${isAdmin ? "hidden sm:block" : "hidden"}`}>
                 {isAdmin
                   ? "Bảng điều khiển quản trị trung tâm & CSDL Supabase Direct"
                   : "Học lập trình & chấm điểm tự động"}
@@ -171,96 +167,104 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
             </nav>
           ) : (
             /* STUDENT / LEARNER HORIZONTAL NAVIGATION */
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="hidden md:flex items-center gap-0.5 whitespace-nowrap">
               <button
                 onClick={() => setActiveTab("learn")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                title="Bài học"
+                aria-label="Bài học"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === "learn"
                     ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Code className="h-4 w-4" />
-                <span>Bài học & code</span>
+                <span className="hidden xl:inline">Bài học</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("algorithms")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                title="Giải đề"
+                aria-label="Giải đề"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === "algorithms"
                     ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Target className="h-4 w-4 text-emerald-500" />
-                <span className="flex items-center gap-1.5">
-                  Giải đề (Thuật toán)
-                  <span className="px-1.5 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300">
-                    Mới
-                  </span>
-                </span>
+                <span className="hidden xl:inline">Giải đề</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("leaderboard")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                title="Xếp hạng"
+                aria-label="Xếp hạng"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === "leaderboard"
                     ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Trophy className="h-4 w-4 text-amber-500" />
-                <span>Bảng xếp hạng</span>
+                <span className="hidden xl:inline">Xếp hạng</span>
               </button>
 
               {currentUser?.role === "teacher" && (
                 <button
                   onClick={() => setActiveTab("class")}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  title="Quản lý lớp"
+                  aria-label="Quản lý lớp"
+                  className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                     activeTab === "class"
                       ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   <GraduationCap className="h-4 w-4 text-indigo-500" />
-                  <span>Quản lý lớp</span>
+                  <span className="hidden xl:inline">Quản lý lớp</span>
                 </button>
               )}
 
               <button
                 onClick={() => setActiveTab("groups")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                title="Học nhóm"
+                aria-label="Học nhóm"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === "groups"
                     ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Users className="h-4 w-4 text-blue-500" />
-                <span>Học nhóm</span>
+                <span className="hidden xl:inline">Học nhóm</span>
               </button>
 
               <button
                 onClick={() => setActiveTab("notes")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                title="Ghi chú"
+                aria-label="Ghi chú"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === "notes"
                     ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <FileText className="h-4 w-4 text-emerald-500" />
-                <span>Ghi chú</span>
+                <span className="hidden xl:inline">Ghi chú</span>
               </button>
 
               <a
                 href="/Sotay.html"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
-                title="Mở Sổ tay tra cứu lập trình Python (Sotay.html) trong tab mới"
+                className="flex items-center gap-1.5 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer"
+                title="Sổ tay: mở trong tab mới"
+                aria-label="Sổ tay"
               >
                 <BookOpen className="h-4 w-4 text-purple-600" />
-                <span>Sổ tay</span>
-                <ExternalLink className="h-3.5 w-3.5 text-slate-400 ml-0.5" />
+                <span className="hidden xl:inline">Sổ tay</span>
+                <ExternalLink className="hidden xl:block h-3.5 w-3.5 text-slate-400 ml-0.5" />
               </a>
             </nav>
           )}
@@ -270,21 +274,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
             {/* Công cụ dành riêng cho học sinh (admin và giáo viên không hiển thị chuỗi ngày, tiến độ, AI Tutor) */}
             {!isAdmin && !isTeacher && (
               <>
-                {/* Streak Counter */}
-                {currentUser && (
-                  <div
-                    onClick={() => setActiveTab("profile")}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 text-xs font-semibold cursor-pointer hover:bg-orange-100 transition-colors"
-                    title={`Chuỗi học tập liên tục: ${currentUser.streakDays} ngày. Mục tiêu hàng ngày: ${currentUser.dailyGoal} phút.`}
-                  >
-                    <Flame className="h-4 w-4 text-orange-500 fill-orange-500 animate-pulse" />
-                    <span>{currentUser.streakDays} ngày</span>
-                  </div>
-                )}
-
                 {/* Curriculum Progress */}
                 <div
-                  className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs cursor-pointer hover:border-slate-300"
+                  className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs cursor-pointer hover:border-slate-300"
                   onClick={() => setActiveTab("learn")}
                   title={`Tiến độ khóa học: ${progressPercent}%`}
                 >
@@ -308,7 +300,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                   title="Mở Trợ lý Giáo viên AI 24/7 để giải đáp thắc mắc và gợi ý code"
                 >
                   <Bot className="h-4 w-4 text-violet-600 animate-bounce" />
-                  <span className="hidden sm:inline">AI Tutor 24/7</span>
+                  <span className="hidden xl:inline whitespace-nowrap">AI Tutor</span>
                   <span className="flex h-2 w-2 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -416,7 +408,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                       alt={currentUser.fullName}
                       className="h-5 w-5 rounded-full bg-indigo-100"
                     />
-                    <span className="truncate max-w-[120px] sm:max-w-[160px]">
+                    <span className={`truncate max-w-[120px] sm:max-w-[160px] ${isAdmin ? "" : "hidden xl:inline"}`}>
                       {isAdmin ? `Admin (${currentUser.username})` : `Hi, ${currentUser.fullName}`}
                     </span>
                   </button>
@@ -425,9 +417,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                     onClick={logout}
                     className="text-rose-600 hover:text-rose-700 hover:underline font-semibold cursor-pointer flex items-center gap-1"
                     title="Đăng xuất khỏi hệ thống"
+                    aria-label="Đăng xuất"
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    <span>Đăng xuất</span>
+                    <span className={`whitespace-nowrap ${isAdmin ? "" : "hidden xl:inline"}`}>Đăng xuất</span>
                   </button>
                 </div>
               </div>

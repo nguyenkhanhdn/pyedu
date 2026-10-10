@@ -30,7 +30,9 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 
 interface LearnViewProps {
@@ -185,6 +187,21 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     setExpandedModules(prev => (prev[modId] ? {} : { [modId]: true }));
   };
 
+  // Thanh bài học bên trái có thể thu gọn/mở ra (nhớ lựa chọn; màn hình nhỏ mặc định thu gọn)
+  const [sidebarOpen, setSidebarOpenState] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("pyedu_learn_sidebar_open");
+      if (saved !== null) return saved === "true";
+    } catch {}
+    return window.innerWidth >= 1280 && window.innerHeight >= 760;
+  });
+  const setSidebarOpen = (open: boolean) => {
+    setSidebarOpenState(open);
+    try {
+      localStorage.setItem("pyedu_learn_sidebar_open", String(open));
+    } catch {}
+  };
+
   const handleSelectLesson = (lesson: Lesson) => {
     if (enforceSequentialProgression && !isLessonUnlocked(lesson.id)) {
       setLockedNoticeLesson(lesson);
@@ -288,7 +305,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
   const isCompleted = isLessonCompleted(selectedLesson.id);
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 text-slate-800">
+    <div className="flex-1 flex flex-col lg:flex-row lg:flex-none lg:h-[calc(100vh-65px)] overflow-hidden bg-slate-50 text-slate-800">
       {/* Toast alert */}
       {noteSavedToast && (
         <div className="fixed top-20 right-8 z-50 px-4 py-3 bg-emerald-600 text-white text-xs font-semibold rounded-2xl shadow-xl animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
@@ -298,7 +315,27 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
       )}
 
       {/* LEFT SIDEBAR: Curriculum Tree */}
-      <aside className="w-full lg:w-80 lg:min-w-[20rem] bg-white border-r border-slate-200 flex flex-col h-auto lg:h-full max-h-[30vh] lg:max-h-full overflow-y-auto">
+      <aside
+        className={`bg-white border-r border-slate-200 flex flex-col overflow-y-auto transition-[width] duration-200 ${
+          sidebarOpen
+            ? "w-full lg:w-80 lg:min-w-[20rem] h-auto lg:h-full max-h-[30vh] lg:max-h-full"
+            : "w-full lg:w-12 lg:min-w-[3rem] h-auto lg:h-full"
+        }`}
+      >
+        {!sidebarOpen ? (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex lg:flex-col items-center justify-center gap-2 px-4 py-2 lg:px-0 lg:py-4 text-indigo-700 hover:bg-indigo-50 cursor-pointer transition-colors w-full lg:h-full lg:justify-start"
+            title="Mở danh sách bài học"
+            aria-label="Mở danh sách bài học"
+            aria-expanded="false"
+          >
+            <PanelLeftOpen className="h-5 w-5 shrink-0" />
+            <BookOpen className="h-4 w-4 shrink-0 text-slate-400" />
+            <span className="text-xs font-semibold lg:[writing-mode:vertical-rl] lg:mt-1 whitespace-nowrap">Lộ trình bài học</span>
+          </button>
+        ) : (
+          <>
         <div className="p-4 border-b border-slate-200 bg-white/95 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-sm text-slate-800 flex items-center gap-2">
@@ -310,6 +347,15 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 Teacher
               </span>
             )}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-indigo-700 hover:bg-indigo-50 cursor-pointer transition-colors"
+              title="Thu gọn danh sách bài học để có thêm chỗ làm bài"
+              aria-label="Thu gọn danh sách bài học"
+              aria-expanded="true"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
           </div>
           <p className="text-xs text-slate-500 mt-1">Pass bài thực hành để mở khóa bài tiếp theo</p>
 
@@ -349,7 +395,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     return (
                       <button
                         key={lesson.id}
-                        onClick={() => handleSelectLesson(lesson)}
+                        onClick={() => {
+                          handleSelectLesson(lesson);
+                          if (window.innerWidth < 1024) setSidebarOpenState(false); // màn hình hẹp: chọn bài xong thì thu gọn để có chỗ làm bài
+                        }}
                         className={`w-full p-2.5 rounded-xl text-left transition-all flex items-center justify-between group cursor-pointer ${
                           isSelected
                             ? "bg-indigo-50 border border-indigo-200 text-indigo-950 font-semibold shadow-xs"
@@ -395,6 +444,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             </div>
           ))}
         </div>
+          </>
+        )}
       </aside>
 
       {/* RIGHT MAIN AREA: Dual Pane (Theory & Visuals OR Code Compiler & Auto-Grader) */}

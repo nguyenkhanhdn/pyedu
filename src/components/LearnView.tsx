@@ -891,9 +891,9 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             </div>
           ) : (
             /* ================= PANE 2: INTEGRATED COMPILER & AUTOMATED GRADER ================= */
-            <div className="flex flex-col xl:flex-row h-full min-h-[500px]">
+            <div className="flex flex-col xl:flex-row xl:h-full xl:min-h-[500px]">
               {/* Problem Description Column */}
-              <div className="w-full xl:w-2/5 p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-200 overflow-y-auto space-y-4 bg-white">
+              <div className="w-full xl:w-2/5 shrink-0 xl:shrink p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-200 xl:overflow-y-auto space-y-4 bg-white">
                 {/* Multi-practice exercise selector if lesson has multiple practices */}
                 {availablePractices.length > 1 && (
                   <div className="space-y-1.5 pb-2 border-b border-slate-200">
@@ -1076,7 +1076,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
               </div>
 
               {/* Code Editor & Auto-Grader Terminal Column */}
-              <div className="w-full xl:w-3/5 flex flex-col h-full bg-slate-900">
+              <div className="w-full xl:w-3/5 shrink-0 xl:shrink flex flex-col min-h-[34rem] xl:min-h-0 xl:h-full bg-slate-900">
                 {/* Editor Header Toolbar */}
                 <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-2">

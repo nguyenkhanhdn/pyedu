@@ -1,6 +1,6 @@
 import { RichInline, RichText } from "./RichText";
 import { CodeEditor } from "./CodeEditor";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { Lesson, TestCase, SubmissionResult } from "../types";
 import { PythonRunner } from "../utils/pythonRunner";
@@ -32,7 +32,9 @@ import {
   AlertTriangle,
   ExternalLink,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 
 interface LearnViewProps {
@@ -69,6 +71,22 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
   // Active Main Pane: 'theory' or 'practice'
   const [activePane, setActivePane] = useState<'theory' | 'practice'>('theory');
+  const [isEditorExpanded, setIsEditorExpanded] = useState(false);
+  const editorPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsEditorExpanded(false);
+  }, [selectedLesson.id, activePane]);
+
+  useEffect(() => {
+    if (!isEditorExpanded) return;
+    editorPanelRef.current?.scrollIntoView({ block: "start" });
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsEditorExpanded(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isEditorExpanded]);
 
   // Modal cảnh báo khi bấm vào bài học bị khóa
   const [lockedNoticeLesson, setLockedNoticeLesson] = useState<Lesson | null>(null);
@@ -893,7 +911,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
             /* ================= PANE 2: INTEGRATED COMPILER & AUTOMATED GRADER ================= */
             <div className="flex flex-col xl:flex-row xl:h-full xl:min-h-[500px]">
               {/* Problem Description Column */}
-              <div className="w-full xl:w-2/5 shrink-0 xl:shrink p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-200 xl:overflow-y-auto space-y-4 bg-white">
+              <div className={`${isEditorExpanded ? "hidden" : "w-full xl:w-2/5"} shrink-0 xl:shrink p-4 sm:p-5 border-b xl:border-b-0 xl:border-r border-slate-200 xl:overflow-y-auto space-y-4 bg-white`}>
                 {/* Multi-practice exercise selector if lesson has multiple practices */}
                 {availablePractices.length > 1 && (
                   <div className="space-y-1.5 pb-2 border-b border-slate-200">
@@ -1076,15 +1094,33 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
               </div>
 
               {/* Code Editor & Auto-Grader Terminal Column */}
-              <div className="w-full xl:w-3/5 shrink-0 xl:shrink flex flex-col min-h-[34rem] xl:min-h-0 xl:h-full bg-slate-900">
+              <div
+                ref={editorPanelRef}
+                id="lesson-code-panel"
+                className={`w-full flex flex-col bg-slate-900 ${isEditorExpanded
+                  ? "shrink-0 min-h-[40rem] h-[85dvh]"
+                  : "xl:w-3/5 shrink-0 xl:shrink min-h-[34rem] xl:min-h-0 xl:h-full"}`}
+              >
                 {/* Editor Header Toolbar */}
-                <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                <div className="px-4 py-2 shrink-0 bg-slate-900 border-b border-slate-800 flex flex-wrap gap-2 items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Terminal className="h-4 w-4 text-emerald-400" />
                     <span className="text-xs font-mono font-semibold text-slate-300">main.py</span>
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditorExpanded((expanded) => !expanded)}
+                      aria-expanded={isEditorExpanded}
+                      aria-controls="lesson-code-panel"
+                      aria-label={isEditorExpanded ? "Thu gọn khung viết code" : "Mở rộng khung viết code"}
+                      title={isEditorExpanded ? "Thu gọn khung viết code (Esc)" : "Mở rộng khung viết code"}
+                      className="px-2 py-1 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 flex items-center gap-1 text-xs font-medium cursor-pointer focus-visible:outline-2 focus-visible:outline-indigo-400"
+                    >
+                      {isEditorExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                      <span>{isEditorExpanded ? "Thu gọn" : "Mở rộng"}</span>
+                    </button>
                     <a
                       href="/Sotay.html"
                       target="_blank"
@@ -1127,7 +1163,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
                 {/* Optional Custom Stdin Input Box */}
                 {showCustomInput && (
-                  <div className="p-3 bg-slate-850 border-b border-slate-800 animate-in fade-in">
+                  <div className="p-3 shrink-0 bg-slate-850 border-b border-slate-800 animate-in fade-in">
                     <label className="block text-xs font-semibold text-slate-300 mb-1">
                       Dữ liệu đầu vào tiêu chuẩn (Custom Stdin cho lệnh input()):
                     </label>
@@ -1147,7 +1183,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 </div>
 
                 {/* Editor Action Buttons */}
-                <div className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3">
+                <div className="p-3 shrink-0 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     {executionTime !== null && (
                       <span className="text-xs text-slate-400 font-mono">
@@ -1180,7 +1216,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                 </div>
 
                 {/* OUTPUT TERMINAL & AUTO-GRADING REPORT */}
-                <div className="h-48 sm:h-56 bg-slate-950 border-t border-slate-800 flex flex-col">
+                <div className="h-48 sm:h-56 shrink-0 bg-slate-950 border-t border-slate-800 flex flex-col">
                   {/* Terminal Header */}
                   <div className="px-4 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between text-xs font-semibold">
                     <span className="text-slate-400 flex items-center gap-2">

@@ -71,6 +71,7 @@ export interface LessonTheory {
 }
 
 export interface LessonPractice {
+  sampleSolution?: string;
   id?: string;
   title: string;
   difficulty: 'Cơ bản' | 'Trung bình' | 'Nâng cao';

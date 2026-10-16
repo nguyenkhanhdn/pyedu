@@ -1,5 +1,6 @@
 import { RichInline, RichText } from "./RichText";
 import { CodeEditor } from "./CodeEditor";
+import { SampleSolutionPanel } from "./SampleSolutionPanel";
 import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { Lesson, TestCase, SubmissionResult } from "../types";
@@ -52,6 +53,7 @@ const renderFormattedText = (text: string) => <RichInline text={text} />;
 
 export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => {
   const {
+    isOpeningSampleSolution,
     modules,
     selectedLesson,
     setSelectedLesson,
@@ -231,6 +233,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
   // Run Code manually against custom input / sample input
   const handleRunCode = async () => {
+    if (isOpeningSampleSolution) return;
     setIsRunning(true);
     setConsoleError("");
     setConsoleOutput("Đang biên dịch và thực thi Python...");
@@ -249,6 +252,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
   // Submit and automated grade against all test cases
   const handleGradeCode = async () => {
+    if (isOpeningSampleSolution) return;
     setIsGrading(true);
     setConsoleError("");
     setUserCodeForLesson(practiceStorageKey, editorCode);
@@ -978,7 +982,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   </div>
 
                   <span className="text-xs px-2.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
-                    Bài tập không lời giải
+                    Bài mẫu có trừ điểm
                   </span>
                 </div>
 
@@ -1091,6 +1095,13 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     </div>
                   )}
                 </div>
+                <SampleSolutionPanel
+                  key={`${currentUser?.id}:${practiceStorageKey}`}
+                  target={{ kind: "lesson", lessonId: selectedLesson.id, practiceIndex: activePracticeIndex }}
+                  reward={selectedLesson.xpReward}
+                  code={currentPractice.sampleSolution}
+                  disabled={isRunning || isGrading}
+                />
               </div>
 
               {/* Code Editor & Auto-Grader Terminal Column */}
@@ -1196,7 +1207,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     {/* Run Code Button */}
                     <button
                       onClick={handleRunCode}
-                      disabled={isRunning || isGrading}
+                      disabled={isRunning || isGrading || isOpeningSampleSolution}
                       className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-700 disabled:opacity-50 cursor-pointer"
                     >
                       <Play className="h-3.5 w-3.5 text-emerald-400" />
@@ -1206,7 +1217,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     {/* Submit & Auto-Grade Button */}
                     <button
                       onClick={handleGradeCode}
-                      disabled={isRunning || isGrading}
+                      disabled={isRunning || isGrading || isOpeningSampleSolution}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       <Award className="h-4 w-4" />

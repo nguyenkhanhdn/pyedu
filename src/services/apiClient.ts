@@ -3,6 +3,7 @@ import { lessonCodeKeys } from "../utils/progressReset";
 import type { PracticeEvent } from "../utils/practiceStats";
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
+import { chargeSampleSolution } from "../utils/sampleSolution";
 
 // Chỉ 2 tài khoản hệ thống được phép tồn tại cục bộ ngoài Supabase
 const CORE_ACCOUNT_IDENTIFIERS = ["admin", "admin@pyedu.edu.vn", "khanh_it", "khanhdsp@gmail.com"];
@@ -624,6 +625,23 @@ export class LocalDataManager {
 
 // API Service with 100% Direct Supabase Connection
 export const ApiService = {
+  async chargeSampleSolution(userId: string, reward: number) {
+    const result = SupabaseService.isAvailable()
+      ? await SupabaseService.chargeSampleSolution(userId, reward)
+      : await chargeSampleSolution(reward, async () => LocalDataManager.getUserById(userId), async (before, after) => {
+          const latest = LocalDataManager.getUserById(userId);
+          if (!latest || latest.role !== before.role || latest.status !== before.status || latest.totalXp !== before.totalXp || latest.weeklyXp !== before.weeklyXp) return false;
+          LocalDataManager.updateUser(userId, after);
+          const saved = LocalDataManager.getUserById(userId);
+          if (!saved || saved.totalXp !== after.totalXp || saved.weeklyXp !== after.weeklyXp) throw new Error("Không lưu được điểm. Chưa mở bài mẫu.");
+          return true;
+        });
+    // Cache only after the durable update succeeds. A cache failure must not
+    // turn a completed payment into a second charge on retry.
+    try { LocalDataManager.updateUser(userId, result.user); } catch {}
+    return result;
+  },
+
   async fetchUsers(): Promise<User[]> {
     const deletedSet = LocalDataManager.getDeletedIdentifiers();
 
@@ -1145,7 +1163,10 @@ export const ApiService = {
       try {
         const suProblems = await SupabaseService.getAlgorithmProblems();
         if (suProblems && suProblems.length > 0) {
-          return suProblems;
+          return suProblems.map(problem => ({
+            ...problem,
+            sampleSolution: problem.sampleSolution || ALGORITHM_PROBLEMS.find(p => p.id === problem.id)?.sampleSolution,
+          }));
         }
       } catch {}
     }

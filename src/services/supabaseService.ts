@@ -14,8 +14,28 @@ import {
 } from "../types";
 import type { PracticeEvent } from "../utils/practiceStats";
 import { lessonCodeKeys } from "../utils/progressReset";
+import { chargeSampleSolution } from "../utils/sampleSolution";
 
 export class SupabaseService {
+  public static async chargeSampleSolution(userId: string, reward: number) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Không kết nối được hệ thống điểm. Chưa mở bài mẫu.");
+    return chargeSampleSolution(reward, () => this.getUserById(userId), async (before, after) => {
+      const { data, error } = await supabase.from("users")
+        .update({ total_xp: after.totalXp, weekly_xp: after.weeklyXp })
+        .eq("id", userId)
+        .eq("role", "student")
+        .eq("status", before.status || "active")
+        .eq("total_xp", before.totalXp)
+        .eq("weekly_xp", before.weeklyXp)
+        .select("id")
+        .maybeSingle();
+      // Never fall back to local points or retry an ambiguous network failure.
+      if (error) throw new Error("Không xác nhận được giao dịch điểm. Hãy kiểm tra lại điểm trước khi thử lại.");
+      return !!data;
+    });
+  }
+
   /**
    * Check if Supabase client is available and active
    */

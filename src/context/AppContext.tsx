@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import type { SampleSolutionTarget } from "../utils/sampleSolution";
 import {
   User,
   Lesson,
@@ -29,6 +30,8 @@ import { computeXpLoss, describeScope } from "../utils/progressReset";
 import confetti from "canvas-confetti";
 
 interface AppContextType {
+  openSampleSolution: (target: SampleSolutionTarget) => Promise<number>;
+  isOpeningSampleSolution: boolean;
   currentUser: User | null;
   allUsers: User[];
   login: (usernameOrEmail: string, password?: string, options?: { impersonate?: boolean }) => Promise<boolean>;
@@ -129,6 +132,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const sampleSolutionPending = useRef(false);
+  const [isOpeningSampleSolution, setIsOpeningSampleSolution] = useState(false);
   // 1. User State - initialized from local storage or null to require login
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("pyedu_current_user");
@@ -596,6 +601,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           linkTab: "algorithms"
         });
       }
+    }
+  };
+
+  const openSampleSolution = async (target: SampleSolutionTarget): Promise<number> => {
+    if (!currentUser) throw new Error("Vui lòng đăng nhập để xem bài mẫu.");
+    if (sampleSolutionPending.current) throw new Error("Đang xử lý yêu cầu xem bài mẫu.");
+    let reward: number;
+    let solution: string | undefined;
+    if (target.kind === "lesson") {
+      const lesson = CURRICULUM_MODULES.flatMap(m => m.lessons).find(l => l.id === target.lessonId);
+      const practice = (lesson?.practices?.length ? lesson.practices : lesson ? [lesson.practice] : [])[target.practiceIndex];
+      if (!lesson || !practice || !isLessonUnlocked(lesson.id)) throw new Error("Bài học chưa được mở khóa.");
+      reward = lesson.xpReward;
+      solution = practice.sampleSolution;
+    } else {
+      const problem = algorithmProblems.find(p => p.id === target.problemId);
+      if (!problem) throw new Error("Không tìm thấy đề bài.");
+      reward = problem.points;
+      solution = problem.sampleSolution;
+    }
+    if (!solution?.trim()) throw new Error("Bài này chưa có bài mẫu. Bạn không bị trừ điểm.");
+    sampleSolutionPending.current = true;
+    setIsOpeningSampleSolution(true);
+    try {
+      const { user, penalty } = await ApiService.chargeSampleSolution(currentUser.id, reward);
+      setCurrentUser(prev => prev?.id === user.id ? { ...prev, totalXp: user.totalXp, weeklyXp: user.weeklyXp } : prev);
+      setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u, totalXp: user.totalXp, weeklyXp: user.weeklyXp } : u));
+      return penalty;
+    } finally {
+      sampleSolutionPending.current = false;
+      setIsOpeningSampleSolution(false);
     }
   };
 
@@ -1320,6 +1356,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider
       value={{
         currentUser,
+        openSampleSolution,
+        isOpeningSampleSolution,
         allUsers,
         login,
         register,

@@ -3,7 +3,7 @@ import { useApp } from "../context/AppContext";
 import { AlgorithmProblem, AlgorithmLevel, AlgorithmSubmission } from "../types";
 import { PythonRunner } from "../utils/pythonRunner";
 import { RichInline, RichText } from "./RichText";
-import { CodeBlock } from "./CodeBlock";
+import { SampleSolutionPanel } from "./SampleSolutionPanel";
 import { CodeEditor } from "./CodeEditor";
 import { AlgoTree, AlgoNodeStat } from "./AlgoTree";
 import { ALGO_TREE, AlgoNode, classifyProblem, flattenLeaves, nodePath } from "../data/problems/algoTree";
@@ -53,6 +53,7 @@ interface AlgorithmViewProps {
 
 export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContext }) => {
   const {
+    isOpeningSampleSolution,
     algorithmProblems = [],
     algorithmSubmissions = [],
     solvedProblemIds = [],
@@ -139,6 +140,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Run with sample tests or custom input
   const handleRunSample = async () => {
+    if (isOpeningSampleSolution) return;
     if (!selectedProblem) return;
     setIsRunningSample(true);
     setRunResult(null);
@@ -165,6 +167,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Submit and grade all test cases
   const handleSubmitAndGrade = async () => {
+    if (isOpeningSampleSolution) return;
     if (!selectedProblem) return;
     setIsSubmitting(true);
     setSubmissionOutcome(null);
@@ -295,11 +298,6 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
   // Bài nên làm tiếp theo: bài chưa giải đầu tiên theo lộ trình
   const nextProblem = [...algorithmProblems].sort(byPath).find(p => !solvedProblemIds.includes(p.id));
-
-  // Bài mẫu: mở khi đã giải được, đã thử ít nhất 3 lần, hoặc là giáo viên / quản trị
-  const attemptsOfSelected = selectedProblem ? algorithmSubmissions.filter(s => s.problemId === selectedProblem.id).length : 0;
-  const isPrivileged = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
-  const canViewSolution = !!selectedProblem && (solvedProblemIds.includes(selectedProblem.id) || attemptsOfSelected >= 3 || isPrivileged);
 
   const toggleNode = (id: string) => setExpanded({ ...expandedNodes, [id]: !expandedNodes[id] });
   const expandAllNodes = (open: boolean) => {
@@ -724,7 +722,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                         workspaceTab === 'solution' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      {canViewSolution ? <Unlock className="h-3 w-3 text-emerald-600" /> : <Lock className="h-3 w-3 text-slate-400" />}
+                      <BookOpen className="h-3 w-3 text-amber-600" />
                       Bài mẫu
                     </button>
                   </div>
@@ -957,50 +955,15 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   )}
 
                   {workspaceTab === 'solution' && (
-                    <div className="space-y-4 text-xs">
-                      {canViewSolution ? (
-                        <>
-                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center gap-2">
-                            <Unlock className="h-4 w-4 text-emerald-600" />
-                            <span>Bài mẫu đã kiểm thử đạt <strong>100% test</strong>. Hãy đọc hiểu rồi tự viết lại bằng cách của mình.</span>
-                          </div>
-                          {selectedProblem.solutionExplanation && (
-                            <div className="p-4 bg-white border border-slate-200 rounded-2xl space-y-1">
-                              <div className="font-bold text-slate-800 text-sm">Ý tưởng</div>
-                              <RichText className="text-slate-700" text={selectedProblem.solutionExplanation} />
-                            </div>
-                          )}
-                          {selectedProblem.sampleSolution ? (
-                            <CodeBlock code={selectedProblem.sampleSolution} title="bai_mau.py" />
-                          ) : (
-                            <p className="text-slate-500">Bài này chưa có bài mẫu.</p>
-                          )}
-                          {selectedProblem.sampleSolution && (
-                            <button
-                              onClick={() => { setUserCode(selectedProblem.sampleSolution || ''); }}
-                              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-semibold cursor-pointer"
-                            >
-                              Nạp bài mẫu vào trình soạn thảo để chạy thử
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <div className="p-6 text-center bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                          <Lock className="h-8 w-8 text-slate-400 mx-auto" />
-                          <h4 className="font-bold text-slate-800 text-sm">Bài mẫu đang khóa</h4>
-                          <p className="text-slate-600 leading-relaxed">
-                            Bài mẫu mở sau khi bạn <strong>giải đúng</strong> hoặc đã <strong>nộp thử 3 lần</strong>.
-                            <br />Hiện bạn đã nộp <strong>{attemptsOfSelected}/3</strong> lần.
-                          </p>
-                          <button
-                            onClick={() => setWorkspaceTab('hints')}
-                            className="px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 font-bold cursor-pointer"
-                          >
-                            Xem gợi ý trước
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <SampleSolutionPanel
+                      key={`${currentUser?.id}:${selectedProblem.id}`}
+                      target={{ kind: "algorithm", problemId: selectedProblem.id }}
+                      reward={selectedProblem.points}
+                      code={selectedProblem.sampleSolution}
+                      explanation={selectedProblem.solutionExplanation}
+                      disabled={isRunningSample || isSubmitting}
+                      onLoadCode={setUserCode}
+                    />
                   )}
                 </div>
               </div>
@@ -1069,7 +1032,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <button
                       onClick={handleRunSample}
-                      disabled={isRunningSample || isSubmitting}
+                      disabled={isRunningSample || isSubmitting || isOpeningSampleSolution}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                     >
                       <Play className="h-4 w-4 text-emerald-400" />
@@ -1078,7 +1041,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
                     <button
                       onClick={handleSubmitAndGrade}
-                      disabled={isSubmitting || isRunningSample}
+                      disabled={isSubmitting || isRunningSample || isOpeningSampleSolution}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-600/30"
                     >
                       <Send className="h-4 w-4" />

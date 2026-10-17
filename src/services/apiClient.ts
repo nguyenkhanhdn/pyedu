@@ -1,6 +1,6 @@
 import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry, ResetScope } from "../types";
 import { lessonCodeKeys } from "../utils/progressReset";
-import type { PracticeEvent } from "../utils/practiceStats";
+import { PracticeEvent, parseActivityTime } from "../utils/practiceStats";
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
 import { chargeSampleSolution } from "../utils/sampleSolution";
@@ -428,10 +428,10 @@ export class LocalDataManager {
     const events: PracticeEvent[] = [];
     this.getUsers().forEach(u => {
       this.getSubmissions(u.id).forEach(s => {
-        const ts = Date.parse(s.timestamp);
+        const ts = parseActivityTime(s.timestamp);
         if (Number.isNaN(ts) || ts < sinceMs) return;
         events.push({
-          userId: u.id, kind: "lesson", itemId: s.lessonId, score: s.score || 0, ts,
+          userId: u.id, kind: "lesson", itemId: s.practiceKey || s.lessonId, score: s.score || 0, ts,
           ok: Boolean(s.passed) || (s.totalTests > 0 && s.passedTests === s.totalTests),
         });
       });
@@ -440,7 +440,7 @@ export class LocalDataManager {
       const raw = localStorage.getItem(this.STORAGE_KEY_ALGO_SUBS);
       const all: AlgorithmSubmission[] = raw ? JSON.parse(raw) : [];
       all.forEach(s => {
-        const ts = Date.parse(s.timestamp);
+        const ts = parseActivityTime(s.timestamp);
         if (!s.userId || Number.isNaN(ts) || ts < sinceMs) return;
         events.push({
           userId: s.userId, kind: "algo", itemId: s.problemId, title: s.problemTitle, score: s.score || 0, ts,
@@ -488,7 +488,7 @@ export class LocalDataManager {
     }
   }
 
-  public static recordSubmission(userId: string, sub: SubmissionResult & { xpEarned?: number }): User | null {
+  public static recordSubmission(userId: string, sub: SubmissionResult & { xpEarned?: number; completesLesson?: boolean }): User | null {
     try {
       const subs = this.getSubmissions(userId);
       subs.unshift(sub);
@@ -502,7 +502,7 @@ export class LocalDataManager {
       let newXp = user.totalXp;
       let newWeeklyXp = user.weeklyXp;
 
-      if (sub.passed && !completedLessons.includes(sub.lessonId)) {
+      if ((sub.completesLesson ?? sub.passed) && !completedLessons.includes(sub.lessonId)) {
         completedLessons.push(sub.lessonId);
         newXp += (sub.xpEarned || 50);
         newWeeklyXp += (sub.xpEarned || 50);
@@ -1056,9 +1056,19 @@ export const ApiService = {
     start.setDate(start.getDate() - (days - 1));
     if (SupabaseService.isAvailable()) {
       const remote = await SupabaseService.getPracticeEvents(start.toISOString());
-      if (remote) return remote;
+      return remote;
     }
     return LocalDataManager.getPracticeEvents(start.getTime());
+  },
+
+  async fetchStudentHistory(studentId: string, viewer: User) {
+    if (!viewer || !["teacher", "admin"].includes(viewer.role) || (viewer.status && viewer.status !== "active")) throw new Error("Chỉ giáo viên và quản trị viên được xem lịch sử học sinh.");
+    return SupabaseService.getStudentActivities(studentId);
+  },
+
+  async fetchStudentSubmissionDetail(studentId: string, kind: "lesson" | "algo", id: string, viewer: User) {
+    if (!viewer || !["teacher", "admin"].includes(viewer.role) || (viewer.status && viewer.status !== "active")) throw new Error("Bạn không có quyền xem chi tiết bài nộp.");
+    return SupabaseService.getSubmissionDetail(studentId, kind, id);
   },
 
   async adminUpdateUser(userId: string, updates: Partial<User> & { password?: string }): Promise<User | null> {
@@ -1126,9 +1136,17 @@ export const ApiService = {
     runtimeMs: number;
     testResults: any[];
     xpReward: number;
+    id?: string;
+    code?: string;
+    practiceKey?: string;
+    timestamp?: string;
+    completesLesson?: boolean;
   }): Promise<User | null> {
     if (SupabaseService.isAvailable()) {
-      await SupabaseService.recordSubmission(userId, {
+      const saved = await SupabaseService.recordSubmission(userId, {
+        id: payload.id,
+        code: payload.code,
+        practiceKey: payload.practiceKey,
         lessonId: payload.lessonId,
         passed: payload.passed,
         score: payload.score,
@@ -1136,16 +1154,24 @@ export const ApiService = {
         passedTests: payload.passedTests,
         runtimeMs: payload.runtimeMs,
         testResults: payload.testResults,
-        timestamp: new Date().toISOString(),
-      });
+        timestamp: payload.timestamp || new Date().toISOString(),
+      }, payload.completesLesson ?? payload.passed);
+      if (!saved) throw new Error("Bài đã chấm nhưng chưa đồng bộ được. Vui lòng nộp lại khi có mạng.");
       const user = await SupabaseService.getUserById(userId);
       if (user) {
         LocalDataManager.updateUser(userId, user);
         return user;
       }
+      // The submission is already stored remotely; do not create another
+      // offline submission merely because the profile refresh failed.
+      return null;
     }
 
     return LocalDataManager.recordSubmission(userId, {
+      id: payload.id,
+      code: payload.code,
+      practiceKey: payload.practiceKey,
+      completesLesson: payload.completesLesson,
       lessonId: payload.lessonId,
       passed: payload.passed,
       score: payload.score,
@@ -1174,10 +1200,11 @@ export const ApiService = {
   },
 
   async recordAlgorithmSubmission(userId: string, submission: AlgorithmSubmission): Promise<void> {
-    LocalDataManager.saveAlgorithmSubmission({ ...submission, userId });
     if (SupabaseService.isAvailable()) {
-      await SupabaseService.saveAlgorithmSubmission(userId, submission);
+      const saved = await SupabaseService.saveAlgorithmSubmission(userId, submission);
+      if (!saved) throw new Error("Bài đã chấm nhưng chưa đồng bộ được. Vui lòng nộp lại khi có mạng.");
     }
+    LocalDataManager.saveAlgorithmSubmission({ ...submission, userId });
   },
 
   async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {

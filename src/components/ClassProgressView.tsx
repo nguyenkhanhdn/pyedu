@@ -1,20 +1,31 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { ApiService } from "../services/apiClient";
 import { User } from "../types";
 import { ProgressResetDialog } from "./ProgressResetDialog";
 import { SequentialModeToggle } from "./SequentialModeToggle";
+import { StudentHistoryPanel } from "./StudentHistoryPanel";
 import { PracticeStatsPanel } from "./PracticeStatsPanel";
 import { RotateCcw, Search, Users, CheckSquare, GraduationCap } from "lucide-react";
 
 /** Màn hình giáo viên: xem tiến độ học sinh và yêu cầu làm lại bài / đưa điểm về 0. */
 export const ClassProgressView: React.FC = () => {
-  const { allUsers, modules, currentUser } = useApp();
+  const { allUsers, modules, currentUser, refreshUsers } = useApp();
+  const [historyStudent, setHistoryStudent] = useState<User | null>(null);
   const [query, setQuery] = useState("");
   const [grade, setGrade] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [dialogTargets, setDialogTargets] = useState<User[] | null>(null);
   const [view, setView] = useState<"students" | "stats">("students");
+
+  useEffect(() => {
+    if (view !== "students") return;
+    const refresh = () => { if (document.visibilityState === "visible") void refreshUsers(); };
+    refresh();
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, [view]);
 
   const totalLessons = useMemo(() => modules.reduce((n, m) => n + m.lessons.length, 0), [modules]);
 
@@ -123,6 +134,8 @@ export const ClassProgressView: React.FC = () => {
           )}
         </div>
 
+        {historyStudent && <StudentHistoryPanel key={historyStudent.id} student={historyStudent} onClose={() => setHistoryStudent(null)} />}
+
         <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
           {visible.length === 0 ? (
             <div className="p-10 text-center text-sm text-slate-500">
@@ -170,6 +183,7 @@ export const ClassProgressView: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-amber-600">{s.totalXp}</td>
                         <td className="px-4 py-3 text-right">
+                          <button type="button" onClick={() => setHistoryStudent(s)} aria-expanded={historyStudent?.id === s.id} className="inline-flex items-center px-2.5 py-1.5 mr-2 mb-1 text-xs font-bold text-indigo-700 bg-indigo-50 rounded-lg">Lịch sử học & nộp bài</button>
                           <button
                             onClick={() => setDialogTargets([s])}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer"

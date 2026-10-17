@@ -12,7 +12,7 @@ import {
   AlgorithmLeaderboardEntry,
   ResetScope,
 } from "../types";
-import type { PracticeEvent } from "../utils/practiceStats";
+import { PracticeEvent, StudentActivity, submissionActivity, newestActivities } from "../utils/practiceStats";
 import { lessonCodeKeys } from "../utils/progressReset";
 import { chargeSampleSolution } from "../utils/sampleSolution";
 
@@ -493,6 +493,9 @@ export class SupabaseService {
 
       const submissions: SubmissionResult[] = subRows
         ? subRows.map((s: any) => ({
+            id: s.id,
+            code: s.code,
+            practiceKey: s.practice_key,
             lessonId: s.lesson_id,
             passed: s.passed,
             score: s.score,
@@ -584,17 +587,20 @@ export class SupabaseService {
 
   public static async recordSubmission(
     userId: string,
-    submission: SubmissionResult
+    submission: SubmissionResult,
+    completesLesson = submission.passed
   ): Promise<boolean> {
     const supabase = getSupabase();
     if (!supabase) return false;
 
     try {
-      const subId = `sub-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-      await supabase.from("submissions").insert({
+      const subId = submission.id || `sub-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      const { error } = await supabase.from("submissions").upsert({
         id: subId,
         user_id: userId,
         lesson_id: submission.lessonId,
+        practice_key: submission.practiceKey || submission.lessonId,
+        code: submission.code ?? null,
         passed: submission.passed,
         score: submission.score,
         total_tests: submission.totalTests,
@@ -602,16 +608,18 @@ export class SupabaseService {
         runtime_ms: submission.runtimeMs,
         test_results: submission.testResults,
         timestamp: submission.timestamp || new Date().toISOString(),
-      });
+      }, { onConflict: "id" });
+      if (error) return false;
 
-      if (submission.passed) {
-        await supabase.from("user_progress").upsert({
+      if (completesLesson) {
+        const { error: progressError } = await supabase.from("user_progress").upsert({
           user_id: userId,
           lesson_id: submission.lessonId,
           completed: true,
           score: submission.score,
           completed_at: new Date().toISOString(),
         }, { onConflict: "user_id,lesson_id" });
+        if (progressError) return false;
       }
 
       return true;
@@ -730,57 +738,66 @@ export class SupabaseService {
 
   // ===================== PRACTICE STATS (thống kê luyện tập) =====================
 
-  /** Các lượt nộp bài (bài học + luyện đề thuật toán) của mọi học sinh kể từ `sinceIso`. */
-  public static async getPracticeEvents(sinceIso: string): Promise<PracticeEvent[] | null> {
-    const supabase = getSupabase();
-    if (!supabase) return null;
-    const PAGE = 1000;
-    const MAX_PAGES = 30;
-
-    const fetchAll = async (table: string, columns: string): Promise<any[] | null> => {
-      const rows: any[] = [];
-      for (let page = 0; page < MAX_PAGES; page++) {
-        const { data, error } = await supabase
-          .from(table)
-          .select(columns)
-          .gte("timestamp", sinceIso)
-          .order("timestamp", { ascending: false })
-          .range(page * PAGE, page * PAGE + PAGE - 1);
-        if (error || !data) return page === 0 ? null : rows;
-        rows.push(...data);
-        if (data.length < PAGE) break;
-      }
-      return rows;
-    };
-
-    try {
-      const [lessons, algos] = await Promise.all([
-        fetchAll("submissions", "user_id,lesson_id,passed,score,total_tests,passed_tests,timestamp"),
-        fetchAll("algorithm_submissions", "user_id,problem_id,problem_title,passed,score,total_tests,passed_tests,timestamp"),
-      ]);
-      if (!lessons && !algos) return null;
-      const events: PracticeEvent[] = [];
-      (lessons || []).forEach((r: any) => {
-        const ts = Date.parse(r.timestamp);
-        if (!r.user_id || Number.isNaN(ts)) return;
-        events.push({
-          userId: r.user_id, kind: "lesson", itemId: r.lesson_id, score: r.score || 0, ts,
-          ok: Boolean(r.passed) || (r.total_tests > 0 && r.passed_tests === r.total_tests),
-        });
-      });
-      (algos || []).forEach((r: any) => {
-        const ts = Date.parse(r.timestamp);
-        if (!r.user_id || Number.isNaN(ts)) return;
-        events.push({
-          userId: r.user_id, kind: "algo", itemId: r.problem_id, title: r.problem_title, score: r.score || 0, ts,
-          ok: Boolean(r.passed) || (r.total_tests > 0 && r.passed_tests === r.total_tests),
-        });
-      });
-      return events;
-    } catch (e) {
-      console.warn("Supabase getPracticeEvents error:", e);
-      return null;
+  /** Stable pagination: do not treat a failed page as a successful partial result. */
+  private static async readActivityRows(table: string, columns: string, sinceIso?: string, userId?: string): Promise<any[]> {
+    const client = getSupabase();
+    if (!client) throw new Error("Không kết nối được dữ liệu bài nộp.");
+    const rows: any[] = [];
+    let total = Infinity;
+    while (rows.length < total) {
+      let query = client.from(table).select(columns, { count: "exact" });
+      if (sinceIso) query = query.gte("timestamp", sinceIso);
+      if (userId) query = query.eq("user_id", userId);
+      const { data, error, count } = await query.order("timestamp", { ascending: false })
+        .order("id", { ascending: false }).range(rows.length, rows.length + 499);
+      if (error || !data) throw new Error(`Không tải được dữ liệu ${table}. Vui lòng tải lại.`);
+      if (count !== null) total = count;
+      if (!data.length) break;
+      rows.push(...data);
     }
+    return rows;
+  }
+
+  public static async getPracticeEvents(sinceIso: string): Promise<PracticeEvent[]> {
+    const columns = "id,user_id,passed,score,total_tests,passed_tests,runtime_ms,timestamp";
+    const [lessons, algos] = await Promise.all([
+      this.readActivityRows("submissions", `${columns},lesson_id,practice_key`, sinceIso),
+      this.readActivityRows("algorithm_submissions", `${columns},problem_id,problem_title`, sinceIso),
+    ]);
+    return newestActivities([
+      ...lessons.map(row => submissionActivity(row, "lesson")),
+      ...algos.map(row => submissionActivity(row, "algo")),
+    ].filter((event): event is StudentActivity => event !== null));
+  }
+
+  public static async getStudentActivities(userId: string): Promise<StudentActivity[]> {
+    const client = getSupabase();
+    if (!client) throw new Error("Không kết nối được dữ liệu học sinh.");
+    const columns = "id,user_id,passed,score,total_tests,passed_tests,runtime_ms,timestamp";
+    const [lessons, algos, progress] = await Promise.all([
+      this.readActivityRows("submissions", `${columns},lesson_id,practice_key`, undefined, userId),
+      this.readActivityRows("algorithm_submissions", `${columns},problem_id,problem_title`, undefined, userId),
+      client.from("user_progress").select("lesson_id,completed,completed_at,score").eq("user_id", userId).eq("completed", true),
+    ]);
+    if (progress.error) throw new Error("Không tải được tiến độ học. Vui lòng tải lại.");
+    const events = [
+      ...lessons.map(row => submissionActivity(row, "lesson")),
+      ...algos.map(row => submissionActivity(row, "algo")),
+    ].filter((event): event is StudentActivity => event !== null);
+    for (const row of progress.data || []) {
+      const ts = Date.parse(row.completed_at);
+      if (Number.isFinite(ts)) events.push({ id: `progress:${row.lesson_id}`, userId, kind: "lesson", type: "completion", itemId: row.lesson_id, ts, ok: true, score: row.score || 0 });
+    }
+    return newestActivities(events);
+  }
+
+  public static async getSubmissionDetail(userId: string, kind: "lesson" | "algo", id: string) {
+    const client = getSupabase();
+    if (!client) throw new Error("Không kết nối được dữ liệu bài nộp.");
+    const { data, error } = await client.from(kind === "lesson" ? "submissions" : "algorithm_submissions")
+      .select("code,test_results").eq("id", id).eq("user_id", userId).single();
+    if (error || !data) throw new Error("Không tải được chi tiết bài nộp. Vui lòng thử lại.");
+    return { code: data.code as string | null, testResults: (data.test_results || []) as SubmissionResult["testResults"] };
   }
 
   // ===================== APP SETTINGS (cài đặt dùng chung) =====================

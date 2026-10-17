@@ -126,6 +126,9 @@ export interface TestResultDetail {
 }
 
 export interface SubmissionResult {
+  id?: string;
+  code?: string;
+  practiceKey?: string;
   lessonId: string;
   passed: boolean;
   score: number; // 0 to 100

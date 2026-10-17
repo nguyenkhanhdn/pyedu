@@ -2,6 +2,11 @@ import { User } from "../types";
 
 /** Một lượt nộp bài (bài học hoặc luyện giải đề thuật toán) của học sinh. */
 export interface PracticeEvent {
+  id?: string;
+  practiceKey?: string;
+  totalTests?: number;
+  passedTests?: number;
+  runtimeMs?: number;
   userId: string;
   kind: "lesson" | "algo";
   itemId: string;
@@ -12,6 +17,32 @@ export interface PracticeEvent {
   /** Thời điểm nộp (ms). */
   ts: number;
 }
+
+export interface StudentActivity extends PracticeEvent {
+  id: string;
+  type: "submission" | "completion";
+}
+
+export const parseActivityTime = (value: string): number => {
+  // Historical offline entries used Vietnamese date strings rather than ISO.
+  const local = value?.match(/^(\d{1,2}):(\d{2})(?::\d{2})?[, ]+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (local) return new Date(Number(local[5]), Number(local[4]) - 1, Number(local[3]), Number(local[1]), Number(local[2])).getTime();
+  return Date.parse(value);
+};
+
+export const submissionActivity = (row: any, kind: "lesson" | "algo"): StudentActivity | null => {
+  const ts = parseActivityTime(row.timestamp);
+  if (!row.user_id || !Number.isFinite(ts)) return null;
+  return {
+    id: row.id, userId: row.user_id, kind, type: "submission", ts,
+    itemId: kind === "lesson" ? row.practice_key || row.lesson_id : row.problem_id,
+    practiceKey: row.practice_key, title: row.problem_title,
+    ok: Boolean(row.passed) || (row.total_tests > 0 && row.passed_tests === row.total_tests),
+    score: row.score || 0, totalTests: row.total_tests, passedTests: row.passed_tests, runtimeMs: row.runtime_ms,
+  };
+};
+
+export const newestActivities = <T extends PracticeEvent>(events: T[]): T[] => [...events].sort((a, b) => b.ts - a.ts || (b.id || "").localeCompare(a.id || ""));
 
 export interface DayStudentRow {
   user: User;

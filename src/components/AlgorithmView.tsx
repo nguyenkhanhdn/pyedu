@@ -54,6 +54,7 @@ interface AlgorithmViewProps {
 export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContext }) => {
   const {
     isOpeningSampleSolution,
+    submissionSyncError,
     algorithmProblems = [],
     algorithmSubmissions = [],
     solvedProblemIds = [],
@@ -1051,6 +1052,8 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                 </div>
 
                 {/* Result Drawer / Panel */}
+                {submissionSyncError && <p role="alert" className="p-3 bg-amber-950 text-amber-200 text-xs">{submissionSyncError}</p>}
+
                 {(runResult || submissionOutcome) && (
                   <div className="max-h-64 overflow-y-auto bg-slate-900 border-t border-slate-800 p-4 space-y-3 animate-in fade-in text-xs font-mono">
                     {/* Single Run Result */}

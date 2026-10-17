@@ -1,3 +1,4 @@
+import { GROUP_CHAT_ANTISPAM_SQL } from "./groupChatPolicy";
 import { getSupabase } from "../lib/supabase";
 import {
   CURRICULUM_MODULES,
@@ -266,6 +267,7 @@ CREATE POLICY "Allow public access notifs" ON public.notifications FOR ALL USING
 CREATE POLICY "Allow public access badges" ON public.user_badges FOR ALL USING (true);
 CREATE POLICY "Allow public access app_settings" ON public.app_settings FOR ALL USING (true) WITH CHECK (true);
 INSERT INTO public.app_settings (key, value) VALUES ('enforce_sequential', 'true') ON CONFLICT (key) DO NOTHING;
+${GROUP_CHAT_ANTISPAM_SQL}
 `;
 
 export interface MigrationProgress {

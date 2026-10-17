@@ -1031,13 +1031,13 @@ export class SupabaseService {
     }
   ): Promise<GroupMessage | null> {
     const supabase = getSupabase();
-    if (!supabase) return null;
+    if (!supabase) throw new Error("Không kết nối được nhóm học.");
 
     try {
       const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
       const now = new Date().toISOString();
 
-      const { error } = await supabase.from("group_messages").insert({
+      const { data, error } = await supabase.from("group_messages").insert({
         id: msgId,
         group_id: groupId,
         user_id: message.userId,
@@ -1048,17 +1048,21 @@ export class SupabaseService {
         code_snippet: message.codeSnippet || null,
         likes: 0,
         timestamp: now,
-      });
+      }).select("id,timestamp,user_role,user_name,user_avatar").single();
 
-      if (error) return null;
+      if (error) {
+        const message = error.message || "";
+        if (/CHAT_(RATE_LIMIT|DUPLICATE|INVALID|BLOCKED):/.test(message)) throw new Error(message.replace(/^.*?CHAT_[A-Z_]+:\s*/, ""));
+        throw new Error("Chưa gửi được tin nhắn. Vui lòng thử lại khi kết nối ổn định.");
+      }
 
       return {
         id: msgId,
         userId: message.userId,
-        userName: message.userName,
-        userAvatar: message.userAvatar,
-        userRole: message.userRole,
-        timestamp: now,
+        userName: data.user_name,
+        userAvatar: data.user_avatar,
+        userRole: data.user_role,
+        timestamp: data.timestamp,
         content: message.content,
         codeSnippet: message.codeSnippet,
         likes: 0,
@@ -1066,7 +1070,7 @@ export class SupabaseService {
       };
     } catch (e) {
       console.warn("Supabase addGroupMessage error:", e);
-      return null;
+      throw e;
     }
   }
 

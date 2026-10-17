@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { GROUP_MESSAGE_MAX_LENGTH } from "../types";
 import {
@@ -25,6 +25,20 @@ export const StudyGroupsView: React.FC = () => {
     currentUser
   } = useApp();
 
+  const pending = useRef(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [clock, setClock] = useState(Date.now());
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    const timer = window.setInterval(() => {
+      const now = Date.now(); setClock(now);
+      if (now >= cooldownUntil) setCooldownUntil(0);
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [cooldownUntil]);
+  const remaining = Math.max(0, Math.ceil((cooldownUntil - clock) / 1000));
   const [selectedGroupId, setSelectedGroupId] = useState<string>(studyGroups[0]?.id || "group-1");
   const [messageText, setMessageText] = useState("");
   const [codeSnippet, setCodeSnippet] = useState("");
@@ -32,18 +46,19 @@ export const StudyGroupsView: React.FC = () => {
 
   const currentGroup = studyGroups.find(g => g.id === selectedGroupId) || studyGroups[0];
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() && !codeSnippet.trim()) return;
-
-    sendMessageToGroup(
-      currentGroup.id,
-      messageText.trim(),
-      codeSnippet.trim() ? codeSnippet.trim() : undefined
-    );
-    setMessageText("");
-    setCodeSnippet("");
-    setShowCodeInput(false);
+    if (pending.current || remaining > 0 || !currentGroup || (!messageText.trim() && !codeSnippet.trim())) return;
+    pending.current = true; setSending(true); setSendError("");
+    try {
+      await sendMessageToGroup(currentGroup.id, messageText.trim(), codeSnippet.trim() || undefined);
+      setMessageText(""); setCodeSnippet(""); setShowCodeInput(false);
+      if (currentUser?.role === "student") {
+        setClock(Date.now()); setCooldownUntil(Date.now() + 5000);
+      }
+    } catch (error) {
+      setSendError(error instanceof Error ? error.message : "Chưa gửi được tin nhắn. Vui lòng thử lại.");
+    } finally { pending.current = false; setSending(false); }
   };
 
   return (
@@ -208,6 +223,9 @@ export const StudyGroupsView: React.FC = () => {
         {/* Message Input Box */}
         <div className="p-4 bg-white border-t border-slate-200 shadow-xs">
           <form onSubmit={handleSendMessage} className="space-y-2">
+            {currentUser?.role === "student" && <p className="text-xs text-slate-500">Chống spam: cách nhau 5 giây, tối đa 10 tin/phút; không lặp nội dung trong 60 giây (tính chung các nhóm).</p>}
+            {sendError && <p role="alert" className="text-xs text-rose-700">{sendError}</p>}
+            {remaining > 0 && <p role="status" className="text-xs text-amber-700">Bạn có thể gửi tin tiếp theo sau {remaining} giây.</p>}
             {showCodeInput && (
               <div className="p-2.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-1 animate-in fade-in">
                 <label className="block text-[10px] font-mono text-indigo-400 font-semibold">
@@ -216,6 +234,7 @@ export const StudyGroupsView: React.FC = () => {
                 <textarea
                   rows={3}
                   value={codeSnippet}
+                  disabled={sending}
                   maxLength={GROUP_MESSAGE_MAX_LENGTH}
                   onChange={(e) => setCodeSnippet(e.target.value.slice(0, GROUP_MESSAGE_MAX_LENGTH))}
                   placeholder="def solution(): ... (dán code cần hỏi vào đây)"
@@ -245,6 +264,7 @@ export const StudyGroupsView: React.FC = () => {
               <input
                 type="text"
                 value={messageText}
+                disabled={sending}
                 maxLength={GROUP_MESSAGE_MAX_LENGTH}
                 onChange={(e) => setMessageText(e.target.value.slice(0, GROUP_MESSAGE_MAX_LENGTH))}
                 placeholder="Gửi câu hỏi hoặc ý kiến thảo luận cùng các bạn trong nhóm..."
@@ -261,11 +281,11 @@ export const StudyGroupsView: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={!messageText.trim() && !codeSnippet.trim()}
+                disabled={sending || remaining > 0 || (!messageText.trim() && !codeSnippet.trim())}
                 className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs disabled:opacity-40 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Send className="h-4 w-4" />
-                <span className="hidden sm:inline">Gửi</span>
+                <span className="hidden sm:inline">{sending ? "Đang gửi..." : remaining > 0 ? `Chờ ${remaining}s` : "Gửi"}</span>
               </button>
             </div>
           </form>

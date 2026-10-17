@@ -1,3 +1,4 @@
+import { SubmissionSyncStatus } from "./SubmissionSyncStatus";
 import { RichInline, RichText } from "./RichText";
 import { CodeEditor } from "./CodeEditor";
 import { SampleSolutionPanel } from "./SampleSolutionPanel";
@@ -1230,6 +1231,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                   </div>
                 </div>
 
+                <SubmissionSyncStatus />
                 {submissionSyncError && <p role="alert" className="p-3 bg-amber-950 text-amber-200 text-xs">{submissionSyncError}</p>}
 
                 {/* OUTPUT TERMINAL & AUTO-GRADING REPORT */}

@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
+import { StudentHistoryPanel } from "./StudentHistoryPanel";
 import { ApiService } from "../services/apiClient";
 import { PracticeEvent, buildDailyStats, buildStudentStats, dayKey } from "../utils/practiceStats";
 import { BarChart3, RefreshCw, Users, CheckCircle2, Send, Target, Search } from "lucide-react";
@@ -10,14 +11,19 @@ const fmtLong = (d: Date) => d.toLocaleDateString("vi-VN", { weekday: "long", da
 
 /** Thống kê kết quả luyện tập của học sinh theo ngày — dành cho giáo viên và admin. */
 export const PracticeStatsPanel: React.FC = () => {
-  const { allUsers, modules } = useApp();
+  const { allUsers, modules, refreshUsers } = useApp();
+  const requestId = useRef(0);
+  const [loadError, setLoadError] = useState("");
   const [mode, setMode] = useState<"day" | "student">("day");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"name" | "passed" | "recent">("passed");
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const lessonTitle = useMemo(() => {
     const m = new Map<string, string>();
-    modules.forEach((mod) => mod.lessons.forEach((l) => m.set(l.id, l.title)));
+    modules.forEach((mod) => mod.lessons.forEach((l) => {
+      m.set(l.id, l.title);
+      (l.practices?.length ? l.practices : [l.practice]).forEach((practice, index) => m.set(`${l.id}_p${index}`, `${l.title} · ${practice.title}`));
+    }));
     return m;
   }, [modules]);
   const [days, setDays] = useState(14);
@@ -42,18 +48,22 @@ export const PracticeStatsPanel: React.FC = () => {
   const scoped = useMemo(() => (grade === "all" ? students : students.filter((s) => s.grade === grade)), [students, grade]);
 
   const load = async () => {
-    setLoading(true);
+    const seq = ++requestId.current;
+    setLoading(true); setLoadError("");
     try {
-      setEvents(await ApiService.fetchPracticeEvents(days));
-      setLoadedAt(new Date());
-    } catch (e) {
-      console.warn("Practice stats load notice:", e);
-      setEvents([]);
-    }
-    setLoading(false);
+      const [rows] = await Promise.all([ApiService.fetchPracticeEvents(days), refreshUsers()]);
+      if (seq !== requestId.current) return;
+      setEvents(rows); setLoadedAt(new Date());
+    } catch {
+      if (seq === requestId.current) setLoadError("Không tải được dữ liệu đồng bộ. Vui lòng tải lại; dữ liệu cũ (nếu có) chưa được cập nhật.");
+    } finally { if (seq === requestId.current) setLoading(false); }
   };
   useEffect(() => {
     load();
+    const refresh = () => { if (document.visibilityState === "visible") load(); };
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    return () => { requestId.current++; window.clearInterval(timer); window.removeEventListener("focus", refresh); };
   }, [days]);
 
   const stats = useMemo(() => buildDailyStats(events, scoped, days), [events, scoped, days]);
@@ -134,6 +144,8 @@ export const PracticeStatsPanel: React.FC = () => {
         </button>
       </div>
 
+      {loadError && <p role="alert" className="p-3 rounded-xl bg-amber-50 text-amber-900 text-sm">{loadError}</p>}
+
       {/* Tổng quan */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Tile icon={<Send className="h-5 w-5" />} label="Lượt nộp bài" value={totals.attempts} note={`${days} ngày gần nhất`} />
@@ -151,6 +163,8 @@ export const PracticeStatsPanel: React.FC = () => {
           lessonTitle={lessonTitle} loading={loading}
         />
       )}
+
+      {mode === "student" && scoped.find(student => student.id === selectedStudent) && <StudentHistoryPanel key={selectedStudent} student={scoped.find(student => student.id === selectedStudent)!} />}
 
       {mode === "day" && (<>
       {/* Biểu đồ cột chồng theo ngày */}
@@ -343,7 +357,7 @@ const StudentView: React.FC<StudentViewProps> = ({ stats, days, query, setQuery,
     <div className="space-y-4">
       <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center gap-3">
-          <span className="text-sm font-semibold text-slate-700 mr-auto">Bài đạt của từng học sinh theo ngày</span>
+          <span className="text-sm font-semibold text-slate-700 mr-auto">Bài đạt / lượt nộp của từng học sinh theo ngày</span>
           <div className="relative">
             <Search className="h-4 w-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
@@ -388,7 +402,7 @@ const StudentView: React.FC<StudentViewProps> = ({ stats, days, query, setQuery,
                 {rows.map((s) => (
                   <tr key={s.user.id} onClick={() => setSelected(s.user.id === selected ? null : s.user.id)} className="cursor-pointer group">
                     <td className={`sticky left-0 z-10 px-3 py-1.5 border-b border-slate-100 ${s.user.id === selected ? "bg-indigo-50" : "bg-white group-hover:bg-slate-50"}`}>
-                      <div className="font-semibold text-slate-900 whitespace-nowrap">{s.user.fullName}</div>
+                      <button type="button" aria-expanded={s.user.id === selected} onClick={event => { event.stopPropagation(); setSelected(s.user.id === selected ? null : s.user.id); }} className="font-semibold text-slate-900 whitespace-nowrap text-left">{s.user.fullName}</button>
                       <div className="text-xs text-slate-400">{s.user.grade || "—"}</div>
                     </td>
                     {days.map((d) => {
@@ -399,7 +413,7 @@ const StudentView: React.FC<StudentViewProps> = ({ stats, days, query, setQuery,
                       return (
                         <td key={d.key} title={title} className={`p-0.5 border-b border-slate-100 ${s.user.id === selected ? "bg-indigo-50" : ""}`}>
                           <div className={`h-7 w-8 rounded-md flex items-center justify-center text-xs font-semibold ${light ? "text-white" : "text-slate-700"} ${c ? "" : "bg-slate-50"}`} style={bg ? { background: bg } : undefined}>
-                            {c ? c.distinctPassed : ""}
+                            {c ? `${c.distinctPassed}/${c.attempts}` : ""}
                           </div>
                         </td>
                       );
@@ -414,7 +428,7 @@ const StudentView: React.FC<StudentViewProps> = ({ stats, days, query, setQuery,
           </div>
         )}
         <div className="px-4 py-2 border-t border-slate-100 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5"><i className="inline-block h-3 w-5 rounded-sm" style={{ background: "rgba(42,120,214,0.6)" }} /> Số bài đạt trong ngày (đậm hơn = nhiều hơn)</span>
+          <span className="flex items-center gap-1.5"><i className="inline-block h-3 w-5 rounded-sm" style={{ background: "rgba(42,120,214,0.6)" }} /> Bài đạt / lượt nộp trong ngày (đậm hơn = nhiều bài đạt)</span>
           <span className="flex items-center gap-1.5"><i className="inline-block h-3 w-5 rounded-sm" style={{ background: "rgba(235,104,52,0.3)" }} /> Có nộp nhưng chưa đạt bài nào (0)</span>
           <span className="flex items-center gap-1.5"><i className="inline-block h-3 w-5 rounded-sm bg-slate-100" /> Không luyện tập</span>
           <span className="ml-auto">Bấm vào một học sinh để xem chi tiết.</span>

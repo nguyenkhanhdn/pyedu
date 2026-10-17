@@ -86,6 +86,9 @@ CREATE TABLE IF NOT EXISTS public.submissions (
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS practice_key TEXT;
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS code TEXT;
+
 -- 6. BẢNG GHI CHÚ CÁ NHÂN (PERSONAL NOTES)
 CREATE TABLE IF NOT EXISTS public.personal_notes (
     id TEXT PRIMARY KEY,

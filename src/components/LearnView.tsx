@@ -54,6 +54,7 @@ const renderFormattedText = (text: string) => <RichInline text={text} />;
 export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => {
   const {
     isOpeningSampleSolution,
+    submissionSyncError,
     modules,
     selectedLesson,
     setSelectedLesson,
@@ -259,7 +260,10 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
 
     const evaluation = await PythonRunner.evaluateTestSuite(editorCode, currentPractice.testCases);
     const submissionResult: SubmissionResult = {
+      id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       lessonId: practiceStorageKey,
+      practiceKey: practiceStorageKey,
+      code: editorCode,
       passed: evaluation.passed,
       score: evaluation.score,
       totalTests: evaluation.totalTests,
@@ -278,7 +282,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
     }
 
     setLatestSubmission(submissionResult);
-    submitLessonCode(selectedLesson.id, submissionResult, lessonDone);
+    await submitLessonCode(selectedLesson.id, submissionResult, lessonDone);
     setIsGrading(false);
 
     if (!evaluation.passed) {
@@ -1225,6 +1229,8 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                     </button>
                   </div>
                 </div>
+
+                {submissionSyncError && <p role="alert" className="p-3 bg-amber-950 text-amber-200 text-xs">{submissionSyncError}</p>}
 
                 {/* OUTPUT TERMINAL & AUTO-GRADING REPORT */}
                 <div className="h-48 sm:h-56 shrink-0 bg-slate-950 border-t border-slate-800 flex flex-col">

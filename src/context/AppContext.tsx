@@ -30,6 +30,7 @@ import { computeXpLoss, describeScope } from "../utils/progressReset";
 import confetti from "canvas-confetti";
 
 interface AppContextType {
+  submissionSyncError: string | null;
   openSampleSolution: (target: SampleSolutionTarget) => Promise<number>;
   isOpeningSampleSolution: boolean;
   currentUser: User | null;
@@ -132,6 +133,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [submissionSyncError, setSubmissionSyncError] = useState<string | null>(null);
   const sampleSolutionPending = useRef(false);
   const [isOpeningSampleSolution, setIsOpeningSampleSolution] = useState(false);
   // 1. User State - initialized from local storage or null to require login
@@ -457,6 +459,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const submitLessonCode = async (lessonId: string, result: SubmissionResult, completesLesson: boolean = true) => {
     // Đạt một bài tập nhưng chưa đủ điều kiện hoàn thành cả bài học
     const completes = result.passed && completesLesson;
+    setSubmissionSyncError(null);
     // Update local state immediately
     setLessonSubmissions(prev => ({
       ...prev,
@@ -510,7 +513,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const updatedUser = await ApiService.recordSubmission(currentUser.id, {
         lessonId,
-        passed: completes,
+        id: result.id,
+        code: result.code,
+        practiceKey: result.practiceKey || result.lessonId,
+        timestamp: result.timestamp,
+        passed: result.passed,
+        completesLesson: completes,
         score: result.score,
         totalTests: result.totalTests,
         passedTests: result.passedTests,
@@ -524,19 +532,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAllUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
       }
     } catch (e) {
+      setSubmissionSyncError("Kết quả đã chấm nhưng chưa đồng bộ lên máy chủ. Vui lòng nộp lại khi kết nối ổn định.");
       console.warn("Submit recording notice:", e);
     }
   };
 
   // Submit Algorithm Problem Solution Handler
   const submitAlgorithmProblem = async (problemId: string, result: SubmissionResult, code: string) => {
+    setSubmissionSyncError(null);
     const problem = ALGORITHM_PROBLEMS.find(p => p.id === problemId);
     const probTitle = problem?.title || problemId;
     const probLevel: AlgorithmLevel = problem?.level || 'primary';
     const probPoints = problem?.points || 40;
 
     const newSub: AlgorithmSubmission = {
-      id: `algo-sub-${Date.now()}`,
+      id: `algo-sub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      userId: currentUser?.id,
       problemId,
       problemTitle: probTitle,
       level: probLevel,
@@ -547,8 +558,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalTests: result.totalTests,
       runtimeMs: result.runtimeMs,
       testResults: result.testResults,
-      timestamp: new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+      timestamp: new Date().toISOString()
     };
+
+
+    if (currentUser) {
+      try {
+        await ApiService.recordAlgorithmSubmission(currentUser.id, newSub);
+      } catch {
+        setSubmissionSyncError("Kết quả đã chấm nhưng chưa đồng bộ lên máy chủ. Vui lòng nộp lại khi kết nối ổn định.");
+        return;
+      }
+    }
 
     const updatedSubmissions = [newSub, ...algorithmSubmissions];
     setAlgorithmSubmissions(updatedSubmissions);
@@ -558,9 +579,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn("Could not save to localStorage:", e);
     }
 
-    if (currentUser) {
-      ApiService.recordAlgorithmSubmission(currentUser.id, newSub).catch(() => {});
-    }
 
     if (result.passed) {
       try {
@@ -1357,6 +1375,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         currentUser,
         openSampleSolution,
+        submissionSyncError,
         isOpeningSampleSolution,
         allUsers,
         login,

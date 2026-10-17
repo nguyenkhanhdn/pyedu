@@ -1,3 +1,4 @@
+import { assertChatAllowed } from "../src/utils/chatRateLimit";
 import initSqlJs, { Database } from "sql.js";
 import fs from "fs";
 import path from "path";
@@ -978,8 +979,20 @@ export async function addGroupMessage(groupId: string, msg: {
   codeSnippet?: string;
 }) {
   const db = await getDatabase();
+  const user = await getUserById(msg.userId);
+  if (!user) throw new Error("Tài khoản không được phép gửi tin nhắn.");
+  const statement = db.prepare("SELECT timestamp, content, code_snippet FROM group_messages WHERE user_id = ? ORDER BY timestamp DESC LIMIT 20");
+  statement.bind([msg.userId]);
+  const recent: { timestamp: string; content: string; codeSnippet?: string }[] = [];
+  while (statement.step()) {
+    const row = statement.getAsObject();
+    recent.push({ timestamp: String(row.timestamp), content: String(row.content), codeSnippet: row.code_snippet ? String(row.code_snippet) : undefined });
+  }
+  statement.free();
+  assertChatAllowed(user.role, recent, msg.content || "", msg.codeSnippet || "");
+  msg = { ...msg, userRole: user.role, userName: user.fullName, userAvatar: user.avatar };
   const id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const time = new Date().toISOString();
   db.run(`
     INSERT INTO group_messages (id, group_id, user_id, user_name, user_avatar, user_role, content, code_snippet, likes, timestamp)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)

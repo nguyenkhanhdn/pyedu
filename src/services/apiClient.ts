@@ -1,3 +1,4 @@
+import { assertChatAllowed } from "../utils/chatRateLimit";
 import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry, ResetScope } from "../types";
 import { lessonCodeKeys } from "../utils/progressReset";
 import { PracticeEvent, parseActivityTime } from "../utils/practiceStats";
@@ -1245,30 +1246,26 @@ export const ApiService = {
   },
 
   async sendGroupMessage(groupId: string, payload: any) {
-    const groups = LocalDataManager.getGroups();
-    const target = groups.find(g => g.id === groupId);
-    const msg: GroupMessage = {
-      id: `msg-${Date.now()}`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      likes: 0,
-      isLiked: false,
-      userId: payload.userId,
-      userName: payload.userName,
-      userAvatar: payload.userAvatar,
-      userRole: payload.userRole || 'student',
-      content: payload.content,
-      codeSnippet: payload.codeSnippet
-    };
-    if (target) {
-      target.messages.push(msg);
-      LocalDataManager.saveGroups(groups);
-    }
-
     if (SupabaseService.isAvailable()) {
-      const suMsg = await SupabaseService.addGroupMessage(groupId, payload);
-      if (suMsg) return suMsg;
+      const message = await SupabaseService.addGroupMessage(groupId, payload);
+      if (!message) throw new Error("Chưa gửi được tin nhắn. Vui lòng thử lại.");
+      return message;
     }
-
+    const user = LocalDataManager.getUserById(payload.userId);
+    if (!user || (user.status && user.status !== "active")) throw new Error("Tài khoản không được phép gửi tin nhắn.");
+    const groups = LocalDataManager.getGroups();
+    const recent = groups.flatMap(group => group.messages).filter(message => message.userId === user.id);
+    assertChatAllowed(user.role, recent, payload.content || "", payload.codeSnippet || "");
+    const msg: GroupMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: new Date().toISOString(), likes: 0, isLiked: false,
+      userId: user.id, userName: user.fullName, userAvatar: user.avatar, userRole: user.role,
+      content: payload.content, codeSnippet: payload.codeSnippet,
+    };
+    const target = groups.find(group => group.id === groupId);
+    if (!target) throw new Error("Không tìm thấy nhóm học.");
+    target.messages.push(msg);
+    LocalDataManager.saveGroups(groups);
     return msg;
   },
 

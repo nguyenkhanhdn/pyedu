@@ -1,3 +1,5 @@
+import { useLiveRefresh } from "../hooks/useLiveRefresh";
+import { ClassroomRealtimeStatus } from "./ClassroomRealtimeStatus";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { ApiService } from "../services/apiClient";
@@ -6,13 +8,12 @@ import { TestResultDetail, User } from "../types";
 import { CodeBlock } from "./CodeBlock";
 
 export const StudentHistoryPanel: React.FC<{ student: User; onClose?: () => void }> = ({ student, onClose }) => {
-  const { currentUser, modules, algorithmProblems } = useApp();
+  const { currentUser, modules, algorithmProblems, classActivityVersion } = useApp();
   const [events, setEvents] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [count, setCount] = useState(30);
-  const [revision, setRevision] = useState(0);
   const request = useRef(0);
   const panel = useRef<HTMLElement>(null);
   const titles = useMemo(() => {
@@ -25,24 +26,18 @@ export const StudentHistoryPanel: React.FC<{ student: User; onClose?: () => void
     return map;
   }, [modules, algorithmProblems]);
 
-  useEffect(() => {
+  const load = async () => {
     const seq = ++request.current;
     setLoading(true); setError("");
-    ApiService.fetchStudentHistory(student.id, currentUser).then(rows => {
+    try {
+      const rows = await ApiService.fetchStudentHistory(student.id, currentUser);
       if (seq === request.current) setEvents(rows);
-    }).catch(err => {
-      if (seq === request.current) setError(err.message || "Không tải được lịch sử học sinh.");
-    }).finally(() => { if (seq === request.current) setLoading(false); });
-    return () => { request.current++; };
-  }, [student.id, currentUser?.id, revision]);
-
-  useEffect(() => {
-    panel.current?.scrollIntoView?.({ block: "nearest" });
-    const refresh = () => { if (document.visibilityState === "visible") setRevision(value => value + 1); };
-    const timer = window.setInterval(refresh, 60000);
-    window.addEventListener("focus", refresh);
-    return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
-  }, []);
+    } catch (err) {
+      if (seq === request.current) setError(err instanceof Error ? err.message : "Không tải được lịch sử học sinh.");
+    } finally { if (seq === request.current) setLoading(false); }
+  };
+  const reload = useLiveRefresh(load, classActivityVersion, `${student.id}:${currentUser?.id}`, () => { request.current++; });
+  useEffect(() => { panel.current?.scrollIntoView?.({ block: "nearest" }); }, []);
 
   const filtered = events.filter(event => filter === "all" || event.kind === filter);
   return (
@@ -55,9 +50,10 @@ export const StudentHistoryPanel: React.FC<{ student: User; onClose?: () => void
         <select aria-label="Lọc loại lịch sử" value={filter} onChange={event => { setFilter(event.target.value); setCount(30); }} className="border border-slate-200 rounded-lg p-2 text-xs">
           <option value="all">Bài học & Giải đề</option><option value="lesson">Bài học</option><option value="algo">Giải đề</option>
         </select>
-        <button type="button" disabled={loading} onClick={() => setRevision(value => value + 1)} className="rounded-lg bg-indigo-50 p-2 text-xs font-semibold text-indigo-700 disabled:opacity-50">Tải lại lịch sử</button>
+        <button type="button" disabled={loading} onClick={reload} className="rounded-lg bg-indigo-50 p-2 text-xs font-semibold text-indigo-700 disabled:opacity-50">Tải lại lịch sử</button>
         {onClose && <button type="button" onClick={onClose} className="rounded-lg p-2 text-xs text-slate-600">Đóng lịch sử</button>}
       </div>
+      <div className="px-4 py-2"><ClassroomRealtimeStatus /></div>
       {error && <p role="alert" className="p-4 bg-amber-50 text-amber-900 text-sm">{error} Dữ liệu cũ (nếu có) chưa được cập nhật.</p>}
       {loading && <p role="status" className="p-4 text-sm text-slate-500">Đang tải lịch sử đồng bộ...</p>}
       {!loading && !error && !filtered.length && <p className="p-6 text-sm text-slate-500">Chưa có lịch sử được đồng bộ cho học sinh này.</p>}

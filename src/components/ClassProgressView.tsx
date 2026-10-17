@@ -1,3 +1,4 @@
+import { ClassroomRealtimeStatus } from "./ClassroomRealtimeStatus";
 import React, { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
 import { ApiService } from "../services/apiClient";
@@ -72,6 +73,7 @@ export const ClassProgressView: React.FC = () => {
           </div>
         </div>
 
+        <ClassroomRealtimeStatus />
         <SequentialModeToggle variant="card" />
 
         <div className="flex gap-1.5">

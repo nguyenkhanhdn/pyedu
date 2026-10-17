@@ -1,3 +1,4 @@
+import { SubmissionSyncStatus } from "./SubmissionSyncStatus";
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { AlgorithmProblem, AlgorithmLevel, AlgorithmSubmission } from "../types";
@@ -1052,6 +1053,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                 </div>
 
                 {/* Result Drawer / Panel */}
+                <SubmissionSyncStatus />
                 {submissionSyncError && <p role="alert" className="p-3 bg-amber-950 text-amber-200 text-xs">{submissionSyncError}</p>}
 
                 {(runResult || submissionOutcome) && (

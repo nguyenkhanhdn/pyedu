@@ -1,3 +1,5 @@
+import { useLiveRefresh } from "../hooks/useLiveRefresh";
+import { ClassroomRealtimeStatus } from "./ClassroomRealtimeStatus";
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import { StudentHistoryPanel } from "./StudentHistoryPanel";
@@ -11,7 +13,7 @@ const fmtLong = (d: Date) => d.toLocaleDateString("vi-VN", { weekday: "long", da
 
 /** Thống kê kết quả luyện tập của học sinh theo ngày — dành cho giáo viên và admin. */
 export const PracticeStatsPanel: React.FC = () => {
-  const { allUsers, modules, refreshUsers } = useApp();
+  const { allUsers, modules, refreshUsers, classActivityVersion } = useApp();
   const requestId = useRef(0);
   const [loadError, setLoadError] = useState("");
   const [mode, setMode] = useState<"day" | "student">("day");
@@ -58,13 +60,7 @@ export const PracticeStatsPanel: React.FC = () => {
       if (seq === requestId.current) setLoadError("Không tải được dữ liệu đồng bộ. Vui lòng tải lại; dữ liệu cũ (nếu có) chưa được cập nhật.");
     } finally { if (seq === requestId.current) setLoading(false); }
   };
-  useEffect(() => {
-    load();
-    const refresh = () => { if (document.visibilityState === "visible") load(); };
-    const timer = window.setInterval(refresh, 60000);
-    window.addEventListener("focus", refresh);
-    return () => { requestId.current++; window.clearInterval(timer); window.removeEventListener("focus", refresh); };
-  }, [days]);
+  const reload = useLiveRefresh(load, classActivityVersion, String(days), () => { requestId.current++; });
 
   const stats = useMemo(() => buildDailyStats(events, scoped, days), [events, scoped, days]);
   const studentStats = useMemo(() => buildStudentStats(events, scoped, days), [events, scoped, days]);
@@ -135,7 +131,7 @@ export const PracticeStatsPanel: React.FC = () => {
           ))}
         </select>
         <button
-          onClick={load}
+          onClick={reload}
           disabled={loading}
           className="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
           title={loadedAt ? `Cập nhật lúc ${loadedAt.toLocaleTimeString("vi-VN")}` : "Tải lại"}
@@ -145,6 +141,8 @@ export const PracticeStatsPanel: React.FC = () => {
       </div>
 
       {loadError && <p role="alert" className="p-3 rounded-xl bg-amber-50 text-amber-900 text-sm">{loadError}</p>}
+
+      <ClassroomRealtimeStatus />
 
       {/* Tổng quan */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -160,7 +158,7 @@ export const PracticeStatsPanel: React.FC = () => {
           days={stats.map((d) => ({ key: d.key, date: d.date }))}
           query={query} setQuery={setQuery} sort={sort} setSort={setSort}
           selected={selectedStudent} setSelected={setSelectedStudent}
-          lessonTitle={lessonTitle} loading={loading}
+          lessonTitle={lessonTitle} loading={loading && !loadedAt}
         />
       )}
 
@@ -176,7 +174,7 @@ export const PracticeStatsPanel: React.FC = () => {
             <span className="flex items-center gap-1.5"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "#eb6834" }} /> Chưa đạt</span>
           </div>
         </div>
-        {loading ? (
+        {loading && !loadedAt ? (
           <div className="h-44 flex items-center justify-center text-sm text-slate-400">Đang tải dữ liệu...</div>
         ) : totals.attempts === 0 ? (
           <div className="h-44 flex items-center justify-center text-sm text-slate-400">Chưa có lượt nộp bài nào trong khoảng này.</div>

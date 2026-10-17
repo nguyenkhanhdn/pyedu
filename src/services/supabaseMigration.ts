@@ -1,3 +1,4 @@
+import { CLASSROOM_REALTIME_SQL } from "./classroomRealtimePolicy";
 import { GROUP_CHAT_ANTISPAM_SQL } from "./groupChatPolicy";
 import { getSupabase } from "../lib/supabase";
 import {
@@ -268,6 +269,7 @@ CREATE POLICY "Allow public access badges" ON public.user_badges FOR ALL USING (
 CREATE POLICY "Allow public access app_settings" ON public.app_settings FOR ALL USING (true) WITH CHECK (true);
 INSERT INTO public.app_settings (key, value) VALUES ('enforce_sequential', 'true') ON CONFLICT (key) DO NOTHING;
 ${GROUP_CHAT_ANTISPAM_SQL}
+${CLASSROOM_REALTIME_SQL}
 `;
 
 export interface MigrationProgress {

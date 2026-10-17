@@ -1,3 +1,5 @@
+import { ClassroomConnection } from "../services/classroomRealtime";
+import { createRefreshQueue } from "../utils/refreshQueue";
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import type { SampleSolutionTarget } from "../utils/sampleSolution";
 import {
@@ -30,6 +32,9 @@ import { computeXpLoss, describeScope } from "../utils/progressReset";
 import confetti from "canvas-confetti";
 
 interface AppContextType {
+  classroomConnection: ClassroomConnection;
+  classActivityVersion: number;
+  submissionSyncStatus: "idle" | "syncing" | "synced" | "error";
   submissionSyncError: string | null;
   openSampleSolution: (target: SampleSolutionTarget) => Promise<number>;
   isOpeningSampleSolution: boolean;
@@ -133,6 +138,9 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [classroomConnection, setClassroomConnection] = useState<ClassroomConnection>("offline");
+  const [classActivityVersion, setClassActivityVersion] = useState(0);
+  const [submissionSyncStatus, setSubmissionSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle");
   const [submissionSyncError, setSubmissionSyncError] = useState<string | null>(null);
   const sampleSolutionPending = useRef(false);
   const [isOpeningSampleSolution, setIsOpeningSampleSolution] = useState(false);
@@ -456,10 +464,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const acknowledgeSubmission = () => {
+    if (ApiService.isServerStorageEnabled()) setSubmissionSyncStatus("synced");
+    else {
+      setSubmissionSyncStatus("error");
+      setSubmissionSyncError("Bài chỉ lưu trên trình duyệt này, chưa đồng bộ lên máy chủ.");
+    }
+  };
+
   const submitLessonCode = async (lessonId: string, result: SubmissionResult, completesLesson: boolean = true) => {
     // Đạt một bài tập nhưng chưa đủ điều kiện hoàn thành cả bài học
     const completes = result.passed && completesLesson;
     setSubmissionSyncError(null);
+    setSubmissionSyncStatus("syncing");
     // Update local state immediately
     setLessonSubmissions(prev => ({
       ...prev,
@@ -527,12 +544,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         xpReward: xpEarned
       });
 
+      acknowledgeSubmission();
       if (updatedUser) {
         setCurrentUser(updatedUser);
         setAllUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
       }
     } catch (e) {
       setSubmissionSyncError("Kết quả đã chấm nhưng chưa đồng bộ lên máy chủ. Vui lòng nộp lại khi kết nối ổn định.");
+      setSubmissionSyncStatus("error");
       console.warn("Submit recording notice:", e);
     }
   };
@@ -540,6 +559,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Submit Algorithm Problem Solution Handler
   const submitAlgorithmProblem = async (problemId: string, result: SubmissionResult, code: string) => {
     setSubmissionSyncError(null);
+    setSubmissionSyncStatus("syncing");
     const problem = ALGORITHM_PROBLEMS.find(p => p.id === problemId);
     const probTitle = problem?.title || problemId;
     const probLevel: AlgorithmLevel = problem?.level || 'primary';
@@ -565,7 +585,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (currentUser) {
       try {
         await ApiService.recordAlgorithmSubmission(currentUser.id, newSub);
+        acknowledgeSubmission();
       } catch {
+        setSubmissionSyncStatus("error");
         setSubmissionSyncError("Kết quả đã chấm nhưng chưa đồng bộ lên máy chủ. Vui lòng nộp lại khi kết nối ổn định.");
         return;
       }
@@ -967,6 +989,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn("Refresh users notice:", e);
     }
   };
+
+  useEffect(() => {
+    if (!currentUser || !["teacher", "admin"].includes(currentUser.role) || (currentUser.status && currentUser.status !== "active")) {
+      setClassroomConnection("offline");
+      return;
+    }
+    const updates = createRefreshQueue(async () => {
+      setClassActivityVersion(version => version + 1);
+      await refreshUsers();
+    });
+    const unsubscribe = ApiService.subscribeClassroomChanges(() => updates.trigger(), setClassroomConnection);
+    return () => { unsubscribe(); updates.dispose(); };
+  }, [currentUser?.id, currentUser?.role, currentUser?.status]);
 
   const adminApproveUser = async (userId: string, role?: 'student' | 'teacher' | 'admin'): Promise<boolean> => {
     try {
@@ -1376,6 +1411,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         openSampleSolution,
         submissionSyncError,
+        submissionSyncStatus,
+        classroomConnection,
+        classActivityVersion,
         isOpeningSampleSolution,
         allUsers,
         login,

@@ -1,3 +1,4 @@
+import { subscribeClassroomChanges, ClassroomConnection } from "./classroomRealtime";
 import { assertChatAllowed } from "../utils/chatRateLimit";
 import { User, StudyGroup, PersonalNote, NotificationItem, SubmissionResult, GroupMessage, AlgorithmProblem, AlgorithmSubmission, AlgorithmLeaderboardEntry, ResetScope } from "../types";
 import { lessonCodeKeys } from "../utils/progressReset";
@@ -626,6 +627,11 @@ export class LocalDataManager {
 
 // API Service with 100% Direct Supabase Connection
 export const ApiService = {
+  isServerStorageEnabled() { return SupabaseService.isAvailable(); },
+  subscribeClassroomChanges(onChange: () => void, onStatus: (status: ClassroomConnection) => void) {
+    return subscribeClassroomChanges(onChange, onStatus);
+  },
+
   async chargeSampleSolution(userId: string, reward: number) {
     const result = SupabaseService.isAvailable()
       ? await SupabaseService.chargeSampleSolution(userId, reward)

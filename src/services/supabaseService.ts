@@ -696,6 +696,10 @@ export class SupabaseService {
         timestamp: /^\d{4}-\d{2}-\d{2}T/.test(submission.timestamp || "") ? submission.timestamp : new Date().toISOString(),
       }, { onConflict: "id" });
 
+      if (error) {
+        // Keep the database cause visible; FK/schema errors are not connectivity errors.
+        console.warn("Supabase saveAlgorithmSubmission failed:", error.code, error.message);
+      }
       return !error;
     } catch (e) {
       console.warn("Supabase saveAlgorithmSubmission error:", e);

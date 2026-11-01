@@ -774,6 +774,38 @@ export class SupabaseService {
     ].filter((event): event is StudentActivity => event !== null));
   }
 
+  /** All-time classroom lesson milestones and attempts; no code or test payloads. */
+  public static async getClassTopicActivities(): Promise<StudentActivity[]> {
+    const client = getSupabase();
+    if (!client) throw new Error("Không kết nối được dữ liệu tiến độ.");
+    const [submissions, progress] = await Promise.all([
+      this.readActivityRows("submissions", "id,user_id,lesson_id,practice_key,passed,score,total_tests,passed_tests,timestamp"),
+      (async () => {
+        const rows: any[] = [];
+        let total = Infinity;
+        while (rows.length < total) {
+          const { data, error, count } = await client.from("user_progress")
+            .select("user_id,lesson_id,completed_at,score", { count: "exact" }).eq("completed", true)
+            .order("user_id").order("lesson_id").range(rows.length, rows.length + 499);
+          if (error || !data) throw new Error("Không tải được tiến độ chủ đề. Vui lòng thử lại.");
+          if (count !== null) total = count;
+          if (!data.length) break;
+          rows.push(...data);
+        }
+        return rows;
+      })(),
+    ]);
+    const events = submissions.map(row => submissionActivity(row, "lesson")).filter((e): e is StudentActivity => e !== null);
+    for (const row of progress) {
+      // Legacy completed rows can lack a date: count them, without inventing recent activity.
+      const ts = Date.parse(row.completed_at);
+      events.push({ id: `progress:${row.user_id}:${row.lesson_id}`, userId: row.user_id,
+        kind: "lesson", type: "completion", itemId: row.lesson_id,
+        ts: Number.isFinite(ts) ? ts : 0, ok: true, score: row.score || 0 });
+    }
+    return newestActivities(events);
+  }
+
   public static async getStudentActivities(userId: string): Promise<StudentActivity[]> {
     const client = getSupabase();
     if (!client) throw new Error("Không kết nối được dữ liệu học sinh.");

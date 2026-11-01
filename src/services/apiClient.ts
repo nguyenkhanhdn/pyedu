@@ -1068,6 +1068,11 @@ export const ApiService = {
     return LocalDataManager.getPracticeEvents(start.getTime());
   },
 
+  async fetchClassTopicActivities(viewer: User) {
+    if (!viewer || !["teacher", "admin"].includes(viewer.role) || (viewer.status && viewer.status !== "active")) throw new Error("Chỉ giáo viên và quản trị viên được xem tiến độ lớp.");
+    return SupabaseService.getClassTopicActivities();
+  },
+
   async fetchStudentHistory(studentId: string, viewer: User) {
     if (!viewer || !["teacher", "admin"].includes(viewer.role) || (viewer.status && viewer.status !== "active")) throw new Error("Chỉ giáo viên và quản trị viên được xem lịch sử học sinh.");
     return SupabaseService.getStudentActivities(studentId);

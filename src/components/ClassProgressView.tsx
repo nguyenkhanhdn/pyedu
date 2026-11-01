@@ -1,3 +1,4 @@
+import { ClassTopicProgress } from "./ClassTopicProgress";
 import { ClassroomRealtimeStatus } from "./ClassroomRealtimeStatus";
 import React, { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
@@ -17,10 +18,10 @@ export const ClassProgressView: React.FC = () => {
   const [grade, setGrade] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [dialogTargets, setDialogTargets] = useState<User[] | null>(null);
-  const [view, setView] = useState<"students" | "stats">("students");
+  const [view, setView] = useState<"topics" | "students" | "stats">("topics");
 
   useEffect(() => {
-    if (view !== "students") return;
+    if (view === "stats") return;
     const refresh = () => { if (document.visibilityState === "visible") void refreshUsers(); };
     refresh();
     const timer = window.setInterval(refresh, 60000);
@@ -67,7 +68,7 @@ export const ClassProgressView: React.FC = () => {
               <h2 className="text-xl font-bold text-slate-900">Quản lý lớp & tiến độ</h2>
               <p className="text-sm text-slate-500">
                 {currentUser?.fullName ? `${currentUser.fullName} · ` : ""}
-                {students.length} học sinh. Chọn học sinh rồi đặt lại điểm hoặc yêu cầu làm lại một số chủ đề.
+                {students.length} học sinh. Theo dõi chủ đề đang học, xem lịch sử và hỗ trợ học sinh.
               </p>
             </div>
           </div>
@@ -76,8 +77,8 @@ export const ClassProgressView: React.FC = () => {
         <ClassroomRealtimeStatus />
         <SequentialModeToggle variant="card" />
 
-        <div className="flex gap-1.5">
-          {([["students", "Danh sách học sinh"], ["stats", "Thống kê luyện tập theo ngày"]] as const).map(([k, label]) => (
+        <div className="flex flex-wrap gap-1.5">
+          {([["topics", "Tiến độ theo chủ đề"], ["students", "Danh sách học sinh"], ["stats", "Thống kê luyện tập theo ngày"]] as const).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setView(k)}
@@ -88,6 +89,7 @@ export const ClassProgressView: React.FC = () => {
           ))}
         </div>
 
+        {view === "topics" && <ClassTopicProgress />}
         {view === "stats" && <PracticeStatsPanel />}
 
         {view === "students" && (<>

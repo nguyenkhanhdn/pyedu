@@ -7,6 +7,7 @@ interface CodeEditorProps {
   placeholder?: string;
   className?: string;
   lineNumbers?: boolean;
+  ariaLabel?: string;
 }
 
 const FONT: React.CSSProperties = {
@@ -22,7 +23,7 @@ const FONT: React.CSSProperties = {
 };
 
 // Trình soạn thảo Python có tô màu cú pháp: textarea trong suốt đặt chồng lên lớp tô màu.
-export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, placeholder, className = "", lineNumbers = false }) => {
+export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, placeholder, className = "", lineNumbers = false, ariaLabel = "Mã Python" }) => {
   const preRef = useRef<HTMLPreElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -79,6 +80,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, placeho
       </pre>
       <textarea
         ref={taRef}
+        aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onScroll={syncScroll}

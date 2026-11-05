@@ -129,8 +129,8 @@ interface AppContextType {
   handbookTopics: typeof OFFLINE_HANDBOOK_TOPICS;
 
   // Active View Tab
-  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class';
-  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class') => void;
+  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review';
+  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review') => void;
   adminSection: 'users' | 'stats' | 'curriculum' | 'algorithms';
   setAdminSection: (sec: 'users' | 'stats' | 'curriculum' | 'algorithms') => void;
 }
@@ -152,7 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [teacherMode, setTeacherMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class'>(() => {
+  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review'>(() => {
     try {
       const saved = localStorage.getItem("pyedu_current_user");
       if (saved) {

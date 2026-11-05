@@ -164,6 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 <Target className="h-4 w-4 text-rose-500" />
                 <span>Ngân Hàng Thuật Toán</span>
               </button>
+              <button type="button" onClick={() => setActiveTab("review")} className={`px-3 py-2 rounded-xl text-sm font-bold ${activeTab === "review" ? "bg-purple-700 text-white" : "text-slate-600 hover:bg-purple-50"}`}>Ôn tập</button>
             </nav>
           ) : (
             /* STUDENT / LEARNER HORIZONTAL NAVIGATION */
@@ -194,6 +195,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 <Target className="h-4 w-4 text-emerald-500" />
                 <span className="hidden xl:inline">Giải đề</span>
+              </button>
+
+              <button type="button" onClick={() => setActiveTab("review")} title="Ôn tập" aria-label="Ôn tập"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap ${activeTab === "review" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+                <BookOpen className="h-4 w-4" /><span className="hidden xl:inline">Ôn tập</span>
               </button>
 
               <button
@@ -488,6 +494,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 🎯 Thuật Toán
               </button>
+              <button type="button" onClick={() => setActiveTab("review")} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${activeTab === "review" ? "bg-purple-700 text-white" : "text-slate-600 hover:bg-purple-50"}`}>Ôn tập</button>
             </>
           ) : (
             <>
@@ -507,6 +514,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 Giải Đề 🎯
               </button>
+              <button type="button" onClick={() => setActiveTab("review")} title="Ôn tập" aria-label="Ôn tập"
+                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap ${activeTab === "review" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+                <BookOpen className="h-4 w-4" /><span>Ôn tập</span>
+              </button>
+
               <button
                 onClick={() => setActiveTab("leaderboard")}
                 className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${

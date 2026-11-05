@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { AppProvider, useApp } from "./context/AppContext";
 import { Navbar } from "./components/Navbar";
 import { LearnView } from "./components/LearnView";
+import { ReviewView } from "./components/ReviewView";
 import { AlgorithmView } from "./components/AlgorithmView";
 import { LeaderboardView } from "./components/LeaderboardView";
 import { StudyGroupsView } from "./components/StudyGroupsView";
@@ -56,6 +57,7 @@ function AppContent() {
           <AlgorithmView onOpenAiWithContext={handleOpenAiWithContext} />
         )}
         {activeTab === "class" && currentUser.role === "teacher" && <ClassProgressView />}
+        {activeTab === "review" && <ReviewView />}
         {activeTab === "leaderboard" && <LeaderboardView />}
         {activeTab === "groups" && <StudyGroupsView />}
         {activeTab === "notes" && <NotesView />}

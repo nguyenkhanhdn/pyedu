@@ -1,0 +1,14 @@
+{
+  "review-1-c1": "n,k,m=map(int,input().split())\nprint(min(n,m//k),max(0,n*k-m))",
+  "review-1-c2": "t,b=map(int,input().split())\nif t>=45: print(\"LAM_MAT\")\nelif b<25: print(\"SAC\")\nelse: print(\"SAN_SANG\")",
+  "review-1-c3": "n,a,b=map(int,input().split())\nx=((n+3)//4)*a\ny=((n+5)//6)*b\nprint(\"A\" if x<y else \"B\" if y<x else \"BANG\",min(x,y))",
+  "review-1-c4": "h,d=map(int,input().split())\nprint((h+d)//24,(h+d)%24)",
+  "review-2-c1": "n,h=map(int,input().split())\nepisodes=run=longest=0\nfor _ in range(n):\n    x=int(input())\n    if x<h:\n        if run==0: episodes+=1\n        run+=1\n        longest=max(longest,run)\n    else: run=0\nprint(episodes,longest)",
+  "review-2-c2": "n,k=map(int,input().split())\nday=done=0\nwhile done<n:\n    day+=1\n    if day%3!=0: done+=k\nprint(day)",
+  "review-2-c3": "c,n=map(int,input().split())\nwater=accepted=0\nfor _ in range(n):\n    x=int(input())\n    if 0<=water+x<=c:\n        water+=x\n        accepted+=1\nprint(water,accepted)",
+  "review-2-c4": "h,w=map(int,input().split())\nfor r in range(1,h+1):\n    line=\"\"\n    for c in range(1,w+1):\n        line+=\"#\" if r==1 or r==h or c==1 or c==w or (r+c)%3==0 else \".\"\n    print(line)",
+  "review-3-c1": "n=int(input())\na=list(map(int,input().split()))\ngain=drops=0\nfor i in range(1,n):\n    d=a[i]-a[i-1]\n    if d>0: gain+=d\n    elif d<0: drops+=1\nprint(gain,drops)",
+  "review-3-c2": "s=input()\na=[]\nfor ch in s:\n    if ch==\"#\":\n        if a: a.pop()\n    else: a.append(ch)\nprint(\"\".join(a) if a else \"EMPTY\")",
+  "review-3-c3": "n=int(input())\nstock={}\nrejected=0\nfor _ in range(n):\n    name,d=input().split()\n    d=int(d)\n    value=stock.get(name,0)+d\n    if value<0: rejected+=1\n    else: stock[name]=value\nq=input()\nprint(stock.get(q,0),rejected)",
+  "review-3-c4": "n=int(input())\nlast={}\nfor _ in range(n):\n    person,item=input().split()\n    last[person]=item\ncounts={}\nfor item in last.values(): counts[item]=counts.get(item,0)+1\nbest=sorted(counts,key=lambda x:(-counts[x],x))[0]\nprint(len(last),best,counts[best])"
+}

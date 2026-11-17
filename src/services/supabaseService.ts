@@ -14,26 +14,109 @@ import {
 } from "../types";
 import { PracticeEvent, StudentActivity, submissionActivity, newestActivities } from "../utils/practiceStats";
 import { lessonCodeKeys } from "../utils/progressReset";
-import { chargeSampleSolution } from "../utils/sampleSolution";
+import {
+  chargeSampleSolution,
+  DailySampleUsage,
+  getSampleSolutionDateKey,
+  parseDailySampleUsage,
+  SampleSolutionQuotaStore,
+  serializeDailySampleUsage,
+} from "../utils/sampleSolution";
 
 export class SupabaseService {
+  private static sampleViewsSettingKey(userId: string): string {
+    return `sample_views:${userId}`;
+  }
+
+  public static async getSampleSolutionDailyUsage(userId: string, now = new Date()): Promise<DailySampleUsage> {
+    const dateKey = getSampleSolutionDateKey(now);
+    const supabase = getSupabase();
+    if (!supabase) return { date: dateKey, count: 0 };
+    try {
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", this.sampleViewsSettingKey(userId))
+        .maybeSingle();
+      if (error || !data) return { date: dateKey, count: 0 };
+      return parseDailySampleUsage(String(data.value), dateKey);
+    } catch {
+      return { date: dateKey, count: 0 };
+    }
+  }
+
   public static async chargeSampleSolution(userId: string, reward: number) {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Không kết nối được hệ thống điểm. Chưa mở bài mẫu.");
-    return chargeSampleSolution(reward, () => this.getUserById(userId), async (before, after) => {
-      const { data, error } = await supabase.from("users")
-        .update({ total_xp: after.totalXp, weekly_xp: after.weeklyXp })
-        .eq("id", userId)
-        .eq("role", "student")
-        .eq("status", before.status || "active")
-        .eq("total_xp", before.totalXp)
-        .eq("weekly_xp", before.weeklyXp)
-        .select("id")
-        .maybeSingle();
-      // Never fall back to local points or retry an ambiguous network failure.
-      if (error) throw new Error("Không xác nhận được giao dịch điểm. Hãy kiểm tra lại điểm trước khi thử lại.");
-      return !!data;
-    });
+
+    const settingKey = this.sampleViewsSettingKey(userId);
+    const quotaStore: SampleSolutionQuotaStore = {
+      readUsage: async (dateKey: string) => {
+        const { data, error } = await supabase
+          .from("app_settings")
+          .select("value")
+          .eq("key", settingKey)
+          .maybeSingle();
+        if (error) {
+          throw new Error("Không kiểm tra được lượt xem bài mẫu trong ngày. Vui lòng thử lại.");
+        }
+        const raw = data?.value !== undefined && data?.value !== null ? String(data.value) : null;
+        return { usage: parseDailySampleUsage(raw, dateKey), raw };
+      },
+      writeUsageIfUnchanged: async (prevRaw: string | null, nextUsage: DailySampleUsage) => {
+        const nextRaw = serializeDailySampleUsage(nextUsage);
+        if (prevRaw === null) {
+          const { error } = await supabase.from("app_settings").insert({
+            key: settingKey,
+            value: nextRaw,
+            updated_by: userId,
+            updated_at: new Date().toISOString(),
+          });
+          if (error) {
+            if (error.code === "23505" || (error.message || "").toLowerCase().includes("duplicate")) {
+              return false;
+            }
+            throw new Error("Không lưu được lượt xem bài mẫu trong ngày. Vui lòng thử lại.");
+          }
+          return true;
+        }
+        const { data, error } = await supabase
+          .from("app_settings")
+          .update({
+            value: nextRaw,
+            updated_by: userId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("key", settingKey)
+          .eq("value", prevRaw)
+          .select("key")
+          .maybeSingle();
+        if (error) {
+          throw new Error("Không lưu được lượt xem bài mẫu trong ngày. Vui lòng thử lại.");
+        }
+        return !!data;
+      },
+    };
+
+    return chargeSampleSolution(
+      reward,
+      () => this.getUserById(userId),
+      async (before, after) => {
+        const { data, error } = await supabase.from("users")
+          .update({ total_xp: after.totalXp, weekly_xp: after.weeklyXp })
+          .eq("id", userId)
+          .eq("role", "student")
+          .eq("status", before.status || "active")
+          .eq("total_xp", before.totalXp)
+          .eq("weekly_xp", before.weeklyXp)
+          .select("id")
+          .maybeSingle();
+        // Never fall back to local points or retry an ambiguous network failure.
+        if (error) throw new Error("Không xác nhận được giao dịch điểm. Hãy kiểm tra lại điểm trước khi thử lại.");
+        return !!data;
+      },
+      quotaStore,
+    );
   }
 
   /**
@@ -272,8 +355,9 @@ export class SupabaseService {
       });
 
       return await this.getUserById(newId);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Supabase createUser exception:", e);
+      if (e instanceof Error) throw e;
       return null;
     }
   }

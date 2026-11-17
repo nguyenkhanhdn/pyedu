@@ -5,7 +5,14 @@ import { lessonCodeKeys } from "../utils/progressReset";
 import { PracticeEvent, parseActivityTime } from "../utils/practiceStats";
 import { INITIAL_STUDY_GROUPS, ALGORITHM_PROBLEMS } from "../data/curriculum";
 import { SupabaseService } from "./supabaseService";
-import { chargeSampleSolution } from "../utils/sampleSolution";
+import {
+  chargeSampleSolution,
+  DailySampleUsage,
+  getSampleSolutionDateKey,
+  parseDailySampleUsage,
+  SampleSolutionQuotaStore,
+  serializeDailySampleUsage,
+} from "../utils/sampleSolution";
 
 // Chỉ 2 tài khoản hệ thống được phép tồn tại cục bộ ngoài Supabase
 const CORE_ACCOUNT_IDENTIFIERS = ["admin", "admin@pyedu.edu.vn", "khanh_it", "khanhdsp@gmail.com"];
@@ -78,6 +85,22 @@ export class LocalDataManager {
   private static STORAGE_KEY_NOTIFS = "pyedu_offline_notifs";
   private static STORAGE_KEY_REQUIRE_APPROVAL = "pyedu_require_approval";
   private static STORAGE_KEY_DELETED_USERS = "pyedu_deleted_users";
+  private static STORAGE_KEY_SAMPLE_VIEWS = "pyedu_sample_views";
+
+  public static getSampleSolutionDailyUsage(userId: string, dateKey = getSampleSolutionDateKey()): { usage: DailySampleUsage; raw: string | null } {
+    try {
+      const raw = localStorage.getItem(`${this.STORAGE_KEY_SAMPLE_VIEWS}_${userId}`);
+      return { usage: parseDailySampleUsage(raw, dateKey), raw };
+    } catch {
+      return { usage: { date: dateKey, count: 0 }, raw: null };
+    }
+  }
+
+  public static saveSampleSolutionDailyUsage(userId: string, usage: DailySampleUsage): void {
+    try {
+      localStorage.setItem(`${this.STORAGE_KEY_SAMPLE_VIEWS}_${userId}`, serializeDailySampleUsage(usage));
+    } catch {}
+  }
 
   public static getDeletedIdentifiers(): Set<string> {
     const defaultBlacklist = [
@@ -632,20 +655,45 @@ export const ApiService = {
     return subscribeClassroomChanges(onChange, onStatus);
   },
 
+  async getSampleSolutionDailyUsage(userId: string): Promise<DailySampleUsage> {
+    if (SupabaseService.isAvailable()) {
+      const usage = await SupabaseService.getSampleSolutionDailyUsage(userId);
+      LocalDataManager.saveSampleSolutionDailyUsage(userId, usage);
+      return usage;
+    }
+    return LocalDataManager.getSampleSolutionDailyUsage(userId).usage;
+  },
+
   async chargeSampleSolution(userId: string, reward: number) {
+    const localQuotaStore: SampleSolutionQuotaStore = {
+      readUsage: async (dateKey: string) => LocalDataManager.getSampleSolutionDailyUsage(userId, dateKey),
+      writeUsageIfUnchanged: async (prevRaw: string | null, nextUsage: DailySampleUsage) => {
+        const current = LocalDataManager.getSampleSolutionDailyUsage(userId, nextUsage.date);
+        if (current.raw !== prevRaw) return false;
+        LocalDataManager.saveSampleSolutionDailyUsage(userId, nextUsage);
+        return true;
+      },
+    };
+
     const result = SupabaseService.isAvailable()
       ? await SupabaseService.chargeSampleSolution(userId, reward)
-      : await chargeSampleSolution(reward, async () => LocalDataManager.getUserById(userId), async (before, after) => {
-          const latest = LocalDataManager.getUserById(userId);
-          if (!latest || latest.role !== before.role || latest.status !== before.status || latest.totalXp !== before.totalXp || latest.weeklyXp !== before.weeklyXp) return false;
-          LocalDataManager.updateUser(userId, after);
-          const saved = LocalDataManager.getUserById(userId);
-          if (!saved || saved.totalXp !== after.totalXp || saved.weeklyXp !== after.weeklyXp) throw new Error("Không lưu được điểm. Chưa mở bài mẫu.");
-          return true;
-        });
+      : await chargeSampleSolution(
+          reward,
+          async () => LocalDataManager.getUserById(userId),
+          async (before, after) => {
+            const latest = LocalDataManager.getUserById(userId);
+            if (!latest || latest.role !== before.role || latest.status !== before.status || latest.totalXp !== before.totalXp || latest.weeklyXp !== before.weeklyXp) return false;
+            LocalDataManager.updateUser(userId, after);
+            const saved = LocalDataManager.getUserById(userId);
+            if (!saved || saved.totalXp !== after.totalXp || saved.weeklyXp !== after.weeklyXp) throw new Error("Không lưu được điểm. Chưa mở bài mẫu.");
+            return true;
+          },
+          localQuotaStore,
+        );
     // Cache only after the durable update succeeds. A cache failure must not
     // turn a completed payment into a second charge on retry.
     try { LocalDataManager.updateUser(userId, result.user); } catch {}
+    try { LocalDataManager.saveSampleSolutionDailyUsage(userId, result.dailyUsage); } catch {}
     return result;
   },
 

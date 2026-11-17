@@ -1,7 +1,7 @@
 import { ClassroomConnection } from "../services/classroomRealtime";
 import { createRefreshQueue } from "../utils/refreshQueue";
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import type { SampleSolutionTarget } from "../utils/sampleSolution";
+import type { DailySampleUsage, SampleSolutionTarget } from "../utils/sampleSolution";
 import {
   User,
   Lesson,
@@ -38,6 +38,7 @@ interface AppContextType {
   submissionSyncError: string | null;
   openSampleSolution: (target: SampleSolutionTarget) => Promise<number>;
   isOpeningSampleSolution: boolean;
+  sampleSolutionDailyUsage: DailySampleUsage | null;
   currentUser: User | null;
   allUsers: User[];
   login: (usernameOrEmail: string, password?: string, options?: { impersonate?: boolean }) => Promise<boolean>;
@@ -144,6 +145,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [submissionSyncError, setSubmissionSyncError] = useState<string | null>(null);
   const sampleSolutionPending = useRef(false);
   const [isOpeningSampleSolution, setIsOpeningSampleSolution] = useState(false);
+  const [sampleSolutionDailyUsage, setSampleSolutionDailyUsage] = useState<DailySampleUsage | null>(null);
   // 1. User State - initialized from local storage or null to require login
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("pyedu_current_user");
@@ -300,6 +302,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           localStorage.setItem("pyedu_algo_submissions", JSON.stringify(algoSubs));
         } catch {}
       }
+      // Load today's sample solution view count
+      const usage = await ApiService.getSampleSolutionDailyUsage(user.id);
+      setSampleSolutionDailyUsage(usage);
     } catch (e) {
       console.warn("Notice: loadUserData handled safely:", e);
     }
@@ -665,10 +670,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     sampleSolutionPending.current = true;
     setIsOpeningSampleSolution(true);
     try {
-      const { user, penalty } = await ApiService.chargeSampleSolution(currentUser.id, reward);
+      const { user, penalty, dailyUsage } = await ApiService.chargeSampleSolution(currentUser.id, reward);
       setCurrentUser(prev => prev?.id === user.id ? { ...prev, totalXp: user.totalXp, weeklyXp: user.weeklyXp } : prev);
       setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u, totalXp: user.totalXp, weeklyXp: user.weeklyXp } : u));
+      setSampleSolutionDailyUsage(dailyUsage);
       return penalty;
+    } catch (err) {
+      ApiService.getSampleSolutionDailyUsage(currentUser.id).then(setSampleSolutionDailyUsage).catch(() => {});
+      throw err;
     } finally {
       sampleSolutionPending.current = false;
       setIsOpeningSampleSolution(false);
@@ -1103,11 +1112,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLessonSubmissions({});
     setPersonalNotes([]);
     setNotifications([]);
+    setSampleSolutionDailyUsage(null);
   };
 
   // Kiểm tra lại phiên đăng nhập đã lưu: tài khoản bị khóa / chuyển về chờ duyệt / bị xóa sẽ bị đăng xuất
   const currentUserId = currentUser?.id;
-  const currentUserRole = currentUser?.role;
   useEffect(() => {
     if (!currentUserId) return;
     let cancelled = false;
@@ -1123,8 +1132,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } else if (fresh.status === 'pending') {
           logout();
           setAuthErrorMessage(`Tài khoản @${fresh.username} đang CHỜ DUYỆT từ Quản trị viên.`);
-        } else if (fresh.role !== currentUserRole) {
-          setCurrentUser(prev => (prev ? { ...prev, role: fresh.role } : prev));
+        } else {
+          setCurrentUser(prev => {
+            if (!prev || prev.id !== fresh.id) return prev;
+            if (prev.role !== fresh.role || prev.totalXp !== fresh.totalXp || prev.weeklyXp !== fresh.weeklyXp) {
+              return { ...prev, role: fresh.role, totalXp: fresh.totalXp, weeklyXp: fresh.weeklyXp };
+            }
+            return prev;
+          });
+          const usage = await ApiService.getSampleSolutionDailyUsage(currentUserId);
+          if (!cancelled) setSampleSolutionDailyUsage(usage);
         }
       } catch {}
     };
@@ -1415,6 +1432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         classroomConnection,
         classActivityVersion,
         isOpeningSampleSolution,
+        sampleSolutionDailyUsage,
         allUsers,
         login,
         register,

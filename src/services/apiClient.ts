@@ -102,14 +102,15 @@ export class LocalDataManager {
     } catch {}
   }
 
+  private static readonly LEGACY_DELETED_TOKENS = new Set([
+    "hahaha",
+    "hahahahahaha",
+    "@hahahahahaha",
+    "test-user-temp-999",
+    "usr-test-delete-123",
+  ]);
+
   public static getDeletedIdentifiers(): Set<string> {
-    const defaultBlacklist = [
-      "hahaha",
-      "hahahahahaha",
-      "@hahahahahaha",
-      "test-user-temp-999",
-      "usr-test-delete-123"
-    ];
     let stored: string[] = [];
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_DELETED_USERS);
@@ -118,14 +119,11 @@ export class LocalDataManager {
         if (Array.isArray(parsed)) stored = parsed;
       }
     } catch {}
-    const set = new Set<string>();
-    [...defaultBlacklist, ...stored].forEach(s => {
+    const set = new Set<string>(LocalDataManager.LEGACY_DELETED_TOKENS);
+    stored.forEach(s => {
       if (s && typeof s === "string") {
         const clean = s.toLowerCase().trim();
-        set.add(clean);
-        if (clean.startsWith("@")) {
-          set.add(clean.substring(1));
-        }
+        if (clean) set.add(clean);
       }
     });
     return set;
@@ -133,13 +131,19 @@ export class LocalDataManager {
 
   public static isUserDeleted(id?: string, username?: string, email?: string, fullName?: string): boolean {
     const deletedSet = this.getDeletedIdentifiers();
-    const checks = [id, username, email, fullName];
-    for (const c of checks) {
+    if (id && typeof id === "string") {
+      const cleanId = id.toLowerCase().trim();
+      if (cleanId && (deletedSet.has(cleanId) || cleanId.startsWith("deleted_"))) {
+        return true;
+      }
+    }
+    // Only check explicit deletion/legacy-spam markers on username/email/fullName so active or
+    // re-registered students with the same display name or email are never hidden.
+    for (const c of [username, email, fullName]) {
       if (!c || typeof c !== "string") continue;
       const clean = c.toLowerCase().trim();
-      if (deletedSet.has(clean)) return true;
-      if (clean.startsWith("@") && deletedSet.has(clean.substring(1))) return true;
-      if (clean === "hahaha" || clean === "hahahahahaha" || clean === "@hahahahahaha") return true;
+      const normalized = clean.startsWith("@") ? clean.substring(1) : clean;
+      if (LocalDataManager.LEGACY_DELETED_TOKENS.has(clean) || LocalDataManager.LEGACY_DELETED_TOKENS.has(normalized)) return true;
       if (clean.startsWith("deleted_")) return true;
       if (clean === "[tài khoản đã xóa]" || clean === "[đã xóa]") return true;
     }
@@ -270,8 +274,6 @@ export class LocalDataManager {
 
   public static deleteUser(id: string, username?: string, email?: string, fullName?: string): boolean {
     const candidates = [id, username, email, fullName].filter(Boolean) as string[];
-    this.recordDeletedIdentifier(...candidates);
-
     const users = this.getUsers();
     const targets = users.filter(u => 
       (id && (u.id === id || u.username?.toLowerCase() === id.toLowerCase() || (u.email && u.email.toLowerCase() === id.toLowerCase()))) ||
@@ -281,9 +283,9 @@ export class LocalDataManager {
       this.isUserDeleted(u.id, u.username, u.email, u.fullName)
     );
 
-    targets.forEach(t => {
-      this.recordDeletedIdentifier(t.id, t.username, t.email, t.fullName);
-    });
+    // Only persist unique user IDs so deleting a duplicate or old account never hides another
+    // student who has the same name, username, or email.
+    this.recordDeletedIdentifier(id, ...targets.map(t => t.id));
 
     const filtered = users.filter(u => {
       if (this.isUserDeleted(u.id, u.username, u.email, u.fullName)) return false;

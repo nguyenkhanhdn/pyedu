@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildTopicProgress } from "../src/utils/topicProgress";
 import { SupabaseService } from "../src/services/supabaseService";
-import { ApiService } from "../src/services/apiClient";
+import { ApiService, LocalDataManager } from "../src/services/apiClient";
 import type { Module, User } from "../src/types";
 import type { StudentActivity } from "../src/utils/practiceStats";
 
@@ -84,3 +84,21 @@ test("read failures are not mistaken for zero progress, student viewer is denied
   await assert.rejects(ApiService.fetchClassTopicActivities(user), /Chỉ giáo viên/);
   await assert.rejects(ApiService.fetchClassTopicActivities({ ...user, role: "teacher", status: "blocked" }), /Chỉ giáo viên/);
 });
+
+test("deleting an old account does not hide a newly registered student with the same name or email", () => {
+  const store = new Map<string, string>();
+  globalThis.localStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => { store.set(k, v); },
+    removeItem: (k: string) => { store.delete(k); },
+  } as unknown as Storage;
+
+  // Simulate legacy polluted blacklist containing display names/emails from earlier browser versions
+  store.set("pyedu_deleted_users", JSON.stringify(["usr-old", "vĩnh huy", "trần vĩnh huy", "huuky131dn@gmail.com"]));
+  LocalDataManager.deleteUser("usr-old-2", "vĩnh huy", "huuky131dn@gmail.com", "trần vĩnh huy");
+
+  assert.equal(LocalDataManager.isUserDeleted("usr-old", "deleted_usr-old", "deleted@deleted.local", "[Tài khoản đã xóa]"), true);
+  assert.equal(LocalDataManager.isUserDeleted("usr-old-2", "vĩnh huy", "huuky131dn@gmail.com", "trần vĩnh huy"), true);
+  assert.equal(LocalDataManager.isUserDeleted("usr-new-active", "vĩnh huy", "huuky131dn@gmail.com", "trần vĩnh huy"), false);
+});
+

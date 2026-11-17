@@ -1005,8 +1005,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
     const updates = createRefreshQueue(async () => {
-      setClassActivityVersion(version => version + 1);
       await refreshUsers();
+      setClassActivityVersion(version => version + 1);
     });
     const unsubscribe = ApiService.subscribeClassroomChanges(() => updates.trigger(), setClassroomConnection);
     return () => { unsubscribe(); updates.dispose(); };

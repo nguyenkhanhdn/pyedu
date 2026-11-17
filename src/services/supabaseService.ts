@@ -128,17 +128,39 @@ export class SupabaseService {
 
   // ===================== AUTH & PROFILES =====================
 
+  private static async readAllPaged<T = any>(
+    buildPage: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>
+  ): Promise<T[]> {
+    const rows: T[] = [];
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await buildPage(rows.length, rows.length + pageSize - 1);
+      if (error || !data) break;
+      rows.push(...data);
+      if (data.length < pageSize) break;
+    }
+    return rows;
+  }
+
   public static async getAllUsers(): Promise<User[] | null> {
     const supabase = getSupabase();
     if (!supabase) return null;
 
     try {
-      const { data: users, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("total_xp", { ascending: false });
-
-      if (error || !users) return null;
+      const users: any[] = [];
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .order("total_xp", { ascending: false })
+          .order("id", { ascending: true })
+          .range(users.length, users.length + pageSize - 1);
+        if (error) return null;
+        if (!data || data.length === 0) break;
+        users.push(...data);
+        if (data.length < pageSize) break;
+      }
 
       // Filter out deleted accounts
       const activeUsers = users.filter((u: any) => 
@@ -148,27 +170,29 @@ export class SupabaseService {
         !(u.username && typeof u.username === "string" && u.username.startsWith("deleted_"))
       );
 
-      // Get badges & completed lessons for each user
-      const { data: allBadges } = await supabase.from("user_badges").select("*");
-      const { data: allProgress } = await supabase.from("user_progress").select("*");
+      // Get badges & completed lessons for each user (paginated so >1000 rows are never truncated)
+      const [allBadges, allProgress] = await Promise.all([
+        this.readAllPaged((from, to) =>
+          supabase.from("user_badges").select("user_id,badge_id").order("user_id").order("badge_id").range(from, to)
+        ),
+        this.readAllPaged((from, to) =>
+          supabase.from("user_progress").select("user_id,lesson_id,completed").eq("completed", true).order("user_id").order("lesson_id").range(from, to)
+        ),
+      ]);
 
       const badgeMap: Record<string, string[]> = {};
-      if (allBadges) {
-        allBadges.forEach((b: any) => {
-          if (!badgeMap[b.user_id]) badgeMap[b.user_id] = [];
-          badgeMap[b.user_id].push(b.badge_id);
-        });
-      }
+      allBadges.forEach((b: any) => {
+        if (!badgeMap[b.user_id]) badgeMap[b.user_id] = [];
+        badgeMap[b.user_id].push(b.badge_id);
+      });
 
       const progressMap: Record<string, string[]> = {};
-      if (allProgress) {
-        allProgress.forEach((p: any) => {
-          if (p.completed) {
-            if (!progressMap[p.user_id]) progressMap[p.user_id] = [];
-            progressMap[p.user_id].push(p.lesson_id);
-          }
-        });
-      }
+      allProgress.forEach((p: any) => {
+        if (p.completed) {
+          if (!progressMap[p.user_id]) progressMap[p.user_id] = [];
+          progressMap[p.user_id].push(p.lesson_id);
+        }
+      });
 
       return activeUsers.map((u: any) => ({
         id: u.id,

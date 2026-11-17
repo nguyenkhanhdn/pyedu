@@ -7,7 +7,7 @@ import type { StudentActivity } from "../utils/practiceStats";
 import { StudentHistoryPanel } from "./StudentHistoryPanel";
 
 export const ClassTopicProgress: React.FC = () => {
-  const { allUsers, modules, currentUser, classActivityVersion } = useApp();
+  const { allUsers, modules, currentUser, refreshUsers, classActivityVersion } = useApp();
   const [events, setEvents] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,7 +23,7 @@ export const ClassTopicProgress: React.FC = () => {
     const seq = ++request.current;
     setLoading(true); setError("");
     try {
-      const rows = await ApiService.fetchClassTopicActivities(currentUser);
+      const [rows] = await Promise.all([ApiService.fetchClassTopicActivities(currentUser), refreshUsers()]);
       if (seq === request.current) { setEvents(rows); setLoadedAt(new Date()); }
     } catch (err) {
       if (seq === request.current) setError(err instanceof Error ? err.message : "Không tải được tiến độ lớp.");

@@ -36,15 +36,18 @@ export const app = express();
 
 app.use(express.json());
 
-// Serve Sotay.html reference document
+// Serve Sotay.html reference document (disable browser caching so handbook updates appear immediately)
 app.get(["/Sotay.html", "/sotay.html"], (_req, res) => {
-  const rootPath = path.join(process.cwd(), "Sotay.html");
-  if (fs.existsSync(rootPath)) {
-    return res.sendFile(rootPath);
-  }
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
   const publicPath = path.join(process.cwd(), "public", "Sotay.html");
   if (fs.existsSync(publicPath)) {
     return res.sendFile(publicPath);
+  }
+  const rootPath = path.join(process.cwd(), "Sotay.html");
+  if (fs.existsSync(rootPath)) {
+    return res.sendFile(rootPath);
   }
   res.status(404).send("Tài liệu Sotay.html không tìm thấy.");
 });

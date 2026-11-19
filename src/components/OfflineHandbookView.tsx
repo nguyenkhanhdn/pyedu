@@ -83,7 +83,7 @@ export const OfflineHandbookView: React.FC = () => {
           </div>
 
           <a
-            href="/Sotay.html"
+            href="/Sotay.html?v=20261119"
             target="_blank"
             rel="noopener noreferrer"
             className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
@@ -100,7 +100,7 @@ export const OfflineHandbookView: React.FC = () => {
         /* Embedded Sotay.html iframe viewer */
         <div className="flex-1 flex flex-col h-full bg-white relative">
           <iframe
-            src="/Sotay.html"
+            src="/Sotay.html?v=20261119"
             title="Sổ tay Lập trình Python"
             className="w-full flex-1 border-0 bg-white"
             sandbox="allow-scripts allow-same-origin allow-popups allow-forms"

@@ -1086,7 +1086,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                           <span>Hỏi AI Tutor giải thích thêm về gợi ý này</span>
                         </button>
                         <a
-                          href="/Sotay.html"
+                          href="/Sotay.html?v=20261119"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
@@ -1138,7 +1138,7 @@ export const LearnView: React.FC<LearnViewProps> = ({ onOpenAiWithContext }) => 
                       <span>{isEditorExpanded ? "Thu gọn" : "Mở rộng"}</span>
                     </button>
                     <a
-                      href="/Sotay.html"
+                      href="/Sotay.html?v=20261119"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-2 py-1 rounded-lg bg-purple-950/60 border border-purple-700/50 text-purple-300 hover:text-white hover:bg-purple-900/80 transition-colors cursor-pointer flex items-center gap-1 text-xs"

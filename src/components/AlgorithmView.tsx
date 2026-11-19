@@ -732,7 +732,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
                   {/* Sổ tay & Ask AI button */}
                   <div className="flex items-center gap-1.5">
                     <a
-                      href="/Sotay.html"
+                      href="/Sotay.html?v=20261119"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
@@ -981,7 +981,7 @@ export const AlgorithmView: React.FC<AlgorithmViewProps> = ({ onOpenAiWithContex
 
                   <div className="flex items-center gap-1.5">
                     <a
-                      href="/Sotay.html"
+                      href="/Sotay.html?v=20261119"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-700/50 text-xs font-medium transition-colors cursor-pointer"

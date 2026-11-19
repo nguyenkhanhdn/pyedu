@@ -175,30 +175,90 @@ print(f"Tong 1..{n} = {s}")`,
   },
   {
     id: "topic-4",
-    title: "4. Chuỗi ký tự (Strings) & Các phương thức chuỗi",
+    title: "4. Chuỗi ký tự (Strings) & Các hàm, phương thức chuỗi thường dùng",
     category: "Chuỗi",
-    summary: "Chỉ số, cắt lát chuỗi [start:stop:step], đảo ngược chuỗi và các phương thức thông dụng.",
-    content: `### Truy cập và cắt chuỗi (Indexing & Slicing)
-- \`s[0]\`: Ký tự đầu tiên; \`s[-1]\`: Ký tự cuối cùng.
-- \`s[start:stop]\`: Cắt chuỗi từ start đến stop-1.
-- \`s[::-1]\`: Đảo ngược chuỗi.
-- \`len(s)\`: Độ dài chuỗi.
+    summary: "Chỉ số, cắt lát chuỗi [start:stop:step], danh sách đầy đủ các hàm & phương thức chuỗi thường dùng kèm giải thích rõ ràng, ví dụ minh họa và lưu ý tránh lỗi.",
+    content: `### 1. Truy cập, cắt chuỗi (Indexing & Slicing) & Hàm có sẵn
+- \`s[i]\`: Lấy 1 ký tự tại vị trí \`i\` (đánh số từ \`0\` từ trái sang; \`s[-1]\` là ký tự cuối cùng, \`s[-2]\` là ký tự áp chót).
+- \`s[start:stop:step]\`: Cắt lấy chuỗi con từ chỉ số \`start\` đến \`stop - 1\` theo bước nhảy \`step\` (mặc định \`step = 1\`).
+  - \`s[:k]\`: Lấy \`k\` ký tự đầu tiên. | \`s[-k:]\`: Lấy \`k\` ký tự cuối cùng.
+  - \`s[::-1]\`: Đảo ngược toàn bộ chuỗi (ví dụ \`"abc"[::-1]\` -> \`"cba"\`).
+- \`len(s)\`: Trả về độ dài chuỗi (tổng số ký tự, tính cả dấu cách và dấu câu).
+- \`str(x)\`: Ép số hoặc giá trị bất kỳ thành chuỗi (rất hay dùng để tách/đếm chữ số của số nguyên).
+- \`ord(ch)\` / \`chr(ma)\`: Đổi 1 ký tự sang mã ASCII/Unicode (\`ord('A') = 65\`, \`ord('a') = 97\`, \`ord('0') = 48\`) và đổi ngược từ mã về ký tự (\`chr(65) = 'A'\`).
+- \`sorted(s)\`: Trả về **list** các ký tự đã sắp xếp tăng dần theo bảng mã (\`"".join(sorted(s))\` để ghép lại thành chuỗi).
+- \`min(s)\` / \`max(s)\`: Tìm ký tự có mã nhỏ nhất / lớn nhất trong chuỗi.
+- \`x in s\` / \`x not in s\`: Kiểm tra chuỗi con \`x\` có xuất hiện trong \`s\` hay không (trả về \`True\` hoặc \`False\`).
 
-### Các phương thức chuỗi thường dùng
-- \`s.lower()\`, \`s.upper()\`: Chuyển thành chữ thường / in hoa.
-- \`s.strip()\`: Cắt bỏ khoảng trắng thừa ở 2 đầu.
-- \`s.split(sep)\`: Tách chuỗi thành danh sách các từ.
-- \`sep.join(list_str)\`: Nối các phần tử của danh sách thành chuỗi.
-- \`s.replace(old, new)\`: Thay thế chuỗi con.
-- \`s.count(sub)\`: Đếm số lần xuất hiện của chuỗi con.`,
-    codeSnippet: `# Kiểm tra chuỗi Palindrome (đối xứng)
-s = input().strip()
-if s == s[::-1]:
-    print("YES")
-else:
-    print("NO")`,
+### 2. Nhóm biến đổi chữ hoa / chữ thường
+- \`s.lower()\`: Chuyển toàn bộ chữ cái sang **chữ thường** (\`"PyThon".lower() -> "python"\`). Hữu ích khi so sánh không phân biệt hoa/thường.
+- \`s.upper()\`: Chuyển toàn bộ chữ cái sang **CHỮ HOA** (\`"PyThon".upper() -> "PYTHON"\`).
+- \`s.title()\`: Viết **Hoa chữ cái đầu của mỗi từ** (\`"nguyen van an".title() -> "Nguyen Van An"\`).
+- \`s.capitalize()\`: Chỉ viết **Hoa chữ cái đầu tiên của cả chuỗi**, các chữ còn lại thành chữ thường (\`"xin CHAO".capitalize() -> "Xin chao"\`).
+- \`s.swapcase()\`: Đổi ngược chữ **HOA thành thường** và **thường thành HOA** (\`"AbC".swapcase() -> "aBc"\`).
+
+### 3. Nhóm xóa khoảng trắng & ký tự thừa ở đầu/cuối
+- \`s.strip([chars])\`: Xóa khoảng trắng (dấu cách, \`\\t\`, \`\\n\`) ở **cả hai đầu** trái và phải. Nếu truyền \`chars\` (vd \`s.strip(".,")\`), xóa mọi ký tự thuộc \`chars\` ở 2 đầu. Không xóa ở giữa chuỗi!
+- \`s.lstrip([chars])\`: Chỉ xóa ở **đầu bên trái** (left).
+- \`s.rstrip([chars])\`: Chỉ xóa ở **đầu bên phải** (right).
+- \`s.removeprefix(p)\` / \`s.removesuffix(p)\`: Xóa đúng cụm tiền tố \`p\` ở đầu / hậu tố \`p\` ở cuối nếu chuỗi có chứa cụm đó (Python 3.9+, an toàn hơn \`strip\`).
+
+### 4. Nhóm tìm kiếm, đếm & thay thế
+- \`s.find(sub[, start, end])\`: Tìm vị trí (chỉ số) **đầu tiên** của \`sub\` trong \`s\`. Nếu **không tìm thấy trả về \`-1\`** (an toàn, không gây lỗi).
+- \`s.rfind(sub[, start, end])\`: Tìm vị trí **cuối cùng** (từ phải sang trái) của \`sub\`; không thấy trả về \`-1\`.
+- \`s.index(sub)\` / \`s.rindex(sub)\`: Tương tự \`find\` / \`rfind\` nhưng sẽ **báo lỗi \`ValueError\`** nếu không tìm thấy.
+- \`s.count(sub[, start, end])\`: Đếm số lần xuất hiện (không chồng lấp) của \`sub\` trong \`s\` (\`"banana".count("a") -> 3\`).
+- \`s.replace(old, new[, count])\`: Tạo chuỗi mới bằng cách thay mọi \`old\` bằng \`new\`. Nếu thêm \`count\`, chỉ thay tối đa \`count\` lần đầu tiên. Muốn xóa bỏ \`old\`, truyền \`new = ""\`.
+- \`s.startswith(prefix)\`: Kiểm tra chuỗi có **bắt đầu** bằng \`prefix\` không (\`True\`/\`False\`). Có thể truyền tuple như \`s.startswith(("http", "https"))\`.
+- \`s.endswith(suffix)\`: Kiểm tra chuỗi có **kết thúc** bằng \`suffix\` không (\`True\`/\`False\`).
+
+### 5. Nhóm tách chuỗi & nối chuỗi
+- \`s.split([sep, maxsplit])\`: Tách chuỗi thành **list các chuỗi con**.
+  - Không truyền \`sep\`: tự tách theo mọi khoảng trắng và tự bỏ khoảng trắng thừa (\`"  a   b\\tc ".split() -> ['a', 'b', 'c']\`).
+  - Truyền \`sep\` (vd \`s.split(",")\`): tách chính xác theo dấu \`","\`, giữ lại chuỗi rỗng nếu có hai dấu phân cách liền nhau.
+- \`s.rsplit(sep, maxsplit)\`: Tách từ **bên phải sang trái** (hữu ích khi chỉ muốn tách 1–2 phần cuối).
+- \`s.splitlines()\`: Tách chuỗi nhiều dòng thành list từng dòng theo dấu xuống dòng \`\\n\`.
+- \`sep.join(ds)\`: **Nối** tất cả các phần tử của \`ds\` thành 1 chuỗi duy nhất, ngăn cách bởi \`sep\` (\`"-".join(["2026", "11", "19"]) -> "2026-11-19"\`). Lưu ý: mọi phần tử trong \`ds\` bắt buộc phải là \`str\`.
+
+### 6. Nhóm kiểm tra loại ký tự (trả về True / False)
+- \`s.isdigit()\`: Trả về \`True\` nếu chuỗi không rỗng và **toàn là chữ số** (\`'0'\`–\`'9'\`). Lưu ý: dấu \`-\`, dấu \`.\`, dấu cách sẽ làm trả về \`False\`.
+- \`s.isalpha()\`: Trả về \`True\` nếu chuỗi không rỗng và **toàn là chữ cái** (không có số, không có dấu cách).
+- \`s.isalnum()\`: Trả về \`True\` nếu chuỗi không rỗng và **chỉ gồm chữ cái và/hoặc chữ số** (không có dấu cách hay ký tự đặc biệt).
+- \`s.isspace()\`: Trả về \`True\` nếu chuỗi không rỗng và **toàn là khoảng trắng** (dấu cách, \`\\t\`, \`\\n\`).
+- \`s.islower()\` / \`s.isupper()\`: Trả về \`True\` nếu có ít nhất 1 chữ cái và **tất cả chữ cái đều viết thường / viết HOA**.
+- \`s.istitle()\`: Trả về \`True\` nếu viết hoa đúng kiểu Title Case (chữ đầu mỗi từ viết hoa).
+
+### 7. Nhóm căn lề & bổ sung ký tự
+- \`s.zfill(width)\`: Thêm các số \`'0'\` vào bên trái cho đủ độ dài \`width\` (\`"42".zfill(5) -> "00042"\`).
+- \`s.ljust(w, ch)\` / \`s.rjust(w, ch)\` / \`s.center(w, ch)\`: Căn trái / căn phải / căn giữa chuỗi trong độ rộng \`w\`, phần trống điền bằng ký tự \`ch\` (mặc định dấu cách).`,
+    codeSnippet: `# Tổng hợp các hàm & phương thức chuỗi thường dùng
+s = "  Hoc Python 2026!  "
+clean = s.strip()                  # "Hoc Python 2026!"
+words = clean.split()              # ['Hoc', 'Python', '2026!']
+
+print("Độ dài:", len(clean))       # 16
+print("Hoa / Thường:", clean.upper(), "|", clean.lower())
+print("Thay thế:", clean.replace("2026", "vui"))
+print("Tìm 'Python':", clean.find("Python"))   # 4 (không thấy trả -1)
+print("Đếm chữ 'o':", clean.count("o"))        # 2
+print("Nối bằng '-':", "-".join(words))        # Hoc-Python-2026!
+print("Thêm số 0 đầu:", "45".zfill(5))         # 00045
+print("Đảo ngược:", clean[::-1])
+
+# Đếm chữ cái, chữ số, khoảng trắng
+chu = sum(1 for c in clean if c.isalpha())
+so = sum(1 for c in clean if c.isdigit())
+print(f"Chữ cái: {chu}, Chữ số: {so}")
+
+# Kiểm tra chuỗi Palindrome (bỏ khoảng trắng & không phân biệt hoa/thường)
+p = "Madam".lower()
+print("Palindrome:", p == p[::-1])`,
     tips: [
-      "Chuỗi trong Python là kiểu bất biến (immutable), các hàm như .lower() hay .replace() luôn trả về chuỗi MỚI mà không làm thay đổi chuỗi gốc."
+      "Chuỗi trong Python là kiểu bất biến (immutable): gọi s.lower(), s.strip() hay s.replace() KHÔNG làm thay đổi biến s ban đầu mà tạo ra chuỗi MỚI. Muốn lưu lại phải gán: s = s.lower().",
+      "Dùng s.find(x) thay cho s.index(x) khi chưa chắc x có trong chuỗi: find trả về -1, còn index sẽ gây lỗi ValueError làm dừng chương trình.",
+      "Phân biệt s.split() và s.split(' '): split() không tham số tự gộp và bỏ mọi khoảng trắng thừa ở đầu/cuối/giữa, còn split(' ') tách từng dấu cách một nên có thể sinh ra chuỗi rỗng ''.",
+      "Khi dùng sep.join(ds), nếu ds chứa số (vd [1, 2, 3]) phải ép sang chuỗi trước: ' '.join(str(x) for x in ds).",
+      "Các hàm kiểm tra như isdigit(), isalpha() trả về False nếu chuỗi rỗng '' hoặc có chứa khoảng trắng."
     ]
   },
   {

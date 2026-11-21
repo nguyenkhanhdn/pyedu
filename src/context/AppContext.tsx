@@ -17,8 +17,12 @@ import {
   AlgorithmLeaderboardEntry,
   AlgorithmLevel,
   ResetScope,
-  GROUP_MESSAGE_MAX_LENGTH
+  GROUP_MESSAGE_MAX_LENGTH,
+  DirectChatMessage
 } from "../types";
+import { ChatService } from "../services/chatService";
+import { subscribeChatRealtime, ChatConnectionStatus } from "../services/chatRealtime";
+import { buildClassRoomId, buildDmRoomId, canAccessChatRoom, CLASS_ALL_ROOM_ID, countUnreadMessages, mergeChatMessages } from "../utils/chatRooms";
 import {
   CURRICULUM_MODULES,
   BADGES_DATA,
@@ -129,9 +133,24 @@ interface AppContextType {
   // Offline Docs & Handbook
   handbookTopics: typeof OFFLINE_HANDBOOK_TOPICS;
 
+  // Class & 1-on-1 Direct Chat
+  chatThreads: Record<string, DirectChatMessage[]>;
+  chatReadTimestamps: Record<string, number>;
+  chatConnectionStatus: ChatConnectionStatus;
+  selectedChatRoomId: string | null;
+  setSelectedChatRoomId: (roomId: string | null) => void;
+  totalChatUnread: number;
+  refreshChatThreads: () => Promise<void>;
+  refreshChatRoom: (roomId: string) => Promise<void>;
+  sendDirectChatMessage: (roomId: string, content: string, codeSnippet?: string, pinned?: boolean) => Promise<DirectChatMessage>;
+  markChatRoomRead: (roomId: string) => Promise<void>;
+  togglePinClassChatMessage: (roomId: string, messageId: string) => Promise<void>;
+  openPrivateChat: (peerUserId: string) => void;
+  openClassChat: (grade?: string) => void;
+
   // Active View Tab
-  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review';
-  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review') => void;
+  activeTab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'chat' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review';
+  setActiveTab: (tab: 'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'chat' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review') => void;
   adminSection: 'users' | 'stats' | 'curriculum' | 'algorithms';
   setAdminSection: (sec: 'users' | 'stats' | 'curriculum' | 'algorithms') => void;
 }
@@ -154,7 +173,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [teacherMode, setTeacherMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review'>(() => {
+  const [activeTab, setActiveTab] = useState<'learn' | 'algorithms' | 'leaderboard' | 'groups' | 'chat' | 'notes' | 'handbook' | 'profile' | 'admin' | 'class' | 'review'>(() => {
     try {
       const saved = localStorage.getItem("pyedu_current_user");
       if (saved) {
@@ -165,6 +184,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return 'learn';
   });
   const [adminSection, setAdminSection] = useState<'users' | 'stats' | 'curriculum' | 'algorithms'>('users');
+  const [chatThreads, setChatThreads] = useState<Record<string, DirectChatMessage[]>>({});
+  const [chatReadTimestamps, setChatReadTimestamps] = useState<Record<string, number>>({});
+  const [chatConnectionStatus, setChatConnectionStatus] = useState<ChatConnectionStatus>("offline");
+  const [selectedChatRoomId, setSelectedChatRoomId] = useState<string | null>(CLASS_ALL_ROOM_ID);
 
   // 2. Selected Lesson State
   const [selectedLesson, setSelectedLessonState] = useState<Lesson>(() => {
@@ -1113,6 +1136,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPersonalNotes([]);
     setNotifications([]);
     setSampleSolutionDailyUsage(null);
+    setChatThreads({});
+    setChatReadTimestamps({});
+    setSelectedChatRoomId(CLASS_ALL_ROOM_ID);
   };
 
   // Kiểm tra lại phiên đăng nhập đã lưu: tài khoản bị khóa / chuyển về chờ duyệt / bị xóa sẽ bị đăng xuất
@@ -1215,6 +1241,122 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
     await ApiService.likeGroupMessage(groupId, messageId, currentUser.id);
   };
+
+  // Class & 1-on-1 Direct Chat handlers & real-time subscription
+  const refreshChatThreads = async () => {
+    if (!currentUser || (currentUser.status && currentUser.status !== "active")) return;
+    try {
+      const [threads, reads] = await Promise.all([
+        ChatService.fetchAccessibleThreads(currentUser),
+        ChatService.getReadReceipts(currentUser.id),
+      ]);
+      setChatThreads(threads);
+      setChatReadTimestamps(reads);
+    } catch (err) {
+      console.warn("Refresh chat threads notice:", err);
+    }
+  };
+
+  const refreshChatRoom = async (roomId: string) => {
+    if (!currentUser || !canAccessChatRoom(currentUser, roomId)) return;
+    try {
+      const messages = await ChatService.fetchRoomMessages(currentUser, roomId);
+      setChatThreads(prev => ({
+        ...prev,
+        [roomId]: mergeChatMessages(prev[roomId] || [], messages),
+      }));
+    } catch (err) {
+      console.warn("Refresh chat room notice:", err);
+    }
+  };
+
+  const markChatRoomRead = async (roomId: string) => {
+    if (!currentUser || !roomId) return;
+    const msgs = chatThreads[roomId] || [];
+    const latestTs = msgs.reduce((max, m) => Math.max(max, Date.parse(m.timestamp) || 0), Date.now());
+    setChatReadTimestamps(prev => ({ ...prev, [roomId]: Math.max(prev[roomId] || 0, latestTs) }));
+    try {
+      const updated = await ChatService.markRoomRead(currentUser.id, roomId, latestTs);
+      setChatReadTimestamps(updated);
+    } catch {}
+  };
+
+  const sendDirectChatMessage = async (
+    roomId: string,
+    content: string,
+    codeSnippet?: string,
+    pinned?: boolean
+  ): Promise<DirectChatMessage> => {
+    if (!currentUser) throw new Error("Vui lòng đăng nhập để nhắn tin.");
+    const sent = await ChatService.sendMessage(currentUser, roomId, { content, codeSnippet, pinned }, allUsers);
+    setChatThreads(prev => ({
+      ...prev,
+      [roomId]: mergeChatMessages(prev[roomId] || [], [sent]),
+    }));
+    void markChatRoomRead(roomId);
+    return sent;
+  };
+
+  const togglePinClassChatMessage = async (roomId: string, messageId: string) => {
+    if (!currentUser) return;
+    const nextMessages = await ChatService.togglePinMessage(currentUser, roomId, messageId);
+    setChatThreads(prev => ({ ...prev, [roomId]: nextMessages }));
+  };
+
+  const openPrivateChat = (peerUserId: string) => {
+    if (!currentUser || !peerUserId || peerUserId === currentUser.id) return;
+    try {
+      const roomId = buildDmRoomId(currentUser.id, peerUserId);
+      setSelectedChatRoomId(roomId);
+      setActiveTab("chat");
+    } catch (err) {
+      console.warn("openPrivateChat notice:", err);
+    }
+  };
+
+  const openClassChat = (grade?: string) => {
+    const roomId = buildClassRoomId(grade || (currentUser?.role === "student" ? currentUser.grade : "all"));
+    setSelectedChatRoomId(roomId);
+    setActiveTab("chat");
+  };
+
+  useEffect(() => {
+    if (!currentUser || (currentUser.status && currentUser.status !== "active")) {
+      setChatConnectionStatus("offline");
+      return;
+    }
+    void refreshChatThreads();
+    const activeRoom = activeTab === "chat" ? selectedChatRoomId : null;
+    const unsubscribe = subscribeChatRealtime(currentUser, activeRoom, {
+      onMessage: (message) => {
+        if (!canAccessChatRoom(currentUser, message.roomId)) return;
+        setChatThreads(prev => ({
+          ...prev,
+          [message.roomId]: mergeChatMessages(prev[message.roomId] || [], [message]),
+        }));
+      },
+      onRoomSync: (roomId) => {
+        void refreshChatRoom(roomId);
+      },
+      onStatusChange: setChatConnectionStatus,
+    });
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void refreshChatThreads();
+      }
+    }, 15000);
+    return () => {
+      unsubscribe();
+      window.clearInterval(timer);
+    };
+  }, [currentUser?.id, currentUser?.role, currentUser?.grade, currentUser?.status, activeTab, selectedChatRoomId]);
+
+  const totalChatUnread = currentUser
+    ? Object.entries<DirectChatMessage[]>(chatThreads).reduce((sum, [roomId, msgs]) => {
+        if (!canAccessChatRoom(currentUser, roomId)) return sum;
+        return sum + countUnreadMessages(msgs, chatReadTimestamps[roomId] || 0, currentUser.id);
+      }, 0)
+    : 0;
 
   // Notes with SQLite
   const addNote = async (note: Omit<PersonalNote, "id" | "createdAt" | "updatedAt">) => {
@@ -1512,6 +1654,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAiThinking,
 
         handbookTopics: OFFLINE_HANDBOOK_TOPICS,
+
+        chatThreads,
+        chatReadTimestamps,
+        chatConnectionStatus,
+        selectedChatRoomId,
+        setSelectedChatRoomId,
+        totalChatUnread,
+        refreshChatThreads,
+        refreshChatRoom,
+        sendDirectChatMessage,
+        markChatRoomRead,
+        togglePinClassChatMessage,
+        openPrivateChat,
+        openClassChat,
 
         activeTab,
         setActiveTab,

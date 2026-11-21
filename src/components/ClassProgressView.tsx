@@ -8,11 +8,11 @@ import { ProgressResetDialog } from "./ProgressResetDialog";
 import { SequentialModeToggle } from "./SequentialModeToggle";
 import { StudentHistoryPanel } from "./StudentHistoryPanel";
 import { PracticeStatsPanel } from "./PracticeStatsPanel";
-import { RotateCcw, Search, Users, CheckSquare, GraduationCap } from "lucide-react";
+import { RotateCcw, Search, Users, CheckSquare, GraduationCap, MessageCircle } from "lucide-react";
 
 /** Màn hình giáo viên: xem tiến độ học sinh và yêu cầu làm lại bài / đưa điểm về 0. */
 export const ClassProgressView: React.FC = () => {
-  const { allUsers, modules, currentUser, refreshUsers } = useApp();
+  const { allUsers, modules, currentUser, refreshUsers, openPrivateChat, openClassChat } = useApp();
   const [historyStudent, setHistoryStudent] = useState<User | null>(null);
   const [query, setQuery] = useState("");
   const [grade, setGrade] = useState("all");
@@ -77,6 +77,14 @@ export const ClassProgressView: React.FC = () => {
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => openClassChat(grade === "all" ? "all" : grade)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold cursor-pointer whitespace-nowrap self-start sm:self-center"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>Chat lớp &amp; Nhắn riêng HS</span>
+          </button>
         </div>
 
         <ClassroomRealtimeStatus />
@@ -192,14 +200,24 @@ export const ClassProgressView: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-right font-semibold text-amber-600">{s.totalXp}</td>
                         <td className="px-4 py-3 text-right">
-                          <button type="button" onClick={() => setHistoryStudent(s)} aria-expanded={historyStudent?.id === s.id} className="inline-flex items-center px-2.5 py-1.5 mr-2 mb-1 text-xs font-bold text-indigo-700 bg-indigo-50 rounded-lg">Lịch sử học & nộp bài</button>
-                          <button
-                            onClick={() => setDialogTargets([s])}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer"
-                            title="Đặt lại điểm hoặc yêu cầu làm lại chủ đề"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" /> Đặt lại
-                          </button>
+                          <div className="inline-flex flex-wrap justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openPrivateChat(s.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg cursor-pointer whitespace-nowrap"
+                              title={`Nhắn tin riêng với ${s.fullName}`}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" /> Nhắn riêng
+                            </button>
+                            <button type="button" onClick={() => setHistoryStudent(s)} aria-expanded={historyStudent?.id === s.id} className="inline-flex items-center px-2.5 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 rounded-lg cursor-pointer whitespace-nowrap">Lịch sử học &amp; nộp bài</button>
+                            <button
+                              onClick={() => setDialogTargets([s])}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer whitespace-nowrap"
+                              title="Đặt lại điểm hoặc yêu cầu làm lại chủ đề"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" /> Đặt lại
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

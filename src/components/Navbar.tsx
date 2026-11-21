@@ -15,7 +15,8 @@ import {
   BarChart3,
   Layers,
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  MessageCircle
 } from "lucide-react";
 
 interface NavbarProps {
@@ -40,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
     getLessonProgressPercentage,
     teacherMode,
     allUsers,
+    totalChatUnread,
   } = useApp();
 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -165,6 +167,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 <span>Ngân Hàng Thuật Toán</span>
               </button>
               <button type="button" onClick={() => setActiveTab("review")} className={`px-3 py-2 rounded-xl text-sm font-bold ${activeTab === "review" ? "bg-purple-700 text-white" : "text-slate-600 hover:bg-purple-50"}`}>Ôn tập</button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("chat")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold cursor-pointer ${
+                  activeTab === "chat"
+                    ? "bg-purple-700 text-white shadow-md shadow-purple-700/25"
+                    : "text-slate-600 hover:text-purple-900 hover:bg-purple-50"
+                }`}
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>Trao đổi</span>
+                {totalChatUnread > 0 && (
+                  <span className="tabular-nums px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">
+                    {totalChatUnread}
+                  </span>
+                )}
+              </button>
             </nav>
           ) : (
             /* STUDENT / LEARNER HORIZONTAL NAVIGATION */
@@ -236,7 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 onClick={() => setActiveTab("groups")}
                 title="Học nhóm"
                 aria-label="Học nhóm"
-                className={`flex items-center gap-2 px-2.5 xl:px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2 xl:px-2.5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   activeTab === "groups"
                     ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -244,6 +263,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
               >
                 <Users className="h-4 w-4 text-blue-500" />
                 <span className="hidden xl:inline">Học nhóm</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("chat")}
+                title="Trao đổi với giáo viên & lớp"
+                aria-label="Trao đổi"
+                className={`relative flex items-center gap-1.5 px-2 xl:px-2.5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === "chat"
+                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <MessageCircle className={`h-4 w-4 ${activeTab === "chat" ? "text-white" : "text-indigo-600"}`} />
+                <span className="hidden xl:inline">Trao đổi</span>
+                {totalChatUnread > 0 && (
+                  <span className="tabular-nums px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">
+                    {totalChatUnread}
+                  </span>
+                )}
               </button>
 
               <button
@@ -495,6 +533,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 🎯 Thuật Toán
               </button>
               <button type="button" onClick={() => setActiveTab("review")} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold ${activeTab === "review" ? "bg-purple-700 text-white" : "text-slate-600 hover:bg-purple-50"}`}>Ôn tập</button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("chat")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-bold flex items-center gap-1 ${activeTab === "chat" ? "bg-purple-700 text-white" : "text-slate-600 hover:bg-purple-50"}`}
+              >
+                <span>Trao đổi</span>
+                {totalChatUnread > 0 && (
+                  <span className="tabular-nums px-1.5 py-0.5 text-[10px] bg-rose-500 text-white rounded-full">{totalChatUnread}</span>
+                )}
+              </button>
             </>
           ) : (
             <>
@@ -544,6 +592,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenAuth, onToggleAi, onOpenSu
                 }`}
               >
                 Học Nhóm
+              </button>
+              <button
+                onClick={() => setActiveTab("chat")}
+                className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium flex items-center gap-1 ${
+                  activeTab === "chat" ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                <span>Trao Đổi</span>
+                {totalChatUnread > 0 && (
+                  <span className="tabular-nums px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">
+                    {totalChatUnread}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab("notes")}

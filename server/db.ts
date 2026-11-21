@@ -1,4 +1,5 @@
 import { assertChatAllowed } from "../src/utils/chatRateLimit";
+import { canAccessChatRoom, canCreateDmBetween, getDmPeerId, isStaffRole, parseChatRoomId } from "../src/utils/chatRooms";
 import initSqlJs, { Database } from "sql.js";
 import fs from "fs";
 import path from "path";
@@ -199,6 +200,22 @@ function initTables(db: Database) {
       type TEXT NOT NULL,
       link_tab TEXT,
       read INTEGER NOT NULL DEFAULT 0,
+      timestamp TEXT NOT NULL
+    );
+  `);
+
+  // 12. Direct & Class Chat Messages
+  db.run(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      room_id TEXT NOT NULL,
+      sender_id TEXT NOT NULL,
+      sender_name TEXT NOT NULL,
+      sender_avatar TEXT NOT NULL,
+      sender_role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      code_snippet TEXT,
+      pinned INTEGER NOT NULL DEFAULT 0,
       timestamp TEXT NOT NULL
     );
   `);
@@ -1078,4 +1095,148 @@ export async function clearNotifications(userId: string) {
   db.run(`DELETE FROM notifications WHERE user_id = ?`, [userId]);
   saveDatabase();
 }
+
+// Direct & Class Chat Messages
+export async function getAccessibleChatThreads(userId: string) {
+  const user = await getUserById(userId);
+  if (!user) throw new Error("Không tìm thấy tài khoản.");
+  const db = await getDatabase();
+  const stmt = db.prepare(`SELECT * FROM chat_messages ORDER BY timestamp ASC`);
+  const threads: Record<string, any[]> = {};
+  while (stmt.step()) {
+    const row = stmt.getAsObject();
+    const roomId = String(row.room_id);
+    if (!canAccessChatRoom(user as any, roomId)) continue;
+    if (!threads[roomId]) threads[roomId] = [];
+    threads[roomId].push({
+      id: row.id,
+      roomId,
+      senderId: row.sender_id,
+      senderName: row.sender_name,
+      senderAvatar: row.sender_avatar,
+      senderRole: row.sender_role,
+      content: row.content,
+      codeSnippet: row.code_snippet || undefined,
+      pinned: Boolean(row.pinned),
+      timestamp: row.timestamp,
+    });
+  }
+  stmt.free();
+  return threads;
+}
+
+export async function getChatRoomMessages(userId: string, roomId: string) {
+  const user = await getUserById(userId);
+  if (!user || !canAccessChatRoom(user as any, roomId)) {
+    throw new Error("Bạn không có quyền truy cập phòng chat này.");
+  }
+  const db = await getDatabase();
+  const stmt = db.prepare(`SELECT * FROM chat_messages WHERE room_id = ? ORDER BY timestamp ASC`);
+  stmt.bind([roomId]);
+  const messages: any[] = [];
+  while (stmt.step()) {
+    const row = stmt.getAsObject();
+    messages.push({
+      id: row.id,
+      roomId: row.room_id,
+      senderId: row.sender_id,
+      senderName: row.sender_name,
+      senderAvatar: row.sender_avatar,
+      senderRole: row.sender_role,
+      content: row.content,
+      codeSnippet: row.code_snippet || undefined,
+      pinned: Boolean(row.pinned),
+      timestamp: row.timestamp,
+    });
+  }
+  stmt.free();
+  return messages;
+}
+
+export async function addChatMessage(
+  roomId: string,
+  payload: { userId: string; content: string; codeSnippet?: string; pinned?: boolean }
+) {
+  const sender = await getUserById(payload.userId);
+  if (!sender || !canAccessChatRoom(sender as any, roomId)) {
+    throw new Error("Bạn không có quyền gửi tin nhắn trong phòng chat này.");
+  }
+  const parsed = parseChatRoomId(roomId);
+  if (!parsed) throw new Error("Phòng chat không hợp lệ.");
+  if (parsed.kind === "dm") {
+    const peerId = getDmPeerId(roomId, sender.id);
+    const peer = peerId ? await getUserById(peerId) : null;
+    if (!peer || !canCreateDmBetween(sender as any, peer as any)) {
+      throw new Error("Chat riêng chỉ hỗ trợ giữa giáo viên và học sinh.");
+    }
+  }
+
+  const db = await getDatabase();
+  const recentStmt = db.prepare(
+    `SELECT timestamp, content, code_snippet FROM chat_messages WHERE sender_id = ? AND room_id = ? ORDER BY timestamp DESC LIMIT 20`
+  );
+  recentStmt.bind([sender.id, roomId]);
+  const recent: { timestamp: string; content: string; codeSnippet?: string }[] = [];
+  while (recentStmt.step()) {
+    const r = recentStmt.getAsObject();
+    recent.push({
+      timestamp: String(r.timestamp),
+      content: String(r.content),
+      codeSnippet: r.code_snippet ? String(r.code_snippet) : undefined,
+    });
+  }
+  recentStmt.free();
+
+  const content = (payload.content || "").trim();
+  const codeSnippet = (payload.codeSnippet || "").trim();
+  assertChatAllowed(sender.role, recent, content, codeSnippet);
+
+  const id = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const timestamp = new Date().toISOString();
+  const pinned = parsed.kind === "class" && isStaffRole(sender.role) && Boolean(payload.pinned);
+
+  db.run(
+    `INSERT INTO chat_messages (id, room_id, sender_id, sender_name, sender_avatar, sender_role, content, code_snippet, pinned, timestamp)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      roomId,
+      sender.id,
+      sender.fullName,
+      sender.avatar,
+      sender.role,
+      content,
+      codeSnippet || null,
+      pinned ? 1 : 0,
+      timestamp,
+    ]
+  );
+  saveDatabase();
+
+  return {
+    id,
+    roomId,
+    senderId: sender.id,
+    senderName: sender.fullName,
+    senderAvatar: sender.avatar,
+    senderRole: sender.role,
+    content,
+    ...(codeSnippet ? { codeSnippet } : {}),
+    ...(pinned ? { pinned: true } : {}),
+    timestamp,
+  };
+}
+
+export async function toggleChatMessagePin(userId: string, roomId: string, messageId: string) {
+  const user = await getUserById(userId);
+  const parsed = parseChatRoomId(roomId);
+  if (!user || !isStaffRole(user.role) || !parsed || parsed.kind !== "class" || !canAccessChatRoom(user as any, roomId)) {
+    throw new Error("Chỉ giáo viên mới có quyền ghim thông báo lớp.");
+  }
+  const db = await getDatabase();
+  db.run(`UPDATE chat_messages SET pinned = CASE WHEN pinned = 1 THEN 0 ELSE 1 END WHERE id = ? AND room_id = ?`, [messageId, roomId]);
+  saveDatabase();
+  return getChatRoomMessages(userId, roomId);
+}
+
 

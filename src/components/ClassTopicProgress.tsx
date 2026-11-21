@@ -7,7 +7,7 @@ import type { StudentActivity } from "../utils/practiceStats";
 import { StudentHistoryPanel } from "./StudentHistoryPanel";
 
 export const ClassTopicProgress: React.FC = () => {
-  const { allUsers, modules, currentUser, refreshUsers, classActivityVersion } = useApp();
+  const { allUsers, modules, currentUser, refreshUsers, classActivityVersion, openPrivateChat } = useApp();
   const [events, setEvents] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,7 +84,10 @@ export const ClassTopicProgress: React.FC = () => {
         <p className="text-sm font-semibold">{p.topic.title}</p><p className="text-xs text-slate-500 mt-1">{p.done}/{p.total} bài hoàn thành · {p.total && p.done === p.total ? "Hoàn thành" : p.done ? "Đang hoàn thành" : "Chưa hoàn thành bài nào"}</p>
         <progress aria-label={p.topic.title} value={p.done} max={p.total || 1} className="w-full h-2 accent-emerald-600" />
       </div>)}</div>
-      <button type="button" aria-expanded={showHistory} onClick={() => setShowHistory(value => !value)} className="rounded-xl bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700">{showHistory ? "Thu gọn lịch sử" : "Xem lịch sử học & nộp bài"}</button>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" aria-expanded={showHistory} onClick={() => setShowHistory(value => !value)} className="rounded-xl bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 cursor-pointer">{showHistory ? "Thu gọn lịch sử" : "Xem lịch sử học & nộp bài"}</button>
+        <button type="button" onClick={() => openPrivateChat(detail.user.id)} className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 cursor-pointer">Nhắn riêng cho {detail.user.fullName}</button>
+      </div>
       {showHistory && <StudentHistoryPanel key={detail.user.id} student={detail.user} />}
     </section>}
   </section>;

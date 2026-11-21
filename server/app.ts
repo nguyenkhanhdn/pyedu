@@ -27,7 +27,11 @@ import {
   markNotificationRead,
   clearNotifications,
   deleteUser,
-  getDatabase
+  getDatabase,
+  getAccessibleChatThreads,
+  getChatRoomMessages,
+  addChatMessage,
+  toggleChatMessagePin
 } from "./db";
 
 dotenv.config();
@@ -378,6 +382,56 @@ app.delete("/api/notifications/:userId", async (req, res) => {
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: "Lỗi xóa thông báo", details: error.message });
+  }
+});
+
+// Direct & Class Chat endpoints (SQLite fallback)
+app.get("/api/chat/rooms", async (req, res) => {
+  try {
+    const userId = String(req.query.userId || "").trim();
+    if (!userId) return res.status(400).json({ error: "Thiếu userId" });
+    const threads = await getAccessibleChatThreads(userId);
+    res.json({ threads });
+  } catch (error: any) {
+    res.status(403).json({ error: error.message || "Không tải được danh sách hội thoại" });
+  }
+});
+
+app.get("/api/chat/rooms/:roomId/messages", async (req, res) => {
+  try {
+    const userId = String(req.query.userId || "").trim();
+    if (!userId) return res.status(400).json({ error: "Thiếu userId" });
+    const messages = await getChatRoomMessages(userId, decodeURIComponent(req.params.roomId));
+    res.json({ messages });
+  } catch (error: any) {
+    res.status(403).json({ error: error.message || "Không tải được tin nhắn" });
+  }
+});
+
+app.post("/api/chat/rooms/:roomId/messages", async (req, res) => {
+  try {
+    const { userId, content, codeSnippet, pinned } = req.body;
+    if (!userId) return res.status(400).json({ error: "Thiếu userId" });
+    const message = await addChatMessage(decodeURIComponent(req.params.roomId), {
+      userId,
+      content,
+      codeSnippet,
+      pinned,
+    });
+    res.status(201).json({ success: true, message });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Không thể gửi tin nhắn" });
+  }
+});
+
+app.post("/api/chat/rooms/:roomId/pin", async (req, res) => {
+  try {
+    const { userId, messageId } = req.body;
+    if (!userId || !messageId) return res.status(400).json({ error: "Thiếu userId hoặc messageId" });
+    const messages = await toggleChatMessagePin(userId, decodeURIComponent(req.params.roomId), messageId);
+    res.json({ success: true, messages });
+  } catch (error: any) {
+    res.status(403).json({ error: error.message || "Không thể ghim tin nhắn" });
   }
 });
 

@@ -11,6 +11,7 @@ import { ReviewView } from "./components/ReviewView";
 import { AlgorithmView } from "./components/AlgorithmView";
 import { LeaderboardView } from "./components/LeaderboardView";
 import { StudyGroupsView } from "./components/StudyGroupsView";
+import { ChatView } from "./components/ChatView";
 import { NotesView } from "./components/NotesView";
 import { OfflineHandbookView } from "./components/OfflineHandbookView";
 import { ProfileView } from "./components/ProfileView";
@@ -60,6 +61,7 @@ function AppContent() {
         {activeTab === "review" && <ReviewView />}
         {activeTab === "leaderboard" && <LeaderboardView />}
         {activeTab === "groups" && <StudyGroupsView />}
+        {activeTab === "chat" && <ChatView />}
         {activeTab === "notes" && <NotesView />}
         {activeTab === "handbook" && <OfflineHandbookView />}
         {activeTab === "profile" && (

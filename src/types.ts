@@ -296,3 +296,31 @@ export interface ResetScope {
 
 /** Độ dài tối đa (ký tự) của nội dung tin nhắn và của đoạn code đính kèm trong học nhóm. */
 export const GROUP_MESSAGE_MAX_LENGTH = 1000;
+
+export type ChatRoomKind = "class" | "dm";
+
+export interface DirectChatMessage {
+  id: string;
+  roomId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar: string;
+  senderRole: UserRole;
+  content: string;
+  codeSnippet?: string;
+  pinned?: boolean;
+  timestamp: string;
+}
+
+export interface ChatRoomSummary {
+  roomId: string;
+  kind: ChatRoomKind;
+  title: string;
+  subtitle?: string;
+  grade?: string;
+  peerUser?: User;
+  lastMessage?: DirectChatMessage;
+  messageCount: number;
+  unreadCount: number;
+}
+
